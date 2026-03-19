@@ -11,6 +11,70 @@ export default function Profile() {
     updateProfile({ goals: newGoals });
   };
 
+  const handleGenerateMediaKit = () => {
+    const mediaKitHtml = `
+      <html>
+        <head>
+          <title>Media Kit - ${profile.name}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; color: #1f2937; margin: 0; padding: 40px; background: #f9fafb; }
+            .container { max-w-3xl; margin: 0 auto; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+            .header { display: flex; align-items: center; gap: 24px; margin-bottom: 40px; }
+            .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }
+            h1 { margin: 0; font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+            .handle { color: ${accentColor}; font-size: 20px; font-weight: 600; margin-top: 4px; }
+            h2 { font-size: 24px; font-weight: 700; margin-top: 40px; margin-bottom: 20px; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }
+            .goals { list-style: none; padding: 0; }
+            .goals li { background: #f9fafb; padding: 16px 20px; border-radius: 12px; margin-bottom: 12px; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; }
+            .goals li::before { content: '✓'; color: ${accentColor}; font-weight: bold; }
+            .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+            .stat-card { background: #f9fafb; padding: 24px; border-radius: 16px; text-align: center; }
+            .stat-value { font-size: 32px; font-weight: 800; color: ${accentColor}; }
+            .stat-label { font-size: 14px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <img src="${profile.avatar}" alt="${profile.name}" class="avatar" />
+              <div>
+                <h1>${profile.name}</h1>
+                <div class="handle">${profile.handle}</div>
+              </div>
+            </div>
+            
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-value">1.2M</div>
+                <div class="stat-label">Seguidores</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">8.5%</div>
+                <div class="stat-label">Engagement</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">450K</div>
+                <div class="stat-label">Alcance Promedio</div>
+              </div>
+            </div>
+
+            <h2>Objetivos del Año</h2>
+            <ul class="goals">
+              ${profile.goals.map(g => `<li>${g}</li>`).join('')}
+            </ul>
+          </div>
+          <script>
+            window.onload = () => window.print();
+          </script>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([mediaKitHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col items-center text-center mb-10 mt-6">
@@ -51,12 +115,12 @@ export default function Profile() {
       </div>
 
       <button
-        disabled
-        className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 opacity-50 cursor-not-allowed shadow-md"
+        onClick={handleGenerateMediaKit}
+        className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 shadow-md hover:opacity-90 active:scale-[0.98] transition-all"
         style={{ backgroundColor: accentColor }}
       >
         <Download size={20} />
-        Generar Media Kit (Próximamente)
+        Generar Media Kit
       </button>
     </div>
   );

@@ -25,6 +25,14 @@ export interface Task {
   status: TaskStatus;
   dueDate: string;
   value: number;
+  gcalEventId?: string;
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
 }
 
 export interface UserProfile {
@@ -32,6 +40,7 @@ export interface UserProfile {
   avatar: string;
   handle: string;
   goals: [string, string, string];
+  notificationsEnabled: boolean;
 }
 
 export interface AppState {
@@ -39,4 +48,5 @@ export interface AppState {
   partners: Partner[];
   profile: UserProfile;
   accentColor: string;
+  templates: Template[];
 }
