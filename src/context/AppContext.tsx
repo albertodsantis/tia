@@ -6,11 +6,13 @@ interface AppContextType extends AppState {
   updateTaskStatus: (taskId: string, status: Task['status']) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   addPartner: (partner: Omit<Partner, 'id'>) => string;
+  updatePartner: (partnerId: string, updates: Partial<Partner>) => void;
   addContact: (partnerId: string, contact: Omit<Contact, 'id'>) => void;
   updateContact: (partnerId: string, contactId: string, updates: Partial<Contact>) => void;
   deleteContact: (partnerId: string, contactId: string) => void;
   updateProfile: (profile: Partial<UserProfile>) => void;
   setAccentColor: (color: string) => void;
+  setTheme: (theme: 'light' | 'dark') => void;
   addTemplate: (template: Omit<Template, 'id'>) => void;
   updateTemplate: (templateId: string, updates: Partial<Template>) => void;
   deleteTemplate: (templateId: string) => void;
@@ -18,9 +20,9 @@ interface AppContextType extends AppState {
 
 const defaultState: AppState = {
   tasks: [
-    { id: '1', title: 'Reel de Lanzamiento', description: 'Video 60s para TikTok e IG', partnerId: 'p1', status: 'Producción', dueDate: '2026-03-22', value: 1500 },
-    { id: '2', title: 'Mención en YouTube', description: 'Integración de 30s', partnerId: 'p2', status: 'En Negociación', dueDate: '2026-04-05', value: 2000 },
-    { id: '3', title: 'Post Carrusel', description: 'Fotos de producto', partnerId: 'p1', status: 'Revisión', dueDate: '2026-03-20', value: 800 },
+    { id: '1', title: 'Reel de Lanzamiento', description: 'Video 60s para TikTok e IG', partnerId: 'p1', status: 'En Progreso', dueDate: '2026-03-22', value: 1500 },
+    { id: '2', title: 'Mención en YouTube', description: 'Integración de 30s', partnerId: 'p2', status: 'Pendiente', dueDate: '2026-04-05', value: 2000 },
+    { id: '3', title: 'Post Carrusel', description: 'Fotos de producto', partnerId: 'p1', status: 'En Revisión', dueDate: '2026-03-20', value: 800 },
   ],
   partners: [
     { id: 'p1', name: 'TechBrand', status: 'Activo', contacts: [{ id: 'c1', name: 'Laura Gómez', role: 'PR Manager', email: 'laura@techbrand.com', ig: '@laurapr' }] },
@@ -34,6 +36,7 @@ const defaultState: AppState = {
     notificationsEnabled: false,
   },
   accentColor: '#8b5cf6', // Violet
+  theme: 'light',
   templates: [
     {
       id: 't1',
@@ -52,6 +55,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', state.accentColor);
   }, [state.accentColor]);
+
+  useEffect(() => {
+    if (state.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [state.theme]);
 
   // Notifications logic
   useEffect(() => {
@@ -113,6 +124,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newPartner.id;
   };
 
+  const updatePartner = (partnerId: string, updates: Partial<Partner>) => {
+    setState(s => ({
+      ...s,
+      partners: s.partners.map(p => p.id === partnerId ? { ...p, ...updates } : p)
+    }));
+  };
+
   const addContact = (partnerId: string, contact: Omit<Contact, 'id'>) => {
     const newContact = { ...contact, id: crypto.randomUUID() };
     setState(s => ({
@@ -155,6 +173,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(s => ({ ...s, accentColor: color }));
   };
 
+  const setTheme = (theme: 'light' | 'dark') => {
+    setState(s => ({ ...s, theme }));
+  };
+
   const addTemplate = (template: Omit<Template, 'id'>) => {
     const newTemplate = { ...template, id: crypto.randomUUID() };
     setState(s => ({ ...s, templates: [...s.templates, newTemplate] }));
@@ -175,7 +197,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   return (
-    <AppContext.Provider value={{ ...state, addTask, updateTaskStatus, updateTask, addPartner, addContact, updateContact, deleteContact, updateProfile, setAccentColor, addTemplate, updateTemplate, deleteTemplate }}>
+    <AppContext.Provider value={{ ...state, addTask, updateTaskStatus, updateTask, addPartner, updatePartner, addContact, updateContact, deleteContact, updateProfile, setAccentColor, setTheme, addTemplate, updateTemplate, deleteTemplate }}>
       {children}
     </AppContext.Provider>
   );

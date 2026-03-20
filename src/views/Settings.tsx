@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Bell, Calendar as CalendarIcon, Shield, LogOut, Check, MessageSquare, Plus, Trash2 } from 'lucide-react';
-
-const THEMES = [
-  { id: 'purple', color: '#8b5cf6', name: 'Morado Eléctrico' },
-  { id: 'green', color: '#10b981', name: 'Verde Neón' },
-  { id: 'orange', color: '#f97316', name: 'Naranja Sunset' },
-  { id: 'blue', color: '#3b82f6', name: 'Azul Océano' },
-  { id: 'pink', color: '#f43f5e', name: 'Rosa Coral' },
-  { id: 'black', color: '#171717', name: 'Carbón' },
-];
+import { Bell, Calendar as CalendarIcon, Shield, LogOut, Check, MessageSquare, Plus, Trash2, ChevronDown, Moon, Sun } from 'lucide-react';
+import { HexColorPicker } from "react-colorful";
 
 export default function Settings() {
-  const { accentColor, setAccentColor, profile, updateProfile, templates, addTemplate, deleteTemplate } = useAppContext();
+  const { accentColor, setAccentColor, profile, updateProfile, templates, addTemplate, deleteTemplate, theme, setTheme } = useAppContext();
   const [gcalConnected, setGcalConnected] = useState(false);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
   const [newTemplate, setNewTemplate] = useState({ name: '', subject: '', body: '' });
+  const [hexInput, setHexInput] = useState(accentColor.replace('#', '').toUpperCase());
+
+  useEffect(() => {
+    setHexInput(accentColor.replace('#', '').toUpperCase());
+  }, [accentColor]);
+
+  const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace('#', '').toUpperCase();
+    setHexInput(val);
+    if (val.length === 6) {
+      setAccentColor('#' + val);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/auth/status')
@@ -75,68 +80,82 @@ export default function Settings() {
 
   return (
     <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8 mt-2 tracking-tight">Configuración</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 mt-2 tracking-tight">Configuración</h1>
 
       <div className="mb-10">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-2">Tema de la App</h2>
-        <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
-          <div className="flex flex-wrap gap-5 justify-between">
-            {THEMES.map(theme => {
-              const isActive = accentColor === theme.color;
-              return (
-                <button
-                  key={theme.id}
-                  onClick={() => setAccentColor(theme.color)}
-                  className="w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 relative shadow-sm"
-                  style={{ backgroundColor: theme.color }}
-                  title={theme.name}
-                >
-                  {isActive && <Check size={20} className="text-white absolute z-10" strokeWidth={3} />}
-                  {isActive && (
-                    <div className="absolute inset-0 rounded-full border-[3px] border-white scale-110 opacity-50" />
-                  )}
-                </button>
-              );
-            })}
+        <h2 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 ml-2">Tema de la App</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden custom-color-picker-container">
+          <HexColorPicker color={accentColor} onChange={setAccentColor} />
+          
+          <div className="p-5 pt-0">
+            <div className="flex items-center gap-3 mt-5">
+              <div className="flex items-center justify-between bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-[15px] font-bold text-gray-700 dark:text-gray-200 shadow-sm w-28">
+                <span>Hex</span>
+                <ChevronDown size={16} className="text-gray-400 dark:text-gray-500" />
+              </div>
+              <input 
+                type="text"
+                value={hexInput}
+                onChange={handleHexChange}
+                maxLength={6}
+                className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-[15px] font-bold text-gray-700 dark:text-gray-200 shadow-sm flex-1 text-center focus:outline-none focus:ring-2 uppercase tracking-wider"
+                style={{ '--tw-ring-color': accentColor } as any}
+              />
+              <div className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-[15px] font-bold text-gray-700 dark:text-gray-200 shadow-sm w-24 text-center">
+                100%
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="mb-10">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-2">Ajustes Generales</h2>
-        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-          <div onClick={toggleNotifications} className="flex items-center justify-between p-5 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer">
+        <h2 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 ml-2">Ajustes Generales</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+          <div onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex items-center justify-between p-5 border-b border-gray-50 dark:border-slate-700/50 active:bg-gray-50 dark:active:bg-slate-700/50 transition-colors cursor-pointer">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-500">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+              </div>
+              <span className="font-bold text-gray-900 dark:text-white text-sm">Modo Oscuro</span>
+            </div>
+            <div className={`w-14 h-7 rounded-full relative transition-colors shadow-inner ${theme === 'dark' ? '' : 'bg-gray-200 dark:bg-slate-600'}`} style={theme === 'dark' ? { backgroundColor: accentColor } : {}}>
+              <div className={`w-6 h-6 bg-white rounded-full absolute top-0.5 shadow-md transition-all ${theme === 'dark' ? 'right-0.5' : 'left-0.5'}`} />
+            </div>
+          </div>
+
+          <div onClick={toggleNotifications} className="flex items-center justify-between p-5 border-b border-gray-50 dark:border-slate-700/50 active:bg-gray-50 dark:active:bg-slate-700/50 transition-colors cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
                 <Bell size={20} />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Notificaciones Push</span>
+              <span className="font-bold text-gray-900 dark:text-white text-sm">Notificaciones Push</span>
             </div>
-            <div className={`w-14 h-7 rounded-full relative transition-colors shadow-inner ${profile.notificationsEnabled ? '' : 'bg-gray-200'}`} style={profile.notificationsEnabled ? { backgroundColor: accentColor } : {}}>
+            <div className={`w-14 h-7 rounded-full relative transition-colors shadow-inner ${profile.notificationsEnabled ? '' : 'bg-gray-200 dark:bg-slate-600'}`} style={profile.notificationsEnabled ? { backgroundColor: accentColor } : {}}>
               <div className={`w-6 h-6 bg-white rounded-full absolute top-0.5 shadow-md transition-all ${profile.notificationsEnabled ? 'right-0.5' : 'left-0.5'}`} />
             </div>
           </div>
 
-          <div onClick={connectGoogleCalendar} className="flex items-center justify-between p-5 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer">
+          <div onClick={connectGoogleCalendar} className="flex items-center justify-between p-5 border-b border-gray-50 dark:border-slate-700/50 active:bg-gray-50 dark:active:bg-slate-700/50 transition-colors cursor-pointer">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-500">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
                 <CalendarIcon size={20} />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Sincronizar Calendar</span>
+              <span className="font-bold text-gray-900 dark:text-white text-sm">Sincronizar Calendar</span>
             </div>
-            <div className={`w-14 h-7 rounded-full relative transition-colors shadow-inner ${gcalConnected ? '' : 'bg-gray-200'}`} style={gcalConnected ? { backgroundColor: accentColor } : {}}>
+            <div className={`w-14 h-7 rounded-full relative transition-colors shadow-inner ${gcalConnected ? '' : 'bg-gray-200 dark:bg-slate-600'}`} style={gcalConnected ? { backgroundColor: accentColor } : {}}>
               <div className={`w-6 h-6 bg-white rounded-full absolute top-0.5 shadow-md transition-all ${gcalConnected ? 'right-0.5' : 'left-0.5'}`} />
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-5 active:bg-gray-50 transition-colors cursor-pointer">
+          <div className="flex items-center justify-between p-5 active:bg-gray-50 dark:active:bg-slate-700/50 transition-colors cursor-pointer">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-500">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
                 <Shield size={20} />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Privacidad y Seguridad</span>
+              <span className="font-bold text-gray-900 dark:text-white text-sm">Privacidad y Seguridad</span>
             </div>
-            <span className="text-gray-300 font-bold text-xl">›</span>
+            <span className="text-gray-300 dark:text-gray-600 font-bold text-xl">›</span>
           </div>
         </div>
       </div>

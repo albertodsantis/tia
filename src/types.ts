@@ -1,5 +1,5 @@
-export type TaskStatus = 'En Negociación' | 'Producción' | 'Revisión' | 'Cobro';
-export type PartnerStatus = 'En Negociación' | 'Activo' | 'On Hold' | 'Relación Culminada';
+export type TaskStatus = 'Pendiente' | 'En Progreso' | 'En Revisión' | 'Completada';
+export type PartnerStatus = 'Prospecto' | 'En Negociación' | 'Activo' | 'Inactivo' | 'On Hold' | 'Relación Culminada';
 
 export interface Contact {
   id: string;
@@ -49,4 +49,5 @@ export interface AppState {
   profile: UserProfile;
   accentColor: string;
   templates: Template[];
+  theme: 'light' | 'dark';
 }
