@@ -9,12 +9,13 @@ import {
   ScreenHeader,
   SurfaceCard,
 } from '../components/ui';
+import { getAccessibleAccentForeground } from '../lib/accent';
 
 const fieldClass =
   'w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 transition-all focus:bg-white focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900/50 dark:text-white dark:focus:bg-slate-800';
 
 export default function Profile() {
-  const { profile, accentColor, updateProfile } = useAppContext();
+  const { profile, accentColor, updateProfile, tasks, partners } = useAppContext();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -22,6 +23,10 @@ export default function Profile() {
     handle: profile.handle,
     avatar: profile.avatar,
   });
+  const openTasks = tasks.filter((task) => task.status !== 'Cobro');
+  const activePartners = partners.filter((partner) => partner.status === 'Activo').length;
+  const openPipelineValue = openTasks.reduce((sum, task) => sum + task.value, 0);
+  const accentForeground = getAccessibleAccentForeground(accentColor);
 
   const openProfileEditor = () => {
     setProfileForm({
@@ -51,25 +56,32 @@ export default function Profile() {
   };
 
   const handleGenerateMediaKit = () => {
+    const generatedAt = new Date().toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
     const mediaKitHtml = `
       <html>
         <head>
-          <title>Media Kit - ${profile.name}</title>
+          <title>Resumen comercial - ${profile.name}</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: #1f2937; margin: 0; padding: 40px; background: #f8fafc; -webkit-font-smoothing: antialiased; }
             .container { max-width: 54rem; margin: 0 auto; background: white; padding: 40px; border-radius: 18px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08); }
             .header { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
             .avatar { width: 120px; height: 120px; border-radius: 18px; object-fit: cover; }
             h1 { margin: 0; font-size: 38px; font-weight: 800; letter-spacing: -1px; }
-            .handle { color: ${accentColor}; font-size: 20px; font-weight: 700; margin-top: 6px; }
+            .handle { color: #475569; font-size: 20px; font-weight: 700; margin-top: 6px; }
+            .meta { margin-top: 12px; display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: ${accentColor}; color: ${accentForeground}; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
             h2 { font-size: 24px; font-weight: 800; margin-top: 32px; margin-bottom: 18px; }
             .goals { list-style: none; padding: 0; }
             .goals li { background: #f8fafc; padding: 16px 18px; border-radius: 12px; margin-bottom: 12px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 12px; }
             .dot { width: 10px; height: 10px; border-radius: 999px; background: ${accentColor}; }
             .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
-            .stat-card { background: #f8fafc; padding: 24px; border-radius: 14px; text-align: center; }
-            .stat-value { font-size: 32px; font-weight: 800; color: ${accentColor}; }
+            .stat-card { background: #f8fafc; padding: 24px; border-radius: 14px; }
+            .stat-value { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px; border-radius: 999px; background: ${accentColor}; color: ${accentForeground}; font-size: 24px; font-weight: 800; }
             .stat-label { font-size: 14px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
+            .summary { margin-top: 24px; color: #475569; font-size: 15px; line-height: 1.7; }
           </style>
         </head>
         <body>
@@ -79,20 +91,24 @@ export default function Profile() {
               <div>
                 <h1>${profile.name}</h1>
                 <div class="handle">${profile.handle}</div>
+                <div class="meta">Actualizado ${generatedAt}</div>
               </div>
+            </div>
+            <div class="summary">
+              Snapshot actual del workspace para compartir foco comercial, ritmo del pipeline y prioridades de marca.
             </div>
             <div class="stats">
               <div class="stat-card">
-                <div class="stat-value">1.2M</div>
-                <div class="stat-label">Seguidores</div>
+                <div class="stat-value">$${openPipelineValue.toLocaleString('es-ES')}</div>
+                <div class="stat-label">Pipeline abierto</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value">8.5%</div>
-                <div class="stat-label">Engagement</div>
+                <div class="stat-value">${activePartners}</div>
+                <div class="stat-label">Partners activos</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value">450K</div>
-                <div class="stat-label">Alcance promedio</div>
+                <div class="stat-value">${openTasks.length}</div>
+                <div class="stat-label">Entregas abiertas</div>
               </div>
             </div>
             <h2>Objetivos del año</h2>
@@ -242,8 +258,8 @@ export default function Profile() {
               <div key={index} className="rounded-[1rem] border border-slate-200/80 bg-slate-50/90 p-4 dark:border-slate-700/60 dark:bg-slate-900/45">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-9 w-9 items-center justify-center rounded-[0.85rem] text-sm font-black text-white"
-                    style={{ backgroundColor: accentColor }}
+                    className="flex h-9 w-9 items-center justify-center rounded-[0.85rem] text-sm font-black"
+                    style={{ backgroundColor: accentColor, color: 'var(--accent-foreground)' }}
                   >
                     {index + 1}
                   </div>

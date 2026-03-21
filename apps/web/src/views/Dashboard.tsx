@@ -11,6 +11,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { EmptyState, MetricCard, StatusBadge, SurfaceCard } from '../components/ui';
 import type { TaskStatus } from '@shared/domain';
+import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
 
 const PIPELINE_STATUSES: TaskStatus[] = [
   'Pendiente',
@@ -31,9 +32,8 @@ const statusToneMap: Record<TaskStatus, 'warning' | 'info' | 'accent' | 'success
 export default function Dashboard() {
   const { profile, tasks, partners, accentColor } = useAppContext();
   const today = new Date();
-  const todayIso = today.toISOString().split('T')[0];
-  const startOfToday = new Date(today);
-  startOfToday.setHours(0, 0, 0, 0);
+  const todayIso = formatLocalDateISO(today);
+  const startOfToday = startOfLocalDay(today);
   const weekEnd = new Date(startOfToday);
   weekEnd.setDate(weekEnd.getDate() + 6);
 
@@ -42,12 +42,13 @@ export default function Dashboard() {
     const activePipelineValue = activePipelineTasks.reduce((sum, task) => sum + task.value, 0);
     const tasksToday = tasks.filter((task) => task.dueDate === todayIso).length;
     const tasksThisWeek = tasks.filter((task) => {
-      const dueDate = new Date(task.dueDate);
-      dueDate.setHours(0, 0, 0, 0);
+      const dueDate = startOfLocalDay(parseLocalDate(task.dueDate));
       return dueDate >= startOfToday && dueDate <= weekEnd;
     }).length;
     const activePartners = partners.filter((partner) => partner.status === 'Activo').length;
-    const overdue = tasks.filter((task) => new Date(task.dueDate) < startOfToday && task.status !== 'Cobro').length;
+    const overdue = tasks.filter(
+      (task) => startOfLocalDay(parseLocalDate(task.dueDate)) < startOfToday && task.status !== 'Cobro',
+    ).length;
     const syncedTasks = tasks.filter((task) => Boolean(task.gcalEventId)).length;
 
     return {
@@ -63,7 +64,7 @@ export default function Dashboard() {
   const upcomingTasks = useMemo(
     () =>
       [...tasks]
-        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+        .sort((a, b) => parseLocalDate(a.dueDate).getTime() - parseLocalDate(b.dueDate).getTime())
         .slice(0, 4),
     [tasks],
   );
@@ -249,7 +250,7 @@ export default function Dashboard() {
                         </StatusBadge>
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                        {partner?.name || 'Sin marca'} · {new Date(task.dueDate).toLocaleDateString('es-ES', {
+                        {partner?.name || 'Sin marca'} · {parseLocalDate(task.dueDate).toLocaleDateString('es-ES', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',

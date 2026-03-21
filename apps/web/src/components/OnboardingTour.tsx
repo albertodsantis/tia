@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import { useAppContext } from '../context/AppContext';
+import { getAccessibleAccentForeground } from '../lib/accent';
+
+const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
 
 export default function OnboardingTour() {
   const { theme, accentColor } = useAppContext();
@@ -8,17 +11,25 @@ export default function OnboardingTour() {
   const [tooltipWidth, setTooltipWidth] = useState(() =>
     typeof window === 'undefined' ? 360 : Math.min(window.innerWidth - 64, 384),
   );
+  const accentForeground = getAccessibleAccentForeground(accentColor || '#8b5cf6');
 
   useEffect(() => {
-    // Check if the user has already seen the tour
-    const hasSeenTour = localStorage.getItem('hasSeenOnboardingTour');
-    if (!hasSeenTour) {
-      // Small delay to ensure the DOM is fully rendered
-      const timer = setTimeout(() => {
-        setRun(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (typeof window === 'undefined') {
+      return undefined;
     }
+
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    const hasSeenTour = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+
+    if (!isDesktop || hasSeenTour) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRun(true);
+    }, 700);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -42,39 +53,50 @@ export default function OnboardingTour() {
 
     if (finishedStatuses.includes(status)) {
       setRun(false);
-      localStorage.setItem('hasSeenOnboardingTour', 'true');
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
     }
   };
 
-  const steps: Step[] = [
-    {
-      target: 'body',
-      content: '¡Bienvenido a tu nuevo CRM! Vamos a dar un rápido paseo por las funciones principales.',
-      placement: 'center',
-      disableBeacon: true,
-    },
-    {
-      target: '#nav-dashboard',
-      content: 'Aquí tienes un resumen de tu actividad, métricas clave y próximos entregables.',
-    },
-    {
-      target: '#nav-pipeline',
-      content: 'Gestiona tus tareas y proyectos. Puedes verlos en formato Kanban, Lista o Calendario.',
-    },
-    {
-      target: '#nav-directory',
-      content: 'Tu directorio de marcas y contactos. Mantén toda la información de tus partners organizada aquí.',
-    },
-    {
-      target: '#nav-settings',
-      content: 'Personaliza la aplicación a tu gusto. ¡Cambia el color de acento o activa el modo oscuro!',
-    },
-    {
-      target: '#tia-assistant-btn',
-      content: 'Conoce a Tía, tu asistente de IA. Pídele que añada tareas, busque contactos o actualice estados por ti.',
-      placement: 'top',
+  const steps = useMemo<Step[]>(() => {
+    const baseSteps: Step[] = [
+      {
+        target: 'body',
+        content: 'Bienvenida a Tía. Este tour te enseña el flujo base del workspace para que ubiques navegación, pipeline y relaciones.',
+        placement: 'center',
+        disableBeacon: true,
+      },
+      {
+        target: '#nav-dashboard',
+        content: 'Aquí aterrizas con el resumen operativo: valor abierto, entregables cercanos y señales del pipeline.',
+      },
+      {
+        target: '#nav-pipeline',
+        content: 'El pipeline concentra tareas, fases y calendario en una misma superficie.',
+      },
+      {
+        target: '#nav-directory',
+        content: 'El directorio te da contexto de marca, contactos y outreach sin salir del workspace.',
+      },
+      {
+        target: '#nav-settings',
+        content: 'Desde ajustes controlas tema, integraciones y plantillas reutilizables.',
+      },
+    ];
+
+    if (typeof document !== 'undefined' && document.querySelector('#tia-assistant-btn')) {
+      baseSteps.push({
+        target: '#tia-assistant-btn',
+        content: 'Cuando la IA está disponible, puedes abrirla desde aquí para crear tareas o actualizar estados con lenguaje natural.',
+        placement: 'left',
+      });
     }
-  ];
+
+    return baseSteps;
+  }, [run]);
+
+  if (!run) {
+    return null;
+  }
 
   return (
     <Joyride
@@ -124,6 +146,7 @@ export default function OnboardingTour() {
         },
         buttonNext: {
           backgroundColor: accentColor || '#8b5cf6',
+          color: accentForeground,
           borderRadius: '9999px',
           padding: '8px 16px',
           fontWeight: 'bold',
@@ -137,7 +160,7 @@ export default function OnboardingTour() {
         buttonSkip: {
           color: theme === 'dark' ? '#94a3b8' : '#64748b',
           padding: 0,
-        }
+        },
       }}
     />
   );

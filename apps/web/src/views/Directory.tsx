@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Contact, Partner } from '@shared/domain';
+import ConfirmDialog from '../components/ConfirmDialog';
 import OverlayModal from '../components/OverlayModal';
 import {
   Button,
@@ -84,6 +85,10 @@ export default function Directory() {
   const [isAddingPartner, setIsAddingPartner] = useState(false);
   const [addingContactTo, setAddingContactTo] = useState<string | null>(null);
   const [editingContact, setEditingContact] = useState<{ partnerId: string; contact: Contact } | null>(null);
+  const [contactPendingDeletion, setContactPendingDeletion] = useState<{
+    partnerId: string;
+    contact: Contact;
+  } | null>(null);
   const [newPartner, setNewPartner] = useState({ name: '', status: 'Prospecto' as Partner['status'] });
   const [newContact, setNewContact] = useState({ name: '', role: '', email: '', ig: '' });
 
@@ -187,8 +192,11 @@ export default function Directory() {
     setEditingContact(null);
   };
 
-  const handleDeleteContact = async (partnerId: string, contactId: string) => {
-    await deleteContact(partnerId, contactId);
+  const handleDeleteContact = async () => {
+    if (!contactPendingDeletion) return;
+
+    await deleteContact(contactPendingDeletion.partnerId, contactPendingDeletion.contact.id);
+    setContactPendingDeletion(null);
   };
 
   return (
@@ -376,7 +384,12 @@ export default function Directory() {
                         </div>
                         <div className="flex shrink-0 gap-2">
                           <IconButton icon={PencilLine} label={`Editar contacto ${contact.name}`} onClick={() => setEditingContact({ partnerId: activePartner.id, contact })} className="bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-300" />
-                          <IconButton icon={Trash2} label={`Eliminar contacto ${contact.name}`} onClick={() => void handleDeleteContact(activePartner.id, contact.id)} tone="danger" />
+                          <IconButton
+                            icon={Trash2}
+                            label={`Eliminar contacto ${contact.name}`}
+                            onClick={() => setContactPendingDeletion({ partnerId: activePartner.id, contact })}
+                            tone="danger"
+                          />
                           <IconButton icon={Send} label={`Redactar mensaje para ${contact.name}`} onClick={() => setComposingTo({ contact, partner: activePartner })} tone="primary" accentColor={accentColor} />
                         </div>
                       </div>
@@ -385,9 +398,11 @@ export default function Directory() {
                         <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
                           <Mail size={16} /> Email
                         </a>
-                        <a href={`https://instagram.com/${contact.ig.replace('@', '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
-                          <Instagram size={16} /> {contact.ig}
-                        </a>
+                        {contact.ig.trim() ? (
+                          <a href={`https://instagram.com/${contact.ig.replace('@', '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
+                            <Instagram size={16} /> {contact.ig}
+                          </a>
+                        ) : null}
                       </div>
                     </div>
                   ))
@@ -409,6 +424,16 @@ export default function Directory() {
           ) : null}
         </div>
       </div>
+
+      {contactPendingDeletion ? (
+        <ConfirmDialog
+          title="Eliminar contacto"
+          description={`Se eliminará a ${contactPendingDeletion.contact.name} del directorio de ${activePartner?.name || 'esta marca'}.`}
+          confirmLabel="Eliminar"
+          onConfirm={() => void handleDeleteContact()}
+          onClose={() => setContactPendingDeletion(null)}
+        />
+      ) : null}
 
       {isAddingPartner && (
         <OverlayModal tone="slate" onClose={() => setIsAddingPartner(false)}>

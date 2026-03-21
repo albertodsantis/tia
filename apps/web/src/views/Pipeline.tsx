@@ -27,6 +27,8 @@ import {
   SurfaceCard,
   cx,
 } from '../components/ui';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
 
 const REVIEW_STATUS = 'En Revisión' as TaskStatus;
 const STATUSES: TaskStatus[] = ['Pendiente', 'En Progreso', REVIEW_STATUS, 'Completada', 'Cobro'];
@@ -43,22 +45,10 @@ const EMPTY_FORM = {
 const fieldClass =
   'w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 transition-all focus:bg-white focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900/50 dark:text-white dark:focus:bg-slate-800';
 
-const parseIsoDate = (value: string) => {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const formatIsoDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 const formatCurrency = (value: number) => `$${value.toLocaleString('es-ES')}`;
 
 const formatTaskDate = (value: string, options?: Intl.DateTimeFormatOptions) =>
-  parseIsoDate(value).toLocaleDateString(
+  parseLocalDate(value).toLocaleDateString(
     'es-ES',
     options ?? {
       day: '2-digit',
@@ -85,6 +75,7 @@ export default function Pipeline() {
     updateTask,
     updateTaskStatus,
     deleteTask,
+    reportActionError,
   } = useAppContext();
   const [view, setView] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [currentStatusIdx, setCurrentStatusIdx] = useState(0);
@@ -98,12 +89,13 @@ export default function Pipeline() {
   const [isSyncingDown, setIsSyncingDown] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [taskPendingDeletion, setTaskPendingDeletion] = useState<Task | null>(null);
   const [isWideDesktopCalendar, setIsWideDesktopCalendar] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 1536,
   );
 
   const sortedTasks = useMemo(
-    () => [...tasks].sort((a, b) => parseIsoDate(a.dueDate).getTime() - parseIsoDate(b.dueDate).getTime()),
+    () => [...tasks].sort((a, b) => parseLocalDate(a.dueDate).getTime() - parseLocalDate(b.dueDate).getTime()),
     [tasks],
   );
   const tasksByStatus = useMemo(
@@ -120,10 +112,10 @@ export default function Pipeline() {
 
   const currentStatus = STATUSES[currentStatusIdx];
   const visibleTasks = view === 'kanban' ? tasksByStatus[currentStatus] : sortedTasks;
-  const todayIso = formatIsoDate(new Date());
+  const todayIso = formatLocalDateISO(new Date());
   const selectedDateTasks = selectedDate ? sortedTasks.filter((task) => task.dueDate === selectedDate) : [];
   const monthTasks = sortedTasks.filter((task) => {
-    const dueDate = parseIsoDate(task.dueDate);
+    const dueDate = parseLocalDate(task.dueDate);
     return (
       dueDate.getMonth() === currentMonth.getMonth() &&
       dueDate.getFullYear() === currentMonth.getFullYear()
@@ -132,9 +124,8 @@ export default function Pipeline() {
   const editingTask = editingTaskId ? sortedTasks.find((task) => task.id === editingTaskId) ?? null : null;
   const syncedTasks = sortedTasks.filter((task) => Boolean(task.gcalEventId)).length;
   const weeklyTasks = sortedTasks.filter((task) => {
-    const dueDate = parseIsoDate(task.dueDate);
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+    const dueDate = parseLocalDate(task.dueDate);
+    const start = startOfLocalDay(new Date());
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
     return dueDate >= start && dueDate <= end;
@@ -169,6 +160,10 @@ export default function Pipeline() {
     setModalMode(null);
     setEditingTaskId(null);
     setForm(EMPTY_FORM);
+  };
+
+  const requestTaskDeletion = (task: Task) => {
+    setTaskPendingDeletion(task);
   };
 
   const openCreate = () => {
@@ -236,8 +231,10 @@ export default function Pipeline() {
     }
   };
 
-  const removeTask = async (task: Task) => {
-    if (!window.confirm(`Eliminar "${task.title}" del pipeline?`)) return;
+  const confirmTaskDeletion = async () => {
+    if (!taskPendingDeletion) return;
+
+    const task = taskPendingDeletion;
     setDeletingTaskId(task.id);
 
     try {
@@ -252,6 +249,7 @@ export default function Pipeline() {
       }
     } finally {
       setDeletingTaskId(null);
+      setTaskPendingDeletion(null);
     }
   };
 
@@ -267,7 +265,7 @@ export default function Pipeline() {
       });
 
       if (!response.ok) {
-        alert('Error al sincronizar. Conecta Google Calendar desde Ajustes.');
+        reportActionError('No pudimos sincronizar la tarea. Conecta Google Calendar desde Ajustes.');
         return;
       }
 
@@ -275,7 +273,7 @@ export default function Pipeline() {
       await updateTask(task.id, { gcalEventId: data.eventId });
     } catch (error) {
       console.error(error);
-      alert('Error de conexión al sincronizar.');
+      reportActionError('Se perdió la conexión al sincronizar la tarea.');
     } finally {
       setSyncingTaskId(null);
     }
@@ -295,7 +293,7 @@ export default function Pipeline() {
       });
 
       if (!response.ok) {
-        alert('Error al sincronizar desde Google Calendar.');
+        reportActionError('No pudimos traer cambios desde Google Calendar.');
         return;
       }
 
@@ -310,7 +308,7 @@ export default function Pipeline() {
       );
     } catch (error) {
       console.error(error);
-      alert('Error de conexión al traer cambios.');
+      reportActionError('Se perdió la conexión al traer cambios desde Google Calendar.');
     } finally {
       setIsSyncingDown(false);
     }
@@ -408,7 +406,7 @@ export default function Pipeline() {
                 <IconButton
                   icon={Trash2}
                   label={`Eliminar ${task.title}`}
-                  onClick={() => void removeTask(task)}
+                  onClick={() => requestTaskDeletion(task)}
                   disabled={deletingTaskId === task.id}
                   tone="danger"
                   className="h-10 w-10 rounded-[0.8rem]"
@@ -511,7 +509,7 @@ export default function Pipeline() {
             <IconButton
               icon={Trash2}
               label={`Eliminar ${task.title}`}
-              onClick={() => void removeTask(task)}
+              onClick={() => requestTaskDeletion(task)}
               disabled={deletingTaskId === task.id}
               tone="danger"
               className="h-10 w-10 rounded-[0.8rem]"
@@ -528,7 +526,7 @@ export default function Pipeline() {
   ));
   const days = Array.from({ length: daysInMonth }, (_, offset) => {
     const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), offset + 1);
-    const iso = formatIsoDate(date);
+    const iso = formatLocalDateISO(date);
     const dayTasks = sortedTasks.filter((task) => task.dueDate === iso);
     const isToday = iso === todayIso;
     const isSelected = iso === selectedDate;
@@ -554,10 +552,14 @@ export default function Pipeline() {
               isSelected
                 ? 'bg-white/18 text-white dark:bg-slate-900/10 dark:text-slate-900'
                 : dayTasks.length > 0
-                  ? 'text-white'
+                  ? ''
                   : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300',
             )}
-            style={!isSelected && dayTasks.length > 0 ? { backgroundColor: accentColor } : undefined}
+            style={
+              !isSelected && dayTasks.length > 0
+                ? { backgroundColor: accentColor, color: 'var(--accent-foreground)' }
+                : undefined
+            }
           >
             {date.getDate()}
           </span>
@@ -936,6 +938,16 @@ export default function Pipeline() {
           </OverlayModal>
         </div>
       ) : null}
+      {taskPendingDeletion ? (
+        <ConfirmDialog
+          title="Eliminar tarea"
+          description={`Se eliminará "${taskPendingDeletion.title}" del pipeline y no podrás recuperarla desde esta vista.`}
+          confirmLabel="Eliminar"
+          onConfirm={() => void confirmTaskDeletion()}
+          onClose={() => setTaskPendingDeletion(null)}
+          isConfirming={deletingTaskId === taskPendingDeletion.id}
+        />
+      ) : null}
       {modalMode ? (
         <OverlayModal onClose={resetModal}>
           <ModalPanel
@@ -948,7 +960,7 @@ export default function Pipeline() {
                   <Button
                     tone="danger"
                     className="flex-1"
-                    onClick={() => void removeTask(editingTask)}
+                    onClick={() => requestTaskDeletion(editingTask)}
                     disabled={deletingTaskId === editingTask.id}
                   >
                     {deletingTaskId === editingTask.id ? 'Eliminando…' : 'Eliminar'}

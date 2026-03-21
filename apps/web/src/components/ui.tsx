@@ -117,7 +117,7 @@ type BadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info
 
 const badgeToneClasses: Record<BadgeTone, string> = {
   neutral: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-  accent: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300',
+  accent: '',
   success: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
   warning: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300',
   danger: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300',
@@ -135,6 +135,14 @@ export function StatusBadge({
 }) {
   return (
     <span
+      style={
+        tone === 'accent'
+          ? {
+              backgroundColor: 'var(--accent-soft-strong)',
+              color: 'var(--accent-color)',
+            }
+          : undefined
+      }
       className={cx(
         'inline-flex items-center rounded-[0.8rem] px-3 py-1 text-[11px] font-bold tracking-[0.12em] uppercase',
         badgeToneClasses[tone],
@@ -206,7 +214,7 @@ export function Button({
 }) {
   const toneClass =
     tone === 'primary'
-      ? 'text-white shadow-[0_12px_30px_-16px_rgba(15,23,42,0.45)]'
+      ? 'border border-transparent shadow-[0_12px_30px_-16px_var(--accent-glow)]'
       : tone === 'danger'
         ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
         : tone === 'ghost'
@@ -224,7 +232,14 @@ export function Button({
         toneClass,
         className,
       )}
-      style={tone === 'primary' && accentColor ? { backgroundColor: accentColor } : undefined}
+      style={
+        tone === 'primary'
+          ? {
+              backgroundColor: accentColor || 'var(--accent-color)',
+              color: 'var(--accent-foreground)',
+            }
+          : undefined
+      }
     >
       {children}
     </button>
@@ -250,7 +265,7 @@ export function IconButton({
 }) {
   const toneClass =
     tone === 'primary'
-      ? 'text-white'
+      ? 'border border-transparent shadow-[0_12px_28px_-18px_var(--accent-glow)]'
       : tone === 'danger'
         ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
         : tone === 'ghost'
@@ -268,7 +283,14 @@ export function IconButton({
         toneClass,
         className,
       )}
-      style={tone === 'primary' && accentColor ? { backgroundColor: accentColor } : undefined}
+      style={
+        tone === 'primary'
+          ? {
+              backgroundColor: accentColor || 'var(--accent-color)',
+              color: 'var(--accent-foreground)',
+            }
+          : undefined
+      }
     >
       <Icon size={18} />
     </button>
@@ -288,7 +310,7 @@ export function ToggleSwitch({
         'relative h-7 w-14 rounded-full shadow-inner transition-colors',
         checked ? '' : 'bg-slate-200 dark:bg-slate-600',
       )}
-      style={checked ? { backgroundColor: accentColor } : undefined}
+      style={checked ? { backgroundColor: accentColor || 'var(--accent-color)' } : undefined}
     >
       <div
         className={cx(

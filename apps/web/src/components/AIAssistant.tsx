@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import { Loader2, MessageSquare, Mic, MicOff, Send, Sparkles, X } from 'lucide-react';
+import { Loader2, Mic, MicOff, Send, Sparkles, X } from 'lucide-react';
 import { TaskStatus } from '@shared/domain';
 import { useAppContext } from '../context/AppContext';
 
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim() || '';
 const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
-const REVIEW_STATUS = `En Revisi${'\u00f3'}n` as TaskStatus;
 
 export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean }) {
   const {
@@ -26,9 +25,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
     {
       role: 'model',
-      text: isAiAvailable
-        ? '¡Hola! Soy Tía, tu asistente de inteligencia artificial. ¿En qué puedo ayudarte hoy?'
-        : 'El asistente IA está desactivado en local porque falta GEMINI_API_KEY. Puedes seguir usando el resto de la app con normalidad.',
+      text: '¡Hola! Soy Tía, tu asistente de inteligencia artificial. ¿En qué puedo ayudarte hoy?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -168,7 +165,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
     } catch (error) {
       console.error('Error initializing Gemini chat:', error);
     }
-  }, [accentColor]);
+  }, []);
 
   const toggleListening = () => {
     if (isListening) {
@@ -292,131 +289,156 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
     }
   };
 
+  if (!isAiAvailable) {
+    return null;
+  }
+
   return (
     <>
       <div
-        className={`z-40 transition-all duration-300 ${
+        className={`z-[95] transition-all duration-300 ${
           isDesktop
-            ? 'fixed bottom-6 right-4'
-            : 'fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] left-1/2 -translate-x-1/2'
+            ? 'fixed right-6 bottom-6'
+            : 'fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)]'
         } ${isOpen ? 'pointer-events-none translate-y-4 scale-95 opacity-0' : 'translate-y-0 scale-100 opacity-100'}`}
       >
         <button
           id="tia-assistant-btn"
           type="button"
           onClick={() => setIsOpen(true)}
-          disabled={!isAiAvailable}
-          className="group flex h-12 items-center gap-2.5 rounded-[1rem] border border-white/60 bg-slate-900/92 px-3 pr-4 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700/60"
+          className={
+            isDesktop
+              ? 'group flex h-12 items-center gap-2.5 rounded-[1rem] border border-white/60 bg-slate-900/92 px-3 pr-4 text-white shadow-[0_16px_40px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95 dark:border-slate-700/60'
+              : 'group flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-slate-900/92 text-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95 dark:border-slate-700/60'
+          }
         >
           <div
             className="flex h-8 w-8 items-center justify-center rounded-[0.8rem]"
-            style={{ backgroundColor: accentColor || '#8b5cf6' }}
+            style={{
+              backgroundColor: accentColor || '#8b5cf6',
+              color: 'var(--accent-foreground)',
+            }}
           >
             <Sparkles size={14} />
           </div>
-          <div className="text-left">
-            <p className="text-[11px] font-bold tracking-[0.16em] text-white/70 uppercase">Asistente</p>
-            <p className="text-sm font-bold">Tía</p>
-          </div>
+          {isDesktop ? (
+            <div className="text-left">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-white/70 uppercase">Asistente</p>
+              <p className="text-sm font-bold">Tía</p>
+            </div>
+          ) : null}
         </button>
       </div>
 
       {isOpen ? (
-        <div
-          className={`z-50 flex flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-300 dark:border-slate-700 dark:bg-slate-900 ${
-            isDesktop
-              ? 'fixed bottom-20 right-4 h-[min(560px,calc(100dvh-8rem))] w-[min(420px,calc(100vw-2rem))]'
-              : 'fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] left-1/2 h-[min(520px,calc(100dvh-8rem))] w-[min(390px,calc(100vw-1.5rem))] -translate-x-1/2'
-          }`}
-        >
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar asistente"
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-[100] bg-slate-950/42 backdrop-blur-[2px]"
+          />
+
           <div
-            className="flex items-center justify-between gap-4 border-b border-white/15 px-5 py-4 text-white"
-            style={{
-              background: `linear-gradient(135deg, ${accentColor || '#8b5cf6'}, ${accentColor || '#8b5cf6'}cc)`,
-            }}
+            className={`z-[110] flex flex-col overflow-hidden border border-slate-200 bg-white shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-300 dark:border-slate-700 dark:bg-slate-900 ${
+              isDesktop
+                ? 'fixed right-6 bottom-24 h-[min(560px,calc(100dvh-8rem))] w-[min(420px,calc(100vw-2rem))] rounded-[1.35rem]'
+                : 'fixed inset-x-3 top-[max(env(safe-area-inset-top,0px)+0.75rem,0.75rem)] bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] rounded-[1.5rem]'
+            }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
-                <Sparkles size={16} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold tracking-wide">Tía</h3>
-                <p className="text-[11px] text-white/80">Asistente integrada del workspace</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 transition-colors hover:bg-white/25"
+            <div
+              className="flex items-center justify-between gap-4 border-b border-black/5 px-5 py-4"
+              style={{
+                backgroundColor: accentColor || '#8b5cf6',
+                color: 'var(--accent-foreground)',
+              }}
             >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/80 p-5 dark:bg-slate-950/40">
-            {messages.map((message, index) => (
-              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`max-w-[88%] rounded-[1rem] px-4 py-3 text-sm leading-6 ${
-                    message.role === 'user'
-                      ? 'rounded-tr-[0.35rem] bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                      : 'rounded-tl-[0.35rem] border border-slate-200 bg-white text-slate-800 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'
-                  }`}
-                >
-                  {message.text}
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/10">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold tracking-wide">Tía</h3>
+                  <p className="text-[11px] opacity-80">Asistente integrada del workspace</p>
                 </div>
               </div>
-            ))}
-
-            {isProcessing ? (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-[1rem] rounded-tl-[0.35rem] border border-slate-200 bg-white px-4 py-3 text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                  <Loader2 size={16} className="animate-spin" />
-                  <span className="text-xs font-medium">Tía está pensando…</span>
-                </div>
-              </div>
-            ) : null}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="border-t border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-            <div className="flex items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 p-1.5 focus-within:border-slate-300 focus-within:bg-white dark:border-slate-700 dark:bg-slate-950/50 dark:focus-within:bg-slate-900">
-              {'SpeechRecognition' in window || 'webkitSpeechRecognition' in window ? (
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                    isListening
-                      ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
-                      : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300'
-                  }`}
-                >
-                  {isListening ? <Mic size={18} className="animate-pulse" /> : <MicOff size={18} />}
-                </button>
-              ) : null}
-
-              <input
-                type="text"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => event.key === 'Enter' && void handleSend()}
-                placeholder="Escribe o habla con Tía..."
-                className="flex-1 border-none bg-transparent px-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
-              />
-
               <button
                 type="button"
-                onClick={() => void handleSend()}
-                disabled={!input.trim() || isProcessing}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition-transform active:scale-95 disabled:opacity-50"
-                style={{ backgroundColor: accentColor || '#8b5cf6' }}
+                onClick={() => setIsOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/10 transition-colors hover:bg-black/15"
               >
-                <Send size={16} className="ml-0.5" />
+                <X size={18} />
               </button>
             </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/80 p-5 dark:bg-slate-950/40">
+              {messages.map((message, index) => (
+                <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-[88%] rounded-[1rem] px-4 py-3 text-sm leading-6 ${
+                      message.role === 'user'
+                        ? 'rounded-tr-[0.35rem] bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                        : 'rounded-tl-[0.35rem] border border-slate-200 bg-white text-slate-800 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100'
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+
+              {isProcessing ? (
+                <div className="flex justify-start">
+                  <div className="flex items-center gap-2 rounded-[1rem] rounded-tl-[0.35rem] border border-slate-200 bg-white px-4 py-3 text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-xs font-medium">Tía está pensando…</span>
+                  </div>
+                </div>
+              ) : null}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="border-t border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+              <div className="flex items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 p-1.5 focus-within:border-slate-300 focus-within:bg-white dark:border-slate-700 dark:bg-slate-950/50 dark:focus-within:bg-slate-900">
+                {'SpeechRecognition' in window || 'webkitSpeechRecognition' in window ? (
+                  <button
+                    type="button"
+                    onClick={toggleListening}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                      isListening
+                        ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
+                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    {isListening ? <Mic size={18} className="animate-pulse" /> : <MicOff size={18} />}
+                  </button>
+                ) : null}
+
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && void handleSend()}
+                  placeholder="Escribe o habla con Tía..."
+                  className="flex-1 border-none bg-transparent px-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => void handleSend()}
+                  disabled={!input.trim() || isProcessing}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl transition-transform active:scale-95 disabled:opacity-50"
+                  style={{
+                    backgroundColor: accentColor || '#8b5cf6',
+                    color: 'var(--accent-foreground)',
+                  }}
+                >
+                  <Send size={16} className="ml-0.5" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       ) : null}
     </>
   );

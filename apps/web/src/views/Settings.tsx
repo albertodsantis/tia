@@ -3,7 +3,7 @@ import {
   Bell,
   Calendar as CalendarIcon,
   ChevronDown,
-  LogOut,
+  RotateCcw,
   MessageSquare,
   Moon,
   Plus,
@@ -62,6 +62,7 @@ export default function Settings() {
     deleteTemplate,
     theme,
     setTheme,
+    reportActionError,
   } = useAppContext();
   const [gcalConnected, setGcalConnected] = useState(false);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
@@ -88,10 +89,10 @@ export default function Settings() {
         if (permission === 'granted') {
           await updateProfile({ notificationsEnabled: true });
         } else {
-          alert('Debes permitir las notificaciones en tu navegador.');
+          reportActionError('Debes permitir las notificaciones del navegador para activarlas.');
         }
       } else {
-        alert('Tu navegador no soporta notificaciones.');
+        reportActionError('Tu navegador no soporta notificaciones push.');
       }
       return;
     }
@@ -121,6 +122,7 @@ export default function Settings() {
       window.addEventListener('message', handleMessage);
     } catch (error) {
       console.error('OAuth error:', error);
+      reportActionError('No pudimos abrir el flujo de Google Calendar.');
     }
   };
 
@@ -129,6 +131,11 @@ export default function Settings() {
     await addTemplate(newTemplate);
     setIsAddingTemplate(false);
     setNewTemplate({ name: '', subject: '', body: '' });
+  };
+
+  const handleResetTour = () => {
+    localStorage.removeItem('hasSeenOnboardingTour');
+    window.location.reload();
   };
 
   return (
@@ -204,7 +211,10 @@ export default function Settings() {
                       type="button"
                       aria-label={`Seleccionar ${option.name}`}
                       title={option.name}
-                      onClick={() => void setAccentColor(option.value)}
+                      onClick={() => {
+                        void setAccentColor(option.value);
+                        setIsAccentPaletteOpen(false);
+                      }}
                       className="flex items-center justify-center py-1 transition-transform active:scale-95"
                     >
                       <span
@@ -338,11 +348,25 @@ export default function Settings() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard tone="muted" className="p-3">
-        <Button tone="danger" className="w-full justify-center">
-          <LogOut size={18} />
-          Cerrar sesión
-        </Button>
+      <SurfaceCard tone="muted" className="p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 dark:text-slate-500 uppercase">
+              Utilidades
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">
+              Reiniciar onboarding
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Vuelve a mostrar el tour guiado la próxima vez que cargue la app.
+            </p>
+          </div>
+
+          <Button tone="secondary" className="justify-center sm:min-w-[12rem]" onClick={handleResetTour}>
+            <RotateCcw size={16} />
+            Reiniciar tour
+          </Button>
+        </div>
       </SurfaceCard>
 
       {isAddingTemplate ? (

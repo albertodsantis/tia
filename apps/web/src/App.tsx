@@ -266,8 +266,6 @@ const MainLayout = () => {
   const {
     accentColor,
     profile,
-    tasks,
-    partners,
     isBootstrapping,
     bootstrapError,
     actionError,
@@ -285,10 +283,6 @@ const MainLayout = () => {
       }),
     [],
   );
-  const tasksDueToday = tasks.filter(
-    (task) => task.dueDate === new Date().toISOString().split('T')[0],
-  ).length;
-  const activePartners = partners.filter((partner) => partner.status === 'Activo').length;
 
   if (isBootstrapping) {
     return (
@@ -320,8 +314,8 @@ const MainLayout = () => {
           <button
             type="button"
             onClick={() => void refreshAppData()}
-            className="mt-6 w-full rounded-[1rem] py-3.5 text-sm font-bold text-white"
-            style={{ backgroundColor: accentColor }}
+            className="mt-6 w-full rounded-[1rem] py-3.5 text-sm font-bold shadow-[0_12px_30px_-16px_var(--accent-glow)]"
+            style={{ backgroundColor: accentColor, color: 'var(--accent-foreground)' }}
           >
             Reintentar
           </button>

@@ -9,6 +9,8 @@ import type {
   UserProfile,
 } from '@shared';
 import { appApi } from '../lib/api';
+import { getAccentCssVariables } from '../lib/accent';
+import { addLocalDays, formatLocalDateISO } from '../lib/date';
 
 interface AppContextType extends AppState {
   isBootstrapping: boolean;
@@ -16,6 +18,7 @@ interface AppContextType extends AppState {
   actionError: string | null;
   refreshAppData: () => Promise<void>;
   dismissActionError: () => void;
+  reportActionError: (message: string) => void;
   addTask: (task: Omit<Task, 'id'>) => Promise<Task>;
   updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<Task>;
@@ -76,7 +79,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--accent-color', state.accentColor);
+    const variables = getAccentCssVariables(state.accentColor);
+
+    Object.entries(variables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
   }, [state.accentColor]);
 
   useEffect(() => {
@@ -90,10 +97,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (state.profile.notificationsEnabled && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        const today = new Date().toISOString().split('T')[0];
-        const tomorrowDate = new Date();
-        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-        const tomorrow = tomorrowDate.toISOString().split('T')[0];
+        const today = formatLocalDateISO(new Date());
+        const tomorrow = formatLocalDateISO(addLocalDays(new Date(), 1));
 
         const tasksDueToday = state.tasks.filter((task) => task.dueDate === today);
         const tasksDueTomorrow = state.tasks.filter((task) => task.dueDate === tomorrow);
@@ -115,6 +120,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const dismissActionError = () => {
     setActionError(null);
+  };
+
+  const reportActionError = (message: string) => {
+    setActionError(message);
   };
 
   const trackError = (error: unknown): never => {
@@ -386,6 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actionError,
         refreshAppData,
         dismissActionError,
+        reportActionError,
         addTask,
         updateTaskStatus,
         updateTask,
