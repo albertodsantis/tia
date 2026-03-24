@@ -1,14 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarClock,
   CalendarDays,
-  CalendarRange,
   CheckCircle2,
   CircleDollarSign,
-  Users,
+  TrendingUp,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { Button, EmptyState, StatusBadge, SurfaceCard } from '../components/ui';
+import { Button, EmptyState, StatusBadge, SurfaceCard, cx } from '../components/ui';
 import { toast } from '../lib/toast';
 import type { Task, TaskStatus } from '@shared/domain';
 import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
@@ -38,21 +37,95 @@ const formatTaskDate = (task: Task) =>
     year: 'numeric',
   });
 
-type OverviewItem = {
-  icon: React.ComponentType<{
-    size?: number;
-    strokeWidth?: number;
-    className?: string;
-    style?: React.CSSProperties;
-  }>;
-  label: string;
-  value: string;
-  helper: string;
-  emphasis?: 'accent' | 'success';
-};
+function GoalsMarquee({ goals, accentColor }: { goals: string[]; accentColor: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInteractingRef = useRef(false);
+  const dragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let animationId: number;
+    let scrollPos = el.scrollLeft;
+    const speed = 0.25; // Velocidad del auto-scroll más lenta
+
+    const scroll = () => {
+      if (!isInteractingRef.current) {
+        scrollPos += speed;
+        const maxScroll = el.scrollWidth / 2;
+
+        // Creamos el loop infinito volviendo al inicio cuando cruzamos la mitad
+        if (scrollPos >= maxScroll) {
+          scrollPos -= maxScroll;
+        }
+        el.scrollLeft = scrollPos;
+      } else {
+        scrollPos = el.scrollLeft;
+      }
+      animationId = requestAnimationFrame(scroll);
+    };
+
+    animationId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    isInteractingRef.current = true;
+    if (e.pointerType === 'mouse') {
+      dragRef.current.isDragging = true;
+      dragRef.current.startX = e.pageX;
+      dragRef.current.scrollLeft = containerRef.current?.scrollLeft || 0;
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current.isDragging || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX;
+    const walk = (x - dragRef.current.startX) * 1.5;
+    containerRef.current.scrollLeft = dragRef.current.scrollLeft - walk;
+  };
+
+  const handlePointerUp = () => {
+    dragRef.current.isDragging = false;
+    isInteractingRef.current = false;
+  };
+
+  // Multiplicamos los objetivos muchas veces para garantizar que llene pantallas muy anchas sin cortarse
+  const displayGoals = Array(30).fill(goals).flat();
+
+  return (
+    <div className="relative flex items-center overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+      <div
+        ref={containerRef}
+        className="hide-scrollbar flex w-full cursor-grab select-none items-center gap-8 overflow-x-auto px-4 active:cursor-grabbing"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onMouseEnter={() => (isInteractingRef.current = true)}
+      >
+        {displayGoals.map((goal, i) => (
+          <div key={i} className="flex shrink-0 items-center gap-8">
+            <div className="flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100">
+              <div
+                className="h-1 w-1 shrink-0 rounded-full"
+                style={{ backgroundColor: accentColor }}
+              />
+              <span className="text-[13px] font-medium tracking-wide text-[var(--text-secondary)]">
+                {goal}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const { tasks, partners, accentColor, updateTaskStatus } = useAppContext();
+  const { tasks, partners, accentColor, updateTaskStatus, profile } = useAppContext();
   const today = new Date();
   const todayIso = formatLocalDateISO(today);
   const startOfToday = startOfLocalDay(today);
@@ -61,6 +134,26 @@ export default function Dashboard() {
   const tomorrowIso = formatLocalDateISO(tomorrow);
   const weekEnd = new Date(startOfToday);
   weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const [period, setPeriod] = useState<'month' | 'last_month' | 'year' | 'all'>('month');
+
+  const periodFilteredTasks = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return tasks.filter((task) => {
+      if (period === 'all') return true;
+      const taskDate = parseLocalDate(task.dueDate);
+      if (period === 'year') return taskDate.getFullYear() === currentYear;
+      if (period === 'month') return taskDate.getMonth() === currentMonth && taskDate.getFullYear() === currentYear;
+      if (period === 'last_month') {
+        const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+        return taskDate.getMonth() === lastMonthDate.getMonth() && taskDate.getFullYear() === lastMonthDate.getFullYear();
+      }
+      return true;
+    });
+  }, [tasks, period]);
 
   const handleCompleteTask = async (taskId: string) => {
     try {
@@ -72,9 +165,9 @@ export default function Dashboard() {
   };
 
   const summary = useMemo(() => {
-    const activePipelineTasks = tasks.filter((task) => task.status !== 'Cobrado');
+    const activePipelineTasks = periodFilteredTasks.filter((task) => task.status !== 'Cobrado');
     const activePipelineValue = activePipelineTasks.reduce((sum, task) => sum + task.value, 0);
-    const closedPipelineValue = tasks
+    const closedPipelineValue = periodFilteredTasks
       .filter((task) => task.status === 'Cobrado')
       .reduce((sum, task) => sum + task.value, 0);
     const tasksToday = tasks.filter((task) => task.dueDate === todayIso).length;
@@ -100,7 +193,20 @@ export default function Dashboard() {
       totalContacts,
       overdue,
     };
-  }, [partners, tasks, startOfToday, todayIso, tomorrowIso, weekEnd]);
+  }, [partners, tasks, periodFilteredTasks, startOfToday, todayIso, tomorrowIso, weekEnd]);
+
+  const generalGoals = useMemo(() => {
+    return (profile?.goals || [])
+      .map((g: any) => (typeof g === 'string' ? g : g.generalGoal))
+      .filter((goal) => typeof goal === 'string' && goal.trim().length > 0);
+  }, [profile?.goals]);
+
+  const estimatedRevenue = useMemo(() => {
+    return (profile?.goals || []).reduce((sum, goal: any) => {
+      if (typeof goal === 'string') return sum;
+      return sum + (Number(goal.revenueEstimation) || 0);
+    }, 0);
+  }, [profile?.goals]);
 
   const upcomingTasks = useMemo(
     () =>
@@ -113,7 +219,7 @@ export default function Dashboard() {
   const breakdown = useMemo(
     () =>
       PIPELINE_STATUSES.map((status) => {
-        const statusTasks = tasks.filter((task) => task.status === status);
+        const statusTasks = periodFilteredTasks.filter((task) => task.status === status);
         const value = statusTasks.reduce((sum, task) => sum + task.value, 0);
 
         return {
@@ -122,7 +228,7 @@ export default function Dashboard() {
           value,
         };
       }),
-    [tasks],
+    [periodFilteredTasks],
   );
 
   const maxBreakdownCount = Math.max(...breakdown.map((item) => item.count), 1);
@@ -137,61 +243,11 @@ export default function Dashboard() {
     null as (typeof breakdown)[number] | null,
   );
 
-  const overviewItems: OverviewItem[] = [
-    {
-      icon: CircleDollarSign,
-      label: 'Valor abierto',
-      value: formatCurrency(summary.activePipelineValue),
-      helper: 'Pipeline activo',
-      emphasis: 'accent',
-    },
-    {
-      icon: CheckCircle2,
-      label: 'Valor cerrado',
-      value: formatCurrency(summary.closedPipelineValue),
-      helper: 'Ya cobrado',
-      emphasis: 'success',
-    },
-    {
-      icon: CalendarClock,
-      label: 'Hoy',
-      value: String(summary.tasksToday),
-      helper: 'Entregas previstas',
-    },
-    {
-      icon: CalendarDays,
-      label: 'Ma\u00f1ana',
-      value: String(summary.tasksTomorrow),
-      helper: 'Siguiente tanda',
-    },
-    {
-      icon: CalendarRange,
-      label: 'Semana',
-      value: String(summary.tasksThisWeek),
-      helper: 'Pr\u00f3ximos 7 d\u00edas',
-    },
-    {
-      icon: Users,
-      label: 'Partners',
-      value: String(summary.totalPartners),
-      helper: 'Total registrados',
-    },
-    {
-      icon: Users,
-      label: 'Partners activos',
-      value: String(summary.activePartners),
-      helper: 'Relaciones activas',
-    },
-    {
-      icon: Users,
-      label: 'Contactos',
-      value: String(summary.totalContacts),
-      helper: 'Base activa',
-    },
-  ];
-
   return (
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:px-8 lg:pt-4 lg:pb-8">
+      {generalGoals.length > 0 && (
+        <GoalsMarquee goals={generalGoals} accentColor={accentColor} />
+      )}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)]">
         <SurfaceCard className="relative overflow-hidden p-6 lg:p-8">
@@ -205,63 +261,91 @@ export default function Dashboard() {
 
           <div className="relative">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
-                Resumen operativo
-              </p>
+              <div className="flex flex-wrap items-center gap-4">
+                <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
+                  Resumen operativo
+                </p>
+                <div className="hidden h-4 w-px bg-[var(--line-soft)] sm:block" />
+                <div className="flex items-center gap-1 rounded-[0.85rem] bg-[var(--surface-muted)]/70 p-1">
+                  {(['month', 'last_month', 'year', 'all'] as const).map((p) => {
+                    const label = p === 'month' ? 'Este mes' : p === 'last_month' ? 'Mes pasado' : p === 'year' ? 'Este año' : 'Total';
+                    const isActive = period === p;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPeriod(p)}
+                        className={cx(
+                          'px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] transition-all rounded-[0.6rem] sm:text-[10px]',
+                          isActive ? 'bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <StatusBadge tone={summary.overdue > 0 ? 'warning' : 'success'}>
                 {summary.overdue > 0 ? `${summary.overdue} retrasadas` : 'Todo en orden'}
               </StatusBadge>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {overviewItems.map((item, index) => {
-                const Icon = item.icon;
-                const isAccent = item.emphasis === 'accent';
-                const isSuccess = item.emphasis === 'success';
+            <div className="mt-8 mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-6 xl:gap-10">
+              <div>
+                <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
+                  <TrendingUp size={14} className="text-blue-500 dark:text-blue-400" />
+                  Meta Anual
+                </p>
+                <p className="mt-2 text-3xl font-black tracking-tight text-[var(--text-primary)] xl:text-4xl">
+                  {formatCurrency(estimatedRevenue)}
+                </p>
+                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">Ingreso proyectado</p>
+              </div>
+              <div>
+                <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
+                  <CircleDollarSign size={14} style={{ color: accentColor }} />
+                  Valor abierto
+                </p>
+                <p className="mt-2 text-3xl font-black tracking-tight text-[var(--text-primary)] xl:text-4xl">
+                  {formatCurrency(summary.activePipelineValue)}
+                </p>
+                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">En negociación</p>
+              </div>
+              <div>
+                <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  Valor cerrado
+                </p>
+                <p className="mt-2 text-3xl font-black tracking-tight text-[var(--text-primary)] xl:text-4xl">
+                  {formatCurrency(summary.closedPipelineValue)}
+                </p>
+                <p className="mt-1 text-xs font-medium text-[var(--text-secondary)]">Facturado</p>
+              </div>
+            </div>
 
-                return (
-                  <div
-                    key={item.label}
-                    className="rounded-[1rem] border border-slate-200/70 bg-white/72 px-4 py-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.16)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-slate-700/60 dark:bg-slate-900/38"
-                    style={
-                      isAccent
-                        ? {
-                            borderColor: 'var(--accent-border)',
-                            backgroundColor: 'var(--accent-soft)',
-                          }
-                        : isSuccess
-                          ? {
-                              borderColor: 'rgba(16, 185, 129, 0.22)',
-                              backgroundColor: 'rgba(16, 185, 129, 0.07)',
-                            }
-                          : undefined
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
-                          {item.label}
-                        </p>
-                        <p className="mt-2 text-[1.4rem] font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
-                          {item.value}
-                        </p>
-                        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                          {item.helper}
-                        </p>
-                      </div>
-                      <Icon
-                        size={18}
-                        strokeWidth={2.3}
-                        className="mt-1 shrink-0"
-                        style={{
-                          color: isSuccess ? 'rgb(5, 150, 105)' : accentColor,
-                          opacity: index === 0 || isSuccess ? 1 : 0.72,
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="border-t border-[var(--line-soft)] pt-6">
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">Entregas Hoy</p>
+                  <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">
+                    {summary.tasksToday} <span className="text-[var(--text-secondary)] text-sm font-medium">/ {summary.tasksTomorrow} mñn</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">Esta semana</p>
+                  <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">{summary.tasksThisWeek}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">Marcas Activas</p>
+                  <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">
+                    {summary.activePartners} <span className="text-[var(--text-secondary)] text-sm font-medium">/ {summary.totalPartners}</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">Contactos</p>
+                  <p className="mt-1 text-xl font-bold text-[var(--text-primary)]">{summary.totalContacts}</p>
+                </div>
+              </div>
             </div>
           </div>
         </SurfaceCard>

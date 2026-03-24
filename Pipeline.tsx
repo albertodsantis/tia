@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlignLeft,
@@ -206,18 +206,15 @@ function DroppableColumn({
   );
 }
 
-type DraggableTaskWrapperProps = {
-  task: Task;
-  disabled: boolean;
-  children: React.ReactNode;
-  key?: React.Key;
-};
-
 function DraggableTaskWrapper({
   task,
   disabled,
   children,
-}: DraggableTaskWrapperProps) {
+}: {
+  task: Task;
+  disabled: boolean;
+  children: React.ReactNode;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
     data: task,
@@ -854,27 +851,29 @@ export default function Pipeline() {
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:space-y-6 lg:px-8 lg:pt-4 lg:pb-8">
       <section>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex h-12 items-center gap-1 sm:gap-2">
-            {[
-              { id: 'kanban', icon: Trello, label: 'Kanban' },
-              { id: 'list', icon: ListIcon, label: 'Lista' },
-              { id: 'calendar', icon: CalendarIcon, label: 'Mes' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setView(tab.id as typeof view)}
-                className={cx(
-                  'flex h-full items-center justify-center gap-2 rounded-[1rem] border px-4 text-sm font-bold transition-all',
-                  view === tab.id
-                    ? 'bg-[var(--surface-card-strong)] text-[var(--text-primary)] shadow-sm [border-color:var(--line-soft)]'
-                    : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]/50 hover:text-[var(--text-primary)]',
-                )}
-              >
-                <tab.icon size={18} style={view === tab.id ? { color: accentColor } : undefined} />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
+          <div className="h-12 rounded-[1.1rem] border bg-[var(--surface-muted)] p-1 [border-color:var(--line-soft)]">
+            <div className="grid h-full grid-cols-3 gap-1">
+              {[
+                { id: 'kanban', icon: Trello, label: 'Kanban' },
+                { id: 'list', icon: ListIcon, label: 'Lista' },
+                { id: 'calendar', icon: CalendarIcon, label: 'Mes' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setView(tab.id as typeof view)}
+                  className={cx(
+                    'flex h-full items-center justify-center gap-2 rounded-[0.8rem] px-3 text-sm font-bold transition-all',
+                    view === tab.id
+                      ? 'bg-[var(--surface-card-strong)] text-[var(--text-primary)] shadow-[var(--shadow-soft)]'
+                      : 'text-[var(--text-secondary)]',
+                  )}
+                >
+                  <tab.icon size={18} />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="relative flex-1 lg:max-w-sm">
@@ -884,7 +883,7 @@ export default function Pipeline() {
               placeholder="Buscar en tareas o marcas..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full rounded-[1rem] border bg-[var(--surface-muted)] py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:border-transparent focus:bg-[var(--surface-card)] focus:outline-none focus:ring-2 [border-color:var(--line-soft)]"
+              className="h-12 w-full rounded-[1.1rem] border bg-[var(--surface-muted)] pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:border-transparent focus:bg-[var(--surface-card)] focus:outline-none focus:ring-2 [border-color:var(--line-soft)]"
               style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
             />
           </div>
@@ -894,12 +893,12 @@ export default function Pipeline() {
               tone="secondary"
               onClick={() => void syncDown()}
               disabled={isSyncingDown}
-              className="flex-1 sm:flex-none"
+              className="h-12 flex-1 rounded-[1.1rem] sm:flex-none"
             >
               <DownloadCloud size={16} />
               Actualizar Calendar
             </Button>
-            <Button accentColor={accentColor} onClick={openCreate} className="flex-1 sm:flex-none">
+            <Button accentColor={accentColor} onClick={openCreate} className="h-12 flex-1 rounded-[1.1rem] sm:flex-none">
               <Plus size={16} />
               Nueva tarea
             </Button>
@@ -1064,14 +1063,12 @@ export default function Pipeline() {
                 tone="ghost"
               />
               <div className="text-center">
-                <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-2">
-                  <h2 className="text-lg font-extrabold capitalize text-[var(--text-primary)]">
-                    {monthLabel}
-                  </h2>
-                  <span className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase sm:text-[11px]">
-                    Vista mensual
-                  </span>
-                </div>
+                <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
+                  Vista mensual
+                </p>
+                <h2 className="mt-1 text-lg font-extrabold capitalize text-[var(--text-primary)]">
+                  {monthLabel}
+                </h2>
               </div>
               <IconButton
                 icon={ChevronRight}
@@ -1101,16 +1098,14 @@ export default function Pipeline() {
           <div className="hidden 2xl:block">
             <SurfaceCard tone="muted" className="p-5">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-baseline gap-3">
-                    <h3 className="text-lg font-extrabold capitalize text-[var(--text-primary)]">
-                      {calendarPanelLabel}
-                    </h3>
-                    <span className="hidden text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase sm:inline-block">
-                      {selectedDate ? 'Agenda del día' : 'Agenda del mes'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[var(--text-secondary)]">
+                <div>
+                  <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
+                    {selectedDate ? 'Agenda del día' : 'Agenda del mes'}
+                  </p>
+                  <h3 className="mt-1 text-lg font-extrabold capitalize text-[var(--text-primary)]">
+                    {calendarPanelLabel}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                     {calendarPanelTasks.length > 0
                       ? calendarPanelSummary
                       : 'No hay tareas programadas en este bloque de tiempo.'}

@@ -13,6 +13,9 @@ import type {
   CreateTemplateRequest,
   DashboardSummaryResponse,
   DeleteEntityResponse,
+  Goal,
+  GoalPriority,
+  GoalStatus,
   MediaKitMetric,
   MediaKitOffer,
   Partner,
@@ -63,6 +66,13 @@ const initialState: AppState = {
       id: 'p1',
       name: 'TechBrand',
       status: 'Activo',
+      partnershipType: 'Permanente',
+      keyTerms: '4 Historias/mes, 1 Reel',
+      startDate: '2025-10-01',
+      endDate: '2026-07-15',
+      monthlyRevenue: 1200,
+      annualRevenue: 14400,
+      mainChannel: 'Instagram/TikTok',
       contacts: [
         {
           id: 'c1',
@@ -70,6 +80,7 @@ const initialState: AppState = {
           role: 'PR Manager',
           email: 'laura@techbrand.com',
           ig: '@laurapr',
+          phone: '',
         },
       ],
     },
@@ -92,9 +103,61 @@ const initialState: AppState = {
     },
     mediaKit: createDefaultMediaKitProfile(),
     goals: [
-      'Llegar a 1M en TikTok',
-      'Cerrar 5 contratos a largo plazo',
-      'Lanzar mi propio merch',
+      {
+        id: 'g1',
+        area: 'Influencer / Contenido',
+        generalGoal: 'Aumentar y fidelizar la audiencia en plataformas clave',
+        successMetric: 'Número de Seguidores',
+        specificTarget: '300K',
+        timeframe: 'Anual',
+        status: 'En Curso',
+        priority: 'Alta',
+        revenueEstimation: 14400,
+      },
+      {
+        id: 'g2',
+        area: 'Radio La Mega 107',
+        generalGoal: 'Consolidar el programa y asegurar patrocinio de valor',
+        successMetric: 'Puntos de Rating (Share)',
+        specificTarget: '+1.5 puntos',
+        timeframe: 'T3 2026',
+        status: 'Pendiente',
+        priority: 'Alta',
+        revenueEstimation: 2400,
+      },
+      {
+        id: 'g3',
+        area: 'Copywriter (Agencia)',
+        generalGoal: 'Alcanzar seniority y aumentar los ingresos freelance',
+        successMetric: 'Cuentas Lideradas / Ingresos',
+        specificTarget: '1 Cuenta Senior',
+        timeframe: 'Anual',
+        status: 'En Curso',
+        priority: 'Alta',
+        revenueEstimation: 5400,
+      },
+      {
+        id: 'g4',
+        area: 'Host de Eventos',
+        generalGoal: 'Expandir la presencia a eventos de alto perfil',
+        successMetric: 'Tarifa Mínima de Contratación',
+        specificTarget: '3,000 USD',
+        timeframe: 'Anual',
+        status: 'Pendiente',
+        priority: 'Media',
+        revenueEstimation: 30000,
+      },
+      {
+        id: 'g5',
+        area: 'Afiliados / Blog',
+        generalGoal: 'Establecer ingresos pasivos mediante códigos de afiliados',
+        successMetric: 'Ventas generadas',
+        specificTarget: '50 ventas/mes',
+        timeframe: 'Anual',
+        status: 'En Curso',
+        priority: 'Baja',
+        revenueEstimation: 6000,
+      }
     ],
     notificationsEnabled: false,
   },
@@ -103,10 +166,27 @@ const initialState: AppState = {
   templates: [
     {
       id: 't1',
-      name: 'Primer Contacto',
-      subject: 'Oportunidad de Colaboración - {{brandName}} x {{creatorName}}',
-      body:
-        'Hola {{contactName}},\n\nMe encanta lo que están haciendo en {{brandName}}. Me gustaría explorar una colaboración para mi audiencia.\n\nSaludos,\n{{creatorName}}',
+      name: '1. Primer contacto (Outreach)',
+      subject: 'Propuesta de colaboración - {{brandName}} x {{creatorName}}',
+      body: 'Hola {{contactName}},\n\nHe estado siguiendo el trabajo de {{brandName}} y me encanta su enfoque. Mi audiencia conecta muchísimo con su sector y creo que haríamos un gran equipo.\n\nTe dejo mi Media Kit interactivo para que conozcas más de mi perfil y métricas:\n{{mediaKitLink}}\n\n¿Tienen disponibilidad para una breve llamada la próxima semana y explorar ideas?\n\nSaludos,\n{{creatorName}}',
+    },
+    {
+      id: 't2',
+      name: '2. Seguimiento (Follow-up)',
+      subject: 'Re: Propuesta de colaboración - {{brandName}} x {{creatorName}}',
+      body: 'Hola {{contactName}},\n\nTe escribo rápidamente para hacer seguimiento a mi correo anterior. Entiendo que deben estar a tope, pero me encantaría saber si pudieron revisar mi perfil.\n\nSigo a su disposición si quieren agendar una llamada rápida.\n\nAbrazo,\n{{creatorName}}',
+    },
+    {
+      id: 't3',
+      name: '3. Envío de entregable',
+      subject: 'Contenido listo para revisión - {{brandName}}',
+      body: 'Hola {{contactName}},\n\n¡Espero que estés genial!\n\nTe comparto el enlace con el contenido de la campaña listo para su revisión. Quedo atento a tus comentarios para aplicar ajustes si es necesario o proceder con la publicación.\n\n¡Gracias!\n{{creatorName}}',
+    },
+    {
+      id: 't4',
+      name: '4. Recordatorio de pago',
+      subject: 'Recordatorio: Factura pendiente - {{brandName}}',
+      body: 'Hola {{contactName}},\n\nEspero que todo vaya de maravilla.\n\nTe escribo para dejarte un amable recordatorio sobre la factura correspondiente a nuestra última colaboración. Si necesitas que adjunte nuevamente el documento o los datos bancarios, házmelo saber.\n\nQuedo atento a cualquier novedad.\n\nUn saludo,\n{{creatorName}}',
     },
   ],
 };
@@ -350,6 +430,13 @@ class InMemoryAppStore {
       status: normalizeRequiredText(input.status, 'El estado') as Partner['status'],
       logo: normalizeOptionalText(input.logo),
       contacts: [],
+      partnershipType: (normalizeOptionalText((input as any).partnershipType) as any) || 'Por definir',
+      keyTerms: normalizeText((input as any).keyTerms),
+      startDate: normalizeOptionalText((input as any).startDate),
+      endDate: normalizeOptionalText((input as any).endDate),
+      monthlyRevenue: Number((input as any).monthlyRevenue) || 0,
+      annualRevenue: Number((input as any).annualRevenue) || 0,
+      mainChannel: normalizeText((input as any).mainChannel),
     };
 
     this.state.partners.push(partner);
@@ -381,6 +468,34 @@ class InMemoryAppStore {
       normalizedUpdates.logo = normalizeOptionalText(updates.logo);
     }
 
+    if ((updates as any).partnershipType !== undefined) {
+      (normalizedUpdates as any).partnershipType = normalizeText((updates as any).partnershipType);
+    }
+
+    if ((updates as any).keyTerms !== undefined) {
+      (normalizedUpdates as any).keyTerms = normalizeText((updates as any).keyTerms);
+    }
+
+    if ((updates as any).startDate !== undefined) {
+      (normalizedUpdates as any).startDate = normalizeOptionalText((updates as any).startDate);
+    }
+
+    if ((updates as any).endDate !== undefined) {
+      (normalizedUpdates as any).endDate = normalizeOptionalText((updates as any).endDate);
+    }
+
+    if ((updates as any).monthlyRevenue !== undefined) {
+      (normalizedUpdates as any).monthlyRevenue = Number((updates as any).monthlyRevenue) || 0;
+    }
+
+    if ((updates as any).annualRevenue !== undefined) {
+      (normalizedUpdates as any).annualRevenue = Number((updates as any).annualRevenue) || 0;
+    }
+
+    if ((updates as any).mainChannel !== undefined) {
+      (normalizedUpdates as any).mainChannel = normalizeText((updates as any).mainChannel);
+    }
+
     Object.assign(partner, normalizedUpdates);
     return clone(partner);
   }
@@ -398,6 +513,7 @@ class InMemoryAppStore {
       role: normalizeRequiredText(input.role, 'El rol del contacto'),
       email: normalizeEmail(input.email),
       ig: igHandle ? (igHandle.startsWith('@') ? igHandle : `@${igHandle}`) : '',
+      phone: normalizeOptionalText((input as any).phone) || '',
     };
     partner.contacts.push(contact);
     return clone(contact);
@@ -428,6 +544,11 @@ class InMemoryAppStore {
               ? igHandle
               : `@${igHandle}`
             : '';
+        }
+
+        if ((updates as any).phone !== undefined) {
+          const phoneVal = normalizeOptionalText((updates as any).phone);
+          (normalizedUpdates as any).phone = phoneVal || '';
         }
 
         Object.assign(contact, normalizedUpdates);
@@ -517,13 +638,17 @@ class InMemoryAppStore {
         throw new Error('Los objetivos deben ser un array.');
       }
 
-      if (updates.goals.length === 0 || updates.goals.length > 5) {
-        throw new Error('Debes definir entre 1 y 5 objetivos.');
-      }
-
-      normalizedUpdates.goals = updates.goals
-        .map((goal) => normalizeRequiredText(goal, 'Un objetivo'))
-        .filter((goal) => goal.length > 0);
+      normalizedUpdates.goals = updates.goals.map((goal: any) => ({
+        id: normalizeText(goal.id) || randomUUID(),
+        area: normalizeText(goal.area),
+        generalGoal: normalizeText(goal.generalGoal),
+        successMetric: normalizeText(goal.successMetric),
+        specificTarget: normalizeText(goal.specificTarget),
+        timeframe: normalizeText(goal.timeframe),
+        status: (normalizeText(goal.status) as GoalStatus) || 'Pendiente',
+        priority: (normalizeText(goal.priority) as GoalPriority) || 'Media',
+        revenueEstimation: Number(goal.revenueEstimation) || 0,
+      }));
     }
 
     if (updates.notificationsEnabled !== undefined) {

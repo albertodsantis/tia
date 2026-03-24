@@ -7,19 +7,23 @@ import {
   Building2,
   CalendarDays,
   ChevronDown,
+  CircleDollarSign,
   Copy,
+  FileText,
   Instagram,
+  Layers,
   Mail,
+  MessageCircle,
   MessageSquare,
   PencilLine,
+  Phone,
   Plus,
   Search,
-  Send,
   Trash2,
   Type,
   Users,
 } from 'lucide-react';
-import { Contact, Partner, TaskStatus } from '@shared/domain';
+import { Contact, Partner, PartnershipType, TaskStatus } from '@shared/domain';
 import ConfirmDialog from '../components/ConfirmDialog';
 import OverlayModal from '../components/OverlayModal';
 import {
@@ -43,6 +47,14 @@ const PARTNER_STATUSES = [
   'On Hold',
   'Relaci\u00f3n Culminada',
 ] as const;
+
+const PHONE_PREFIXES = [
+  { value: '+34', label: '🇪🇸 +34' },
+  { value: '+1', label: '🇺🇸 +1' },
+  { value: '+58', label: '🇻🇪 +58' },
+];
+
+const PARTNERSHIP_TYPES: PartnershipType[] = ['Permanente', 'One Time', 'Por definir'];
 
 const STATUS_LABELS: Record<Partner['status'], string> = {
   Prospecto: 'Prospecto',
@@ -107,13 +119,24 @@ export default function Directory() {
   const [messagePreview, setMessagePreview] = useState({ subject: '', body: '' });
   const [isAddingPartner, setIsAddingPartner] = useState(false);
   const [addingContactTo, setAddingContactTo] = useState<string | null>(null);
-  const [editingContact, setEditingContact] = useState<{ partnerId: string; contact: Contact } | null>(null);
+  const [editingContact, setEditingContact] = useState<{ partnerId: string; contact: Contact; prefix: string; number: string } | null>(null);
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const [contactPendingDeletion, setContactPendingDeletion] = useState<{
     partnerId: string;
     contact: Contact;
   } | null>(null);
-  const [newPartner, setNewPartner] = useState({ name: '', status: 'Prospecto' as Partner['status'] });
-  const [newContact, setNewContact] = useState({ name: '', role: '', email: '', ig: '' });
+  const [newPartner, setNewPartner] = useState({
+    name: '',
+    status: 'Prospecto' as Partner['status'],
+    partnershipType: 'Por definir' as PartnershipType,
+    keyTerms: '',
+    startDate: '',
+    endDate: '',
+    monthlyRevenue: '',
+    annualRevenue: '',
+    mainChannel: '',
+  });
+  const [newContact, setNewContact] = useState({ name: '', role: '', email: '', ig: '', phonePrefix: '+34', phoneNumber: '' });
 
   const filteredPartners = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -190,12 +213,14 @@ export default function Directory() {
     const partnerTasks = tasks.filter((task) => task.partnerId === composingTo.partner.id && task.status !== 'Cobrado');
     const relevantTask = partnerTasks.length > 0 ? partnerTasks[0] : null;
     const deliverable = relevantTask ? `${relevantTask.title} (${relevantTask.description})` : '[Entregable no especificado]';
+    const mediaKitLink = `https://tia.app/${profile.handle.replace('@', '')}`;
     const replaceVars = (text: string) =>
       text
         .replace(/{{brandName}}/g, composingTo.partner.name)
         .replace(/{{contactName}}/g, composingTo.contact.name.split(' ')[0])
         .replace(/{{creatorName}}/g, profile.name)
-        .replace(/{{deliverable}}/g, deliverable);
+        .replace(/{{deliverable}}/g, deliverable)
+        .replace(/{{mediaKitLink}}/g, mediaKitLink);
 
     setMessagePreview({
       subject: replaceVars(template.subject),
@@ -203,10 +228,24 @@ export default function Directory() {
     });
   };
 
-  const handleSend = () => {
+  const handleSendEmail = () => {
     if (!composingTo) return;
-    const mailto = `mailto:${composingTo.contact.email}?subject=${encodeURIComponent(messagePreview.subject)}&body=${encodeURIComponent(messagePreview.body)}`;
+    const subject = messagePreview.subject || `Contacto con ${composingTo.partner.name}`;
+    const mailto = `mailto:${composingTo.contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(messagePreview.body)}`;
     window.open(mailto, '_blank');
+    closeComposer();
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!composingTo) return;
+    const phone = composingTo.contact.phone?.replace(/\D/g, '');
+    if (!phone) {
+      toast.error('Este contacto no tiene un número de WhatsApp guardado.');
+      return;
+    }
+    const text = messagePreview.body;
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
     closeComposer();
   };
 
@@ -214,26 +253,73 @@ export default function Directory() {
     event.preventDefault();
     const name = newPartner.name.trim();
     if (!name) return;
-    const partnerId = await addPartner({ name, status: newPartner.status, contacts: [] });
+    const partnerId = await addPartner({
+      name,
+      status: newPartner.status,
+      partnershipType: newPartner.partnershipType,
+      keyTerms: newPartner.keyTerms,
+      startDate: newPartner.startDate,
+      endDate: newPartner.endDate,
+      monthlyRevenue: Number(newPartner.monthlyRevenue) || 0,
+      annualRevenue: Number(newPartner.annualRevenue) || 0,
+      mainChannel: newPartner.mainChannel,
+      contacts: [],
+    } as any);
     setSelectedPartnerId(partnerId);
     setIsAddingPartner(false);
-    setNewPartner({ name: '', status: 'Prospecto' });
+    setNewPartner({ name: '', status: 'Prospecto', partnershipType: 'Por definir', keyTerms: '', startDate: '', endDate: '', monthlyRevenue: '', annualRevenue: '', mainChannel: '' });
     toast.success(`Marca ${name} añadida al directorio`);
+  };
+
+  const handleEditPartner = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingPartner) return;
+    await updatePartner(editingPartner.id, {
+      name: editingPartner.name,
+      partnershipType: editingPartner.partnershipType,
+      keyTerms: editingPartner.keyTerms,
+      startDate: editingPartner.startDate,
+      endDate: editingPartner.endDate,
+      monthlyRevenue: Number(editingPartner.monthlyRevenue) || 0,
+      annualRevenue: Number(editingPartner.annualRevenue) || 0,
+      mainChannel: editingPartner.mainChannel,
+    } as any);
+    setEditingPartner(null);
+    toast.success('Marca actualizada');
   };
 
   const handleAddContact = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!addingContactTo) return;
-    await addContact(addingContactTo, newContact);
+    const finalPhone = newContact.phoneNumber.trim() ? `${newContact.phonePrefix} ${newContact.phoneNumber.trim()}` : '';
+    await addContact(addingContactTo, { ...newContact, phone: finalPhone });
     setAddingContactTo(null);
-    setNewContact({ name: '', role: '', email: '', ig: '' });
+    setNewContact({ name: '', role: '', email: '', ig: '', phonePrefix: '+34', phoneNumber: '' });
     toast.success('Contacto guardado');
+  };
+
+  const handleOpenEditContact = (partnerId: string, contact: Contact) => {
+    let prefix = '+34';
+    let number = contact.phone || '';
+    const match = number.match(/^(\+\d+)\s+(.*)$/);
+    if (match) {
+      prefix = match[1];
+      number = match[2];
+    } else if (number.startsWith('+34')) {
+      prefix = '+34'; number = number.replace('+34', '').trim();
+    } else if (number.startsWith('+1')) {
+      prefix = '+1'; number = number.replace('+1', '').trim();
+    } else if (number.startsWith('+58')) {
+      prefix = '+58'; number = number.replace('+58', '').trim();
+    }
+    setEditingContact({ partnerId, contact, prefix, number });
   };
 
   const handleEditContact = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editingContact) return;
-    await updateContact(editingContact.partnerId, editingContact.contact.id, editingContact.contact);
+    const finalPhone = editingContact.number.trim() ? `${editingContact.prefix} ${editingContact.number.trim()}` : '';
+    await updateContact(editingContact.partnerId, editingContact.contact.id, { ...editingContact.contact, phone: finalPhone });
     setEditingContact(null);
     toast.success('Contacto actualizado');
   };
@@ -302,9 +388,9 @@ export default function Directory() {
 
           <SurfaceCard className="p-3 sm:p-4">
             <div className="mb-3 flex items-center justify-between px-2 pt-1">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Lista</p>
-                <h2 className="mt-1 text-lg font-bold text-[var(--text-primary)]">Marcas y contactos</h2>
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-lg font-bold text-[var(--text-primary)]">Marcas y contactos</h2>
+                <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Lista</span>
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge tone="neutral">{filteredPartners.length} resultados</StatusBadge>
@@ -379,9 +465,19 @@ export default function Directory() {
               <div className="p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Marca activa</p>
-                    <h2 className="mt-1.5 text-[1.55rem] font-bold tracking-tight text-[var(--text-primary)]">{activePartner.name}</h2>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{activePartner.name}</h2>
+                      <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Marca activa</span>
+                      <IconButton
+                        icon={PencilLine}
+                        label={`Editar ${activePartner.name}`}
+                        onClick={() => setEditingPartner(activePartner)}
+                        tone="ghost"
+                        className="h-8 w-8 rounded-[0.6rem]"
+                        iconSize={16}
+                      />
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <StatusBadge tone={statusTone(activePartner.status)}>{statusLabel(activePartner.status)}</StatusBadge>
                       {nextDueTask ? <StatusBadge tone="neutral">{formatTaskDate(nextDueTask.dueDate)}</StatusBadge> : null}
                     </div>
@@ -396,6 +492,40 @@ export default function Directory() {
                     className="w-full sm:w-auto sm:min-w-[180px]"
                     buttonClassName="shadow-sm"
                   />
+                </div>
+
+                <div className="mt-6 rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/40 p-5">
+                  <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                    Acuerdo Comercial
+                  </h4>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Tipo</p>
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{activePartner.partnershipType || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Canal</p>
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{activePartner.mainChannel || '-'}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Fechas</p>
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+                        {activePartner.startDate ? formatTaskDate(activePartner.startDate) : '-'} al {activePartner.endDate ? formatTaskDate(activePartner.endDate) : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Rev Mensual</p>
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{activePartner.monthlyRevenue ? formatCurrency(activePartner.monthlyRevenue) : '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Rev Anual</p>
+                      <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{activePartner.annualRevenue ? formatCurrency(activePartner.annualRevenue) : '-'}</p>
+                    </div>
+                    <div className="sm:col-span-2 lg:col-span-4 mt-2 border-t border-[color:var(--line-soft)] pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Condiciones Clave</p>
+                      <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{activePartner.keyTerms || 'Aún no se han definido condiciones.'}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
@@ -435,9 +565,9 @@ export default function Directory() {
 
               <div className="border-t border-[color:var(--line-soft)] bg-[var(--surface-muted)]/50 p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Pipeline abierto</p>
-                  <h3 className="mt-1 text-lg font-bold text-[var(--text-primary)]">Próximos deliverables</h3>
+                <div className="flex items-baseline gap-3">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Próximos deliverables</h3>
+                  <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Pipeline abierto</span>
                 </div>
                 <StatusBadge tone="neutral">{openTasks.length} abiertas</StatusBadge>
               </div>
@@ -479,9 +609,9 @@ export default function Directory() {
 
               <div className="border-t border-[color:var(--line-soft)] p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Contactos</p>
-                  <h3 className="mt-1 text-lg font-bold text-[var(--text-primary)]">Red de la marca</h3>
+                <div className="flex items-baseline gap-3">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Red de la marca</h3>
+                  <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Contactos</span>
                 </div>
                 <Button accentColor={accentColor} onClick={() => setAddingContactTo(activePartner.id)}>
                   <Plus size={16} />
@@ -523,19 +653,22 @@ export default function Directory() {
                                 </button>
                               </div>
                             ) : null}
+                            {contact.phone?.trim() ? (
+                              <div className="group flex items-center gap-1">
+                                <a href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                                  <Phone size={16} /> {contact.phone}
+                                </a>
+                                <button type="button" onClick={() => handleCopy(contact.phone || '', 'Teléfono')} className="opacity-0 transition-opacity group-hover:opacity-100 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]" aria-label="Copiar teléfono">
+                                  <Copy size={14} />
+                                </button>
+                              </div>
+                            ) : null}
                           </div>
                         </div>
 
                         <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
-                          <IconButton icon={PencilLine} label={`Editar contacto ${contact.name}`} onClick={() => setEditingContact({ partnerId: activePartner.id, contact })} className="h-10 w-10 rounded-[0.8rem] bg-[var(--surface-muted)] text-[var(--text-secondary)]" />
-                          <IconButton
-                            icon={Trash2}
-                            label={`Eliminar contacto ${contact.name}`}
-                            onClick={() => setContactPendingDeletion({ partnerId: activePartner.id, contact })}
-                            tone="danger"
-                            className="h-10 w-10 rounded-[0.8rem]"
-                          />
-                          <IconButton icon={Send} label={`Redactar mensaje para ${contact.name}`} onClick={() => setComposingTo({ contact, partner: activePartner })} tone="primary" accentColor={accentColor} className="h-10 w-10 rounded-[0.8rem]" />
+                          <IconButton icon={PencilLine} label={`Editar contacto ${contact.name}`} onClick={() => handleOpenEditContact(activePartner.id, contact)} className="h-10 w-10 rounded-[0.8rem] bg-[var(--surface-muted)] text-[var(--text-secondary)]" />
+                          <IconButton icon={MessageCircle} label={`Redactar WhatsApp para ${contact.name}`} onClick={() => setComposingTo({ contact, partner: activePartner })} tone="primary" accentColor={accentColor} className="h-10 w-10 rounded-[0.8rem]" />
                         </div>
                       </div>
                     </div>
@@ -574,35 +707,165 @@ export default function Directory() {
         />
       ) : null}
 
-      {isAddingPartner && (
-        <OverlayModal tone="slate" onClose={() => setIsAddingPartner(false)}>
-          <ModalPanel title="Nueva marca" description="Añade un partner para empezar a ordenar contactos y conversaciones." onClose={() => setIsAddingPartner(false)} size="sm">
-            <form onSubmit={handleAddPartner} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
-                    <Building2 size={14} />
-                    Nombre
-                  </label>
-                  <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Nike, Samsung, Zara" />
+      {editingPartner && (
+        <OverlayModal tone="slate" onClose={() => setEditingPartner(null)}>
+          <ModalPanel title="Editar marca" description="Modifica los detalles del acuerdo comercial de esta marca." onClose={() => setEditingPartner(null)} size="lg">
+            <form onSubmit={handleEditPartner} className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Building2 size={14} />
+                      Nombre
+                    </label>
+                    <input required value={editingPartner.name} onChange={(event) => setEditingPartner({ ...editingPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Nike, Samsung, Zara" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Layers size={14} />
+                      Canal Principal
+                    </label>
+                    <input value={editingPartner.mainChannel || ''} onChange={(event) => setEditingPartner({ ...editingPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Instagram/TikTok" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <FileText size={14} />
+                      Condiciones Clave
+                    </label>
+                    <textarea value={editingPartner.keyTerms || ''} onChange={(event) => setEditingPartner({ ...editingPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
+                  </div>
+                </div>
+
+                <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                  <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                    Detalles Operativos
+                  </h4>
+                  <div className="grid gap-4">
+                    <div>
+                      <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                        <Activity size={14} />
+                        Tipo de Partnership
+                      </label>
+                      <CustomSelect value={editingPartner.partnershipType || 'Por definir'} onChange={(val) => setEditingPartner({ ...editingPartner, partnershipType: val as PartnershipType })} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CalendarDays size={14} />
+                          Inicio
+                        </label>
+                        <input type="date" value={editingPartner.startDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                      </div>
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CalendarDays size={14} />
+                          Fin
+                        </label>
+                        <input type="date" value={editingPartner.endDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CircleDollarSign size={14} />
+                          Mensual
+                        </label>
+                        <input type="number" value={editingPartner.monthlyRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, monthlyRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="1200" />
+                      </div>
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CircleDollarSign size={14} />
+                          Anual
+                        </label>
+                        <input type="number" value={editingPartner.annualRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, annualRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="14400" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
-                <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
-                  Detalles Operativos
-                </h4>
-                <div>
-                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
-                    <Activity size={14} />
-                    Estado
-                  </label>
-                  <CustomSelect
-                    value={newPartner.status}
-                    onChange={(val) => setNewPartner({ ...newPartner, status: val as Partner['status'] })}
-                    options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))}
-                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                    buttonClassName="font-medium bg-[var(--surface-card)]"
-                  />
+              <Button type="submit" accentColor={accentColor} className="w-full">Guardar cambios</Button>
+            </form>
+          </ModalPanel>
+        </OverlayModal>
+      )}
+
+      {isAddingPartner && (
+        <OverlayModal tone="slate" onClose={() => setIsAddingPartner(false)}>
+          <ModalPanel title="Nueva marca" description="Añade un partner e ingresa su acuerdo comercial." onClose={() => setIsAddingPartner(false)} size="lg">
+            <form onSubmit={handleAddPartner} className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Building2 size={14} />
+                      Nombre
+                    </label>
+                    <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Nike, Samsung, Zara" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Layers size={14} />
+                      Canal Principal
+                    </label>
+                    <input value={newPartner.mainChannel} onChange={(event) => setNewPartner({ ...newPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Instagram/TikTok" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <FileText size={14} />
+                      Condiciones Clave
+                    </label>
+                    <textarea value={newPartner.keyTerms} onChange={(event) => setNewPartner({ ...newPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
+                  </div>
+                </div>
+
+                <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h4 className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                      Detalles Operativos
+                    </h4>
+                    <CustomSelect value={newPartner.status} onChange={(val) => setNewPartner({ ...newPartner, status: val as Partner['status'] })} options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="py-1 px-3 text-xs bg-[var(--surface-card)]" />
+                  </div>
+                  <div className="grid gap-4">
+                    <div>
+                      <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                        <Activity size={14} />
+                        Tipo de Partnership
+                      </label>
+                      <CustomSelect value={newPartner.partnershipType} onChange={(val) => setNewPartner({ ...newPartner, partnershipType: val as PartnershipType })} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CalendarDays size={14} />
+                          Inicio
+                        </label>
+                        <input type="date" value={newPartner.startDate} onChange={(event) => setNewPartner({ ...newPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                      </div>
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CalendarDays size={14} />
+                          Fin
+                        </label>
+                        <input type="date" value={newPartner.endDate} onChange={(event) => setNewPartner({ ...newPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CircleDollarSign size={14} />
+                          Mensual
+                        </label>
+                        <input type="number" value={newPartner.monthlyRevenue} onChange={(event) => setNewPartner({ ...newPartner, monthlyRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="1200" />
+                      </div>
+                      <div>
+                        <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                          <CircleDollarSign size={14} />
+                          Anual
+                        </label>
+                        <input type="number" value={newPartner.annualRevenue} onChange={(event) => setNewPartner({ ...newPartner, annualRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="14400" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <Button type="submit" accentColor={accentColor} className="w-full">Crear marca</Button>
@@ -625,7 +888,7 @@ export default function Directory() {
                     value={selectedTemplateId}
                     onChange={handleTemplateSelect}
                     options={[
-                      { value: '', label: 'Selecciona una plantilla' },
+                      { value: '', label: 'Mensaje libre (Sin plantilla)' },
                       ...templates.map((t) => ({ value: t.id, label: t.name }))
                     ]}
                     buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -634,30 +897,30 @@ export default function Directory() {
                 </div>
               </div>
 
-              {selectedTemplateId ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
-                      <Type size={14} />
-                      Asunto
-                    </label>
-                    <input value={messagePreview.subject} onChange={(event) => setMessagePreview({ ...messagePreview, subject: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
-                  </div>
-                  <div>
-                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
-                      <AlignLeft size={14} />
-                      Mensaje
-                    </label>
-                    <textarea value={messagePreview.body} onChange={(event) => setMessagePreview({ ...messagePreview, body: event.target.value })} className={cx(fieldClass, 'min-h-[180px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
-                  </div>
-                  <Button onClick={handleSend} accentColor={accentColor} className="w-full">
-                    <Send size={18} />
-                    Abrir en correo
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <AlignLeft size={14} />
+                    Mensaje
+                  </label>
+                  <textarea value={messagePreview.body} onChange={(event) => setMessagePreview({ ...messagePreview, body: event.target.value })} className={cx(fieldClass, 'min-h-[180px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Escribe tu mensaje aquí..." />
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={handleSendWhatsApp}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    <MessageCircle size={18} />
+                    Enviar por WhatsApp
+                  </button>
+                  <Button onClick={handleSendEmail} tone="secondary" className="flex-1 justify-center">
+                    <Mail size={18} />
+                    Enviar por Correo
                   </Button>
                 </div>
-              ) : (
-                <EmptyState icon={MessageSquare} title="Elige una plantilla" description="Selecciona una plantilla para previsualizar asunto y mensaje antes de abrir el correo." className="border-dashed" />
-              )}
+              </div>
             </div>
           </ModalPanel>
         </OverlayModal>
@@ -701,6 +964,22 @@ export default function Directory() {
                       Instagram
                     </label>
                     <input value={newContact.ig} onChange={(event) => setNewContact({ ...newContact, ig: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Phone size={14} />
+                      WhatsApp
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <CustomSelect
+                        value={newContact.phonePrefix}
+                        onChange={(val) => setNewContact({ ...newContact, phonePrefix: val })}
+                        options={PHONE_PREFIXES}
+                        buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                        buttonClassName="w-[100px] shrink-0 bg-[var(--surface-card)]"
+                      />
+                      <input type="tel" value={newContact.phoneNumber} onChange={(event) => setNewContact({ ...newContact, phoneNumber: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="600 123 456" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -749,9 +1028,39 @@ export default function Directory() {
                     </label>
                     <input required value={editingContact.contact.ig} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, ig: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
                   </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Phone size={14} />
+                      WhatsApp
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <CustomSelect
+                        value={editingContact.prefix}
+                        onChange={(val) => setEditingContact({ ...editingContact, prefix: val })}
+                        options={PHONE_PREFIXES}
+                        buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                        buttonClassName="w-[100px] shrink-0 bg-[var(--surface-card)]"
+                      />
+                      <input type="tel" value={editingContact.number} onChange={(event) => setEditingContact({ ...editingContact, number: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="600 123 456" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <Button type="submit" accentColor={accentColor} className="w-full">Guardar cambios</Button>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  tone="danger"
+                  onClick={() => {
+                    setContactPendingDeletion({ partnerId: editingContact.partnerId, contact: editingContact.contact });
+                    setEditingContact(null);
+                  }}
+                  className="px-4"
+                  aria-label="Eliminar contacto"
+                >
+                  <Trash2 size={18} />
+                </Button>
+                <Button type="submit" accentColor={accentColor} className="flex-1 justify-center">Guardar cambios</Button>
+              </div>
             </form>
           </ModalPanel>
         </OverlayModal>

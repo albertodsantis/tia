@@ -6,6 +6,7 @@ import {
   ChevronDown,
   MessageSquare,
   Moon,
+  PencilLine,
   Plus,
   RotateCcw,
   Shield,
@@ -73,6 +74,7 @@ export default function Settings() {
   } = useAppContext();
   const [gcalConnected, setGcalConnected] = useState(false);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [isAccentPaletteOpen, setIsAccentPaletteOpen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({ name: '', subject: '', body: '' });
 
@@ -141,10 +143,19 @@ export default function Settings() {
 
   const handleAddTemplate = async (event: React.FormEvent) => {
     event.preventDefault();
-    await addTemplate(newTemplate);
-    setIsAddingTemplate(false);
-    setNewTemplate({ name: '', subject: '', body: '' });
-    toast.success('Plantilla guardada correctamente');
+    if (editingTemplateId) {
+      await deleteTemplate(editingTemplateId);
+      await addTemplate(newTemplate);
+      setIsAddingTemplate(false);
+      setNewTemplate({ name: '', subject: '', body: '' });
+      setEditingTemplateId(null);
+      toast.success('Plantilla actualizada correctamente');
+    } else {
+      await addTemplate(newTemplate);
+      setIsAddingTemplate(false);
+      setNewTemplate({ name: '', subject: '', body: '' });
+      toast.success('Plantilla guardada correctamente');
+    }
   };
 
   const handleResetTour = () => {
@@ -270,14 +281,17 @@ export default function Settings() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.28fr)]">
         <SurfaceCard tone="muted" className="p-6 lg:p-7">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
-              Plantillas
-            </p>
-            <h2 className="mt-2 text-[1.55rem] font-bold tracking-tight text-slate-800 dark:text-slate-100">
-              Mensajes reutilizables
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+            <div className="flex shrink-0 items-baseline gap-3">
+              <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                Mensajes reutilizables
+              </h2>
+              <span className="hidden text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500 sm:inline-block">
+                Plantillas
+              </span>
+            </div>
+            <div className="hidden h-4 w-px bg-[var(--line-soft)] sm:block" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Guarda bases de outreach y personalizalas luego desde el directorio.
             </p>
           </div>
@@ -298,7 +312,11 @@ export default function Settings() {
 
             <Button
               accentColor={accentColor}
-              onClick={() => setIsAddingTemplate(true)}
+              onClick={() => {
+                setEditingTemplateId(null);
+                setNewTemplate({ name: '', subject: '', body: '' });
+                setIsAddingTemplate(true);
+              }}
               className="w-full justify-center"
             >
               <Plus size={16} />
@@ -310,7 +328,7 @@ export default function Settings() {
                 Variables
               </p>
               <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}'}
+                {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}, {{mediaKitLink}}'}
               </p>
             </div>
           </div>
@@ -349,11 +367,15 @@ export default function Settings() {
 
                   <button
                     type="button"
-                    onClick={() => void deleteTemplate(template.id)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500 transition-colors hover:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-300 dark:hover:bg-rose-500/20"
-                    aria-label={`Eliminar plantilla ${template.name}`}
+                    onClick={() => {
+                      setEditingTemplateId(template.id);
+                      setNewTemplate({ name: template.name, subject: template.subject, body: template.body });
+                      setIsAddingTemplate(true);
+                    }}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-card-strong)] hover:text-[var(--text-primary)]"
+                    aria-label={`Editar plantilla ${template.name}`}
                   >
-                    <Trash2 size={16} />
+                    <PencilLine size={16} />
                   </button>
                 </div>
               ))}
@@ -365,7 +387,11 @@ export default function Settings() {
                 title="Aun no hay plantillas"
                 description="Crea una plantilla para acelerar respuestas, follow-ups y primeros contactos."
                 action={
-                  <Button accentColor={accentColor} onClick={() => setIsAddingTemplate(true)}>
+                  <Button accentColor={accentColor} onClick={() => {
+                    setEditingTemplateId(null);
+                    setNewTemplate({ name: '', subject: '', body: '' });
+                    setIsAddingTemplate(true);
+                  }}>
                     <Plus size={16} />
                     Crear plantilla
                   </Button>
@@ -378,14 +404,17 @@ export default function Settings() {
 
       <SurfaceCard tone="muted" className="p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
-              Utilidades
-            </p>
-            <h2 className="mt-2 text-lg font-bold text-slate-800 dark:text-slate-100">
-              Reiniciar onboarding
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+            <div className="flex shrink-0 items-baseline gap-3">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                Reiniciar onboarding
+              </h2>
+              <span className="hidden text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500 sm:inline-block">
+                Utilidades
+              </span>
+            </div>
+            <div className="hidden h-4 w-px bg-[var(--line-soft)] sm:block" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Vuelve a mostrar el tour guiado la proxima vez que cargue la app.
             </p>
           </div>
@@ -402,15 +431,39 @@ export default function Settings() {
       </SurfaceCard>
 
       {isAddingTemplate ? (
-        <OverlayModal onClose={() => setIsAddingTemplate(false)}>
+        <OverlayModal onClose={() => {
+          setIsAddingTemplate(false);
+          setEditingTemplateId(null);
+        }}>
           <ModalPanel
-            title="Nueva plantilla"
-            description="Guarda un mensaje base para reutilizarlo despues con variables dinamicas."
-            onClose={() => setIsAddingTemplate(false)}
+            title={editingTemplateId ? 'Editar plantilla' : 'Nueva plantilla'}
+            description={editingTemplateId ? 'Ajusta los detalles de tu mensaje reutilizable.' : 'Guarda un mensaje base para reutilizarlo despues con variables dinamicas.'}
+            onClose={() => {
+              setIsAddingTemplate(false);
+              setEditingTemplateId(null);
+            }}
             footer={
-              <Button type="submit" form="template-form" accentColor={accentColor} className="w-full">
-                Guardar plantilla
-              </Button>
+              <div className="flex w-full gap-3">
+                {editingTemplateId && (
+                  <Button
+                    type="button"
+                    tone="danger"
+                    onClick={() => {
+                      void deleteTemplate(editingTemplateId);
+                      setIsAddingTemplate(false);
+                      setEditingTemplateId(null);
+                      toast.info('Plantilla eliminada');
+                    }}
+                    className="px-4"
+                    aria-label="Eliminar plantilla"
+                  >
+                    <Trash2 size={18} />
+                  </Button>
+                )}
+                <Button type="submit" form="template-form" accentColor={accentColor} className="flex-1 justify-center">
+                  {editingTemplateId ? 'Guardar cambios' : 'Guardar plantilla'}
+                </Button>
+              </div>
             }
           >
           <form id="template-form" onSubmit={handleAddTemplate} className="space-y-6">
@@ -465,7 +518,7 @@ export default function Settings() {
                     placeholder="Hola {{contactName}}..."
                   />
                   <p className="mt-2 text-[11px] font-medium text-[var(--text-secondary)]">
-                    Variables disponibles: {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}'}
+                    Variables disponibles: {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}, {{mediaKitLink}}'}
                   </p>
                 </div>
               </div>

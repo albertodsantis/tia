@@ -7,6 +7,8 @@ export type PartnerStatus =
   | 'On Hold'
   | 'Relación Culminada';
 
+export type PartnershipType = 'Permanente' | 'One Time' | 'Por definir';
+
 export type AppTheme = 'light' | 'dark';
 
 export interface Contact {
@@ -15,6 +17,7 @@ export interface Contact {
   role: string;
   email: string;
   ig: string;
+  phone?: string;
 }
 
 export interface Partner {
@@ -23,6 +26,13 @@ export interface Partner {
   status: PartnerStatus;
   logo?: string;
   contacts: Contact[];
+  keyTerms?: string;
+  partnershipType?: PartnershipType;
+  startDate?: string;
+  endDate?: string;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  mainChannel?: string;
 }
 
 export function getPartnerLookupKey(value: string) {
@@ -88,6 +98,21 @@ export interface MediaKitProfile {
   closingTitle: string;
   closingDescription: string;
   footerNote: string;
+}
+
+export type GoalStatus = 'Pendiente' | 'En Curso' | 'Alcanzado' | 'Cancelado';
+export type GoalPriority = 'Baja' | 'Media' | 'Alta';
+
+export interface Goal {
+  id: string;
+  area: string;
+  generalGoal: string;
+  successMetric: string;
+  specificTarget: string;
+  timeframe: string;
+  status: GoalStatus;
+  priority: GoalPriority;
+  revenueEstimation: number;
 }
 
 export function createEmptySocialProfiles(): SocialProfiles {
@@ -189,7 +214,7 @@ export interface UserProfile {
   handle: string;
   socialProfiles: SocialProfiles;
   mediaKit: MediaKitProfile;
-  goals: string[];
+  goals: Goal[];
   notificationsEnabled: boolean;
 }
 

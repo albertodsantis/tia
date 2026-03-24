@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
   BriefcaseBusiness,
-  Download,
-  Eye,
+  CheckCircle2,
+  ChevronRight,
+  ExternalLink,
   Image,
+  Loader2,
+  Plus,
   Save,
   Sparkles,
   Target,
@@ -12,10 +15,14 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import type { MediaKitMetric, MediaKitOffer, SocialProfiles, UserProfile } from '@shared';
+import type { Goal, GoalPriority, GoalStatus, MediaKitMetric, MediaKitOffer, MediaKitProfile, SocialProfiles, UserProfile } from '@shared';
 import { useAppContext } from '../context/AppContext';
-import { Button, SurfaceCard, ModalPanel } from '../components/ui';
+import { Button, SurfaceCard, ModalPanel, cx } from '../components/ui';
+import CustomSelect from '../components/CustomSelect';
 import { toast } from '../lib/toast';
+
+const GOAL_STATUSES: GoalStatus[] = ['Pendiente', 'En Curso', 'Alcanzado', 'Cancelado'];
+const GOAL_PRIORITIES: GoalPriority[] = ['Baja', 'Media', 'Alta'];
 
 const fieldClass =
   'w-full rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:outline-none focus:ring-2';
@@ -70,17 +77,21 @@ function buildSocialHref(platform: keyof SocialProfiles, value: string) {
   return `${baseByPlatform[platform]}${cleanHandle}`;
 }
 
-function getFilledCount(values: string[]) {
-  return values.filter((value) => value.trim()).length;
+function safeArr(val: any): any[] {
+  return Array.isArray(val) ? val : [];
 }
 
-function getFilledMetricCount(values: MediaKitMetric[]) {
-  return values.filter((item) => item.label.trim() || item.value.trim()).length;
+function getFilledCount(values: any) {
+  return safeArr(values).filter((value) => typeof value === 'string' && value.trim()).length;
 }
 
-function getFilledOfferCount(values: MediaKitOffer[]) {
-  return values.filter(
-    (item) => item.title.trim() || item.price.trim() || item.description.trim(),
+function getFilledMetricCount(values: any) {
+  return safeArr(values).filter((item) => item && ((typeof item.label === 'string' && item.label.trim()) || (typeof item.value === 'string' && item.value.trim()))).length;
+}
+
+function getFilledOfferCount(values: any) {
+  return safeArr(values).filter(
+    (item) => item && ((typeof item.title === 'string' && item.title.trim()) || (typeof item.price === 'string' && item.price.trim()) || (typeof item.description === 'string' && item.description.trim())),
   ).length;
 }
 
@@ -98,40 +109,69 @@ function SectionHeader({
   accentColor: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem]"
-        style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
-      >
-        <Icon size={19} strokeWidth={2.4} />
+    <div className="rounded-xl border border-[var(--line-soft)] bg-[var(--surface-card-strong)] p-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+          style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
+        >
+          <Icon size={16} strokeWidth={2.4} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold tracking-[0.18em] text-[var(--text-secondary)]/90 uppercase">{eyebrow}</p>
+          <h2 className="text-base font-bold text-[var(--text-primary)] leading-5 truncate">{title}</h2>
+        </div>
       </div>
-      <div>
-        <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)]/80 uppercase">
-          {eyebrow}
-        </p>
-        <h2 className="mt-1 text-xl font-bold text-[var(--text-primary)]">{title}</h2>
-        {description ? (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-            {description}
-          </p>
-        ) : null}
-      </div>
+      {description ? (
+        <p className="mt-2 text-sm leading-5 text-[var(--text-secondary)]">{description}</p>
+      ) : null}
     </div>
   );
 }
 
 export default function Profile() {
-  const { profile, accentColor, updateProfile } = useAppContext();
-  const [profileForm, setProfileForm] = useState<UserProfile>(profile);
+  const { profile, updateProfile, accentColor } = useAppContext();
+  const [profileForm, setProfileForm] = useState<UserProfile>(() => {
+    const safeGoals = safeArr(profile?.goals).map((g: any, i) =>
+          typeof g === 'string'
+            ? { id: `legacy-${i}`, area: '', generalGoal: g, successMetric: '', specificTarget: '', timeframe: '', status: 'Pendiente' as GoalStatus, priority: 'Media' as GoalPriority, revenueEstimation: 0 }
+            : g,
+        )
+    return { ...(profile || {}), goals: safeGoals } as UserProfile;
+  });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const isMounted = useRef(false);
+  const lastSavedProfile = useRef(JSON.stringify(profileForm));
 
   useEffect(() => {
-    setProfileForm(profile);
-  }, [profile]);
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
 
-  const mediaKit = profileForm.mediaKit;
+    const currentString = JSON.stringify(profileForm);
+    if (currentString === lastSavedProfile.current) {
+      return;
+    }
+
+    setSaveStatus('saving');
+    const timer = setTimeout(async () => {
+      try {
+        await updateProfile(profileForm);
+        lastSavedProfile.current = currentString;
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
+      } catch (error) {
+        setSaveStatus('idle');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [profileForm, updateProfile]);
+
+  const mediaKit = profileForm.mediaKit || ({} as any);
   const configuredPortfolio = getFilledCount(mediaKit.portfolioImages);
   const configuredBrands = getFilledCount(mediaKit.trustedBrands);
   const configuredStats =
@@ -152,9 +192,9 @@ export default function Profile() {
     setProfileForm((current) => ({
       ...current,
       socialProfiles: {
-        ...current.socialProfiles,
+        ...(current.socialProfiles || {}),
         [key]: value,
-      },
+      } as SocialProfiles,
     }));
   };
 
@@ -165,9 +205,9 @@ export default function Profile() {
     setProfileForm((current) => ({
       ...current,
       mediaKit: {
-        ...current.mediaKit,
+        ...(current.mediaKit || {}),
         [key]: value,
-      },
+      } as MediaKitProfile,
     }));
   };
 
@@ -180,11 +220,11 @@ export default function Profile() {
     setProfileForm((current) => ({
       ...current,
       mediaKit: {
-        ...current.mediaKit,
-        [key]: current.mediaKit[key].map((item, itemIndex) =>
+        ...(current.mediaKit || {}),
+        [key]: safeArr(current.mediaKit?.[key]).map((item: any, itemIndex: number) =>
           itemIndex === index ? { ...item, [field]: value } : item,
         ),
-      },
+      } as MediaKitProfile,
     }));
   };
 
@@ -192,11 +232,11 @@ export default function Profile() {
     setProfileForm((current) => ({
       ...current,
       mediaKit: {
-        ...current.mediaKit,
-        offerings: current.mediaKit.offerings.map((item, itemIndex) =>
+        ...(current.mediaKit || {}),
+        offerings: safeArr(current.mediaKit?.offerings).map((item: any, itemIndex: number) =>
           itemIndex === index ? { ...item, [field]: value } : item,
         ),
-      },
+      } as MediaKitProfile,
     }));
   };
 
@@ -208,30 +248,93 @@ export default function Profile() {
     setProfileForm((current) => ({
       ...current,
       mediaKit: {
-        ...current.mediaKit,
-        [key]: current.mediaKit[key].map((item, itemIndex) => (itemIndex === index ? value : item)),
-      },
+        ...(current.mediaKit || {}),
+        [key]: safeArr(current.mediaKit?.[key]).map((item: any, itemIndex: number) => (itemIndex === index ? value : item)),
+      } as MediaKitProfile,
     }));
   };
 
-  const setGoalField = (index: number, value: string) => {
+  const addMetric = (key: MetricKey) => {
     setProfileForm((current) => ({
       ...current,
-      goals: current.goals.map((item, itemIndex) => (itemIndex === index ? value : item)),
+      mediaKit: { ...(current.mediaKit || {}), [key]: [...safeArr(current.mediaKit?.[key]), { label: '', value: '' }] } as MediaKitProfile,
+    }));
+  };
+
+  const removeMetric = (key: MetricKey, index: number) => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: { ...(current.mediaKit || {}), [key]: safeArr(current.mediaKit?.[key]).filter((_: any, i: number) => i !== index) } as MediaKitProfile,
+    }));
+  };
+
+  const addStringListItem = (key: 'aboutParagraphs' | 'topicTags' | 'portfolioImages' | 'trustedBrands') => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: { ...(current.mediaKit || {}), [key]: [...safeArr(current.mediaKit?.[key]), ''] } as MediaKitProfile,
+    }));
+  };
+
+  const removeStringListItem = (key: 'aboutParagraphs' | 'topicTags' | 'portfolioImages' | 'trustedBrands', index: number) => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: { ...(current.mediaKit || {}), [key]: safeArr(current.mediaKit?.[key]).filter((_: any, i: number) => i !== index) } as MediaKitProfile,
+    }));
+  };
+
+  const addOffering = () => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: {
+        ...(current.mediaKit || {}),
+        offerings: [...safeArr(current.mediaKit?.offerings), { title: '', price: '', description: '' }],
+      } as MediaKitProfile,
+    }));
+  };
+
+  const removeOffering = (index: number) => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: {
+        ...(current.mediaKit || {}),
+        offerings: safeArr(current.mediaKit?.offerings).filter((_: any, i: number) => i !== index),
+      } as MediaKitProfile,
+    }));
+  };
+
+  const setGoalField = <K extends keyof Goal>(index: number, field: K, value: Goal[K]) => {
+    setProfileForm((current) => ({
+      ...current,
+      goals: safeArr(current.goals).map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
+      ),
     }));
   };
 
   const addGoal = () => {
     setProfileForm((current) => ({
       ...current,
-      goals: [...current.goals, ''],
+      goals: [
+        ...safeArr(current.goals),
+        {
+          id: Math.random().toString(36).substring(7),
+          area: '',
+          generalGoal: '',
+          successMetric: '',
+          specificTarget: '',
+          timeframe: '',
+          status: 'Pendiente',
+          priority: 'Media',
+          revenueEstimation: 0,
+        },
+      ],
     }));
   };
 
   const deleteGoal = (index: number) => {
     setProfileForm((current) => ({
       ...current,
-      goals: current.goals.filter((_, itemIndex) => itemIndex !== index),
+      goals: safeArr(current.goals).filter((_, itemIndex) => itemIndex !== index),
     }));
   };
 
@@ -248,10 +351,10 @@ export default function Profile() {
     }
   };
 
-  const generateHtml = (autoPrint = false) => {
+  const generateHtml = () => {
     const socialLinks = socialProfileFields
       .map((field) => {
-        const value = profileForm.socialProfiles[field.key].trim();
+        const value = (profileForm.socialProfiles?.[field.key] || '').trim();
         const href = buildSocialHref(field.key, value);
         if (!value || !href) {
           return '';
@@ -264,8 +367,8 @@ export default function Profile() {
       .filter(Boolean)
       .join('');
 
-    const insightCards = mediaKit.insightStats
-      .filter((item) => item.label.trim() || item.value.trim())
+    const insightCards = safeArr(mediaKit.insightStats)
+      .filter((item: any) => item?.label?.trim() || item?.value?.trim())
       .map(
         (item) => `
           <article class="metric-card">
@@ -276,8 +379,8 @@ export default function Profile() {
       )
       .join('');
 
-    const audienceCards = mediaKit.audienceGender
-      .filter((item) => item.label.trim() || item.value.trim())
+    const audienceCards = safeArr(mediaKit.audienceGender)
+      .filter((item: any) => item?.label?.trim() || item?.value?.trim())
       .map(
         (item) => `
           <article class="list-card">
@@ -288,8 +391,8 @@ export default function Profile() {
       )
       .join('');
 
-    const ageCards = mediaKit.ageDistribution
-      .filter((item) => item.label.trim() || item.value.trim())
+    const ageCards = safeArr(mediaKit.ageDistribution)
+      .filter((item: any) => item?.label?.trim() || item?.value?.trim())
       .map(
         (item) => `
           <article class="list-card">
@@ -300,8 +403,8 @@ export default function Profile() {
       )
       .join('');
 
-    const countryRows = mediaKit.topCountries
-      .filter((item) => item.label.trim() || item.value.trim())
+    const countryRows = safeArr(mediaKit.topCountries)
+      .filter((item: any) => item?.label?.trim() || item?.value?.trim())
       .map(
         (item) => `
           <div class="country-row">
@@ -312,18 +415,18 @@ export default function Profile() {
       )
       .join('');
 
-    const aboutParagraphs = mediaKit.aboutParagraphs
-      .filter((paragraph) => paragraph.trim())
+    const aboutParagraphs = safeArr(mediaKit.aboutParagraphs)
+      .filter((paragraph: any) => paragraph?.trim())
       .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
       .join('');
 
-    const topicTags = mediaKit.topicTags
-      .filter((tag) => tag.trim())
+    const topicTags = safeArr(mediaKit.topicTags)
+      .filter((tag: any) => tag?.trim())
       .map((tag) => `<span class="tag">#${escapeHtml(tag.replace(/^#/, ''))}</span>`)
       .join('');
 
-    const portfolioImages = mediaKit.portfolioImages
-      .filter((image) => image.trim())
+    const portfolioImages = safeArr(mediaKit.portfolioImages)
+      .filter((image: any) => image?.trim())
       .map(
         (image, index) => `
           <figure class="portfolio-item">
@@ -333,8 +436,8 @@ export default function Profile() {
       )
       .join('');
 
-    const offerings = mediaKit.offerings
-      .filter((item) => item.title.trim() || item.price.trim() || item.description.trim())
+    const offerings = safeArr(mediaKit.offerings)
+      .filter((item: any) => item?.title?.trim() || item?.price?.trim() || item?.description?.trim())
       .map(
         (item) => `
           <article class="offer-card">
@@ -346,15 +449,13 @@ export default function Profile() {
       )
       .join('');
 
-    const trustedBrands = mediaKit.trustedBrands
-      .filter((brand) => brand.trim())
+    const trustedBrands = safeArr(mediaKit.trustedBrands)
+      .filter((brand: any) => brand?.trim())
       .map((brand) => `<span class="brand-chip">${escapeHtml(brand)}</span>`)
       .join('');
-    const nameParts = profileForm.name.trim().split(/\s+/).filter(Boolean);
-    const leadingName = nameParts[0] || profileForm.name;
+    const nameParts = (profileForm.name || '').trim().split(/\s+/).filter(Boolean);
+    const leadingName = nameParts[0] || profileForm.name || '';
     const trailingName = nameParts.slice(1).join(' ');
-
-    const autoPrintScript = autoPrint ? '<script>window.onload = () => window.print();</script>' : '';
 
     const mediaKitHtml = `
       <html>
@@ -506,7 +607,6 @@ export default function Profile() {
     )}</p>
             </section>
           </main>
-          ${autoPrintScript}
         </body>
       </html>
     `;
@@ -514,8 +614,8 @@ export default function Profile() {
     return mediaKitHtml;
   };
 
-  const handleGenerateMediaKit = () => {
-    const mediaKitHtml = generateHtml(true);
+  const handleOpenMediaKit = () => {
+    const mediaKitHtml = generateHtml();
     const blob = new Blob([mediaKitHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
@@ -536,16 +636,16 @@ export default function Profile() {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               <img
-                src={profileForm.avatar}
-                alt={profileForm.name}
+                src={profileForm.avatar || ''}
+                alt={profileForm.name || 'Avatar'}
                 className="h-24 w-24 shrink-0 rounded-[1.25rem] border border-white/70 object-cover shadow-[0_22px_42px_-24px_rgba(63,43,34,0.38)]"
               />
               <div className="min-w-0">
                 <h1 className="mt-2 text-[1.75rem] font-extrabold tracking-tight text-[var(--text-primary)] lg:text-[2.15rem]">
-                  {profileForm.name}
+                  {profileForm.name || 'Sin nombre'}
                 </h1>
                 <p className="mt-2 text-sm font-semibold text-[var(--text-secondary)]">
-                  {profileForm.handle}
+                  {profileForm.handle || '@usuario'}
                 </p>
               </div>
             </div>
@@ -554,51 +654,65 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setIsGoalsModalOpen(true)}
-                className="w-full rounded-[1.2rem] border-2 border-dashed p-4 transition-all hover:bg-[var(--surface-muted)]/40 [border-color:var(--accent-border)]"
-                style={{ borderColor: `${accentColor}40` }}
+                className="group relative w-full overflow-hidden rounded-[1.35rem] border border-[var(--line-soft)] bg-[var(--surface-card)] p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_var(--btn-glow)] active:scale-95"
+                style={{ '--btn-glow': `${accentColor}40` } as React.CSSProperties}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div
+                  className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: `linear-gradient(135deg, ${accentColor}12 0%, transparent 100%)` }}
+                />
+                <div className="relative flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
                     <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                      style={{ backgroundColor: accentColor, color: '#fff' }}
                     >
-                      <Target size={18} strokeWidth={2.4} />
+                      <Target size={22} strokeWidth={2.5} />
                     </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold tracking-[0.14em] uppercase text-[var(--text-secondary)]">
-                        Objetivos del año
+                    <div className="min-w-0">
+                      <p className="truncate text-[10px] font-extrabold tracking-[0.18em] text-[var(--text-secondary)]/80 uppercase">
+                        Plan Estratégico
                       </p>
-                      <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
-                        {profileForm.goals.filter((g) => g.trim()).length > 0 ? `${profileForm.goals.filter((g) => g.trim()).length} objetivo${profileForm.goals.filter((g) => g.trim()).length > 1 ? 's' : ''} definido${profileForm.goals.filter((g) => g.trim()).length > 1 ? 's' : ''}` : 'Sin definir'}
+                      <p className="mt-0.5 truncate text-[1.05rem] font-black tracking-tight text-[var(--text-primary)]">
+                        Objetivos del Año
+                      </p>
+                      <p className="mt-1 truncate text-[11px] font-medium text-[var(--text-secondary)]">
+                        {safeArr(profileForm.goals).length > 0
+                          ? `${safeArr(profileForm.goals).length} objetivo${safeArr(profileForm.goals).length > 1 ? 's' : ''} en curso`
+                          : 'Define tus metas ahora'}
                       </p>
                     </div>
                   </div>
                   <div
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black"
-                    style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--text-primary)] transition-transform duration-300 group-hover:translate-x-1"
                   >
-                    +
+                    <ChevronRight size={18} strokeWidth={2.5} style={{ color: accentColor }} />
                   </div>
                 </div>
               </button>
 
               <div className="flex flex-wrap gap-2">
-                <Button
-                  tone="secondary"
-                  onClick={() => void handleSaveProfile()}
-                  disabled={isSavingProfile}
+                <div
+                  className={cx(
+                    'flex items-center gap-1.5 rounded-[0.85rem] px-3 py-1.5 text-[11px] font-bold transition-all',
+                    saveStatus === 'saving'
+                      ? 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'
+                      : saveStatus === 'saved'
+                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
+                        : 'opacity-0',
+                  )}
                 >
-                  <Save size={16} />
-                  {isSavingProfile ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
-                <Button tone="secondary" onClick={() => setPreviewHtml(generateHtml(false))}>
-                  <Eye size={16} />
-                  Vista previa
-                </Button>
-                <Button accentColor={accentColor} onClick={handleGenerateMediaKit}>
-                  <Download size={16} />
-                  Generar PDF
+                  {saveStatus === 'saving' ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : saveStatus === 'saved' ? (
+                    <CheckCircle2 size={14} />
+                  ) : null}
+                  {saveStatus === 'saving' ? 'Guardando...' : saveStatus === 'saved' ? 'Guardado' : ''}
+                </div>
+
+                <Button accentColor={accentColor} onClick={handleOpenMediaKit}>
+                  <ExternalLink size={16} />
+                  Abrir Media Kit
                 </Button>
               </div>
             </div>
@@ -667,7 +781,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Nombre</label>
               <input
-                value={profileForm.name}
+                value={profileForm.name || ''}
                 onChange={(event) => setProfileField('name', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -677,7 +791,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Handle</label>
               <input
-                value={profileForm.handle}
+                value={profileForm.handle || ''}
                 onChange={(event) => setProfileField('handle', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -687,7 +801,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Avatar</label>
               <input
-                value={profileForm.avatar}
+                value={profileForm.avatar || ''}
                 onChange={(event) => setProfileField('avatar', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -697,7 +811,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Periodo visible</label>
               <input
-                value={mediaKit.periodLabel}
+                value={mediaKit.periodLabel || ''}
                 onChange={(event) => setMediaKitField('periodLabel', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -707,7 +821,7 @@ export default function Profile() {
             <div className="sm:col-span-2">
               <label className={labelClass}>Tagline</label>
               <input
-                value={mediaKit.tagline}
+                value={mediaKit.tagline || ''}
                 onChange={(event) => setMediaKitField('tagline', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -717,7 +831,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Email de contacto</label>
               <input
-                value={mediaKit.contactEmail}
+                value={mediaKit.contactEmail || ''}
                 onChange={(event) => setMediaKitField('contactEmail', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -727,7 +841,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Texto de actualizacion</label>
               <input
-                value={mediaKit.updatedLabel}
+                value={mediaKit.updatedLabel || ''}
                 onChange={(event) => setMediaKitField('updatedLabel', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -743,7 +857,7 @@ export default function Profile() {
                 <div key={field.key}>
                   <label className={labelClass}>{field.label}</label>
                   <input
-                    value={profileForm.socialProfiles[field.key]}
+                    value={profileForm.socialProfiles?.[field.key] || ''}
                     onChange={(event) => setSocialField(field.key, event.target.value)}
                     className={fieldClass}
                     style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -768,7 +882,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Imagen principal</label>
               <input
-                value={mediaKit.featuredImage}
+                value={mediaKit.featuredImage || ''}
                 onChange={(event) => setMediaKitField('featuredImage', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -777,26 +891,32 @@ export default function Profile() {
             </div>
             <div className="overflow-hidden rounded-[1.15rem] border border-[var(--line-soft)] bg-[var(--surface-muted)]">
               <img
-                src={mediaKit.featuredImage || profileForm.avatar}
-                alt={profileForm.name}
+                src={mediaKit.featuredImage || profileForm.avatar || ''}
+                alt={profileForm.name || 'Portada'}
                 className="h-64 w-full object-cover"
               />
             </div>
             <div>
               <label className={labelClass}>Titulo de presentacion</label>
               <input
-                value={mediaKit.aboutTitle}
+                value={mediaKit.aboutTitle || ''}
                 onChange={(event) => setMediaKitField('aboutTitle', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                 placeholder="Hola! Soy..."
               />
             </div>
-            {mediaKit.aboutParagraphs.map((paragraph, index) => (
-              <div key={index}>
-                <label className={labelClass}>Parrafo {index + 1}</label>
+            <div className="space-y-4">
+              {safeArr(mediaKit.aboutParagraphs).map((paragraph: any, index: number) => (
+                <div key={index} className="group relative">
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">Párrafo {index + 1}</label>
+                    <button type="button" onClick={() => removeStringListItem('aboutParagraphs', index)} className="text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 <textarea
-                  value={paragraph}
+                  value={typeof paragraph === 'string' ? paragraph : ''}
                   onChange={(event) =>
                     setStringListField('aboutParagraphs', index, event.target.value)
                   }
@@ -804,22 +924,33 @@ export default function Profile() {
                   style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                   placeholder="Describe tu voz, tu universo y como trabajas con marcas."
                 />
-              </div>
-            ))}
+                </div>
+              ))}
+              <button type="button" onClick={() => addStringListItem('aboutParagraphs')} className="mt-2 flex items-center gap-1.5 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                <Plus size={14} /> Añadir párrafo
+              </button>
+            </div>
             <div>
               <p className={labelClass}>Tags</p>
               <div className="grid gap-4 sm:grid-cols-2">
-                {mediaKit.topicTags.map((tag, index) => (
-                  <input
-                    key={index}
-                    value={tag}
-                    onChange={(event) => setStringListField('topicTags', index, event.target.value)}
-                    className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                    placeholder={`Tag ${index + 1}`}
-                  />
+                {safeArr(mediaKit.topicTags).map((tag: any, index: number) => (
+                  <div key={index} className="group relative">
+                    <input
+                      value={typeof tag === 'string' ? tag : ''}
+                      onChange={(event) => setStringListField('topicTags', index, event.target.value)}
+                      className={fieldClass}
+                      style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                      placeholder={`#Tag${index + 1}`}
+                    />
+                    <button type="button" onClick={() => removeStringListItem('topicTags', index)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
+                      <X size={14} />
+                    </button>
+                  </div>
                 ))}
               </div>
+              <button type="button" onClick={() => addStringListItem('topicTags')} className="mt-3 flex items-center gap-1.5 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                <Plus size={14} /> Añadir tag
+              </button>
             </div>
           </div>
         </SurfaceCard>
@@ -838,14 +969,21 @@ export default function Profile() {
           <div>
             <p className={labelClass}>Metricas principales</p>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {mediaKit.insightStats.map((item, index) => (
+              {safeArr(mediaKit.insightStats).map((item: any, index: number) => (
                 <div
                   key={index}
-                  className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
+                  className="group relative rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
                 >
+                  <button
+                    type="button"
+                    onClick={() => removeMetric('insightStats', index)}
+                    className="absolute right-3 top-3 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                   <label className={labelClass}>Etiqueta</label>
                   <input
-                    value={item.label}
+                    value={item?.label || ''}
                     onChange={(event) =>
                       setMetricField('insightStats', index, 'label', event.target.value)
                     }
@@ -855,7 +993,7 @@ export default function Profile() {
                   />
                   <label className={`${labelClass} mt-4`}>Valor</label>
                   <input
-                    value={item.value}
+                    value={item?.value || ''}
                     onChange={(event) =>
                       setMetricField('insightStats', index, 'value', event.target.value)
                     }
@@ -865,6 +1003,16 @@ export default function Profile() {
                   />
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={() => addMetric('insightStats')}
+                className="flex min-h-[120px] items-center justify-center rounded-[1rem] border border-dashed border-[var(--line-soft)] bg-[var(--surface-card)] text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Plus size={20} />
+                  <span className="text-sm font-bold">Añadir métrica</span>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -872,14 +1020,21 @@ export default function Profile() {
             <div>
               <p className={labelClass}>Audiencia</p>
               <div className="grid gap-4">
-                {mediaKit.audienceGender.map((item, index) => (
+                {safeArr(mediaKit.audienceGender).map((item: any, index: number) => (
                   <div
                     key={index}
-                    className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
+                    className="group relative rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
                   >
+                    <button
+                      type="button"
+                      onClick={() => removeMetric('audienceGender', index)}
+                      className="absolute right-3 top-3 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                     <label className={labelClass}>Segmento</label>
                     <input
-                      value={item.label}
+                      value={item?.label || ''}
                       onChange={(event) =>
                         setMetricField('audienceGender', index, 'label', event.target.value)
                       }
@@ -889,7 +1044,7 @@ export default function Profile() {
                     />
                     <label className={`${labelClass} mt-4`}>Valor</label>
                     <input
-                      value={item.value}
+                      value={item?.value || ''}
                       onChange={(event) =>
                         setMetricField('audienceGender', index, 'value', event.target.value)
                       }
@@ -899,6 +1054,9 @@ export default function Profile() {
                     />
                   </div>
                 ))}
+                <button type="button" onClick={() => addMetric('audienceGender')} className="flex items-center justify-center gap-2 rounded-[1rem] border border-dashed border-[var(--line-soft)] py-3 text-sm font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                  <Plus size={16} /> Añadir segmento
+                </button>
               </div>
             </div>
 
@@ -906,14 +1064,21 @@ export default function Profile() {
               <div>
                 <p className={labelClass}>Rangos de edad</p>
                 <div className="grid gap-4 md:grid-cols-2">
-                  {mediaKit.ageDistribution.map((item, index) => (
+                  {safeArr(mediaKit.ageDistribution).map((item: any, index: number) => (
                     <div
                       key={index}
-                      className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
+                      className="group relative rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
                     >
+                      <button
+                        type="button"
+                        onClick={() => removeMetric('ageDistribution', index)}
+                        className="absolute right-3 top-3 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                       <label className={labelClass}>Rango</label>
                       <input
-                        value={item.label}
+                        value={item?.label || ''}
                         onChange={(event) =>
                           setMetricField('ageDistribution', index, 'label', event.target.value)
                         }
@@ -923,7 +1088,7 @@ export default function Profile() {
                       />
                       <label className={`${labelClass} mt-4`}>Valor</label>
                       <input
-                        value={item.value}
+                        value={item?.value || ''}
                         onChange={(event) =>
                           setMetricField('ageDistribution', index, 'value', event.target.value)
                         }
@@ -933,20 +1098,30 @@ export default function Profile() {
                       />
                     </div>
                   ))}
+                  <button type="button" onClick={() => addMetric('ageDistribution')} className="flex items-center justify-center gap-2 rounded-[1rem] border border-dashed border-[var(--line-soft)] py-3 text-sm font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                    <Plus size={16} /> Añadir rango
+                  </button>
                 </div>
               </div>
 
               <div>
                 <p className={labelClass}>Top countries</p>
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {mediaKit.topCountries.map((item, index) => (
+                  {safeArr(mediaKit.topCountries).map((item: any, index: number) => (
                     <div
                       key={index}
-                      className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
+                      className="group relative rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
                     >
+                      <button
+                        type="button"
+                        onClick={() => removeMetric('topCountries', index)}
+                        className="absolute right-3 top-3 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                       <label className={labelClass}>Pais</label>
                       <input
-                        value={item.label}
+                        value={item?.label || ''}
                         onChange={(event) =>
                           setMetricField('topCountries', index, 'label', event.target.value)
                         }
@@ -956,7 +1131,7 @@ export default function Profile() {
                       />
                       <label className={`${labelClass} mt-4`}>Valor</label>
                       <input
-                        value={item.value}
+                        value={item?.value || ''}
                         onChange={(event) =>
                           setMetricField('topCountries', index, 'value', event.target.value)
                         }
@@ -966,6 +1141,9 @@ export default function Profile() {
                       />
                     </div>
                   ))}
+                  <button type="button" onClick={() => addMetric('topCountries')} className="flex items-center justify-center gap-2 rounded-[1rem] border border-dashed border-[var(--line-soft)] py-3 text-sm font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                    <Plus size={16} /> Añadir país
+                  </button>
                 </div>
               </div>
             </div>
@@ -987,11 +1165,16 @@ export default function Profile() {
             <div>
               <p className={labelClass}>Imagenes del portfolio</p>
               <div className="grid gap-4">
-                {mediaKit.portfolioImages.map((image, index) => (
-                  <div key={index}>
-                    <label className={labelClass}>Imagen {index + 1}</label>
+                {safeArr(mediaKit.portfolioImages).map((image: any, index: number) => (
+                  <div key={index} className="group relative">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">Imagen {index + 1}</label>
+                      <button type="button" onClick={() => removeStringListItem('portfolioImages', index)} className="text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     <input
-                      value={image}
+                      value={typeof image === 'string' ? image : ''}
                       onChange={(event) =>
                         setStringListField('portfolioImages', index, event.target.value)
                       }
@@ -1002,15 +1185,18 @@ export default function Profile() {
                   </div>
                 ))}
               </div>
+              <button type="button" onClick={() => addStringListItem('portfolioImages')} className="mt-3 flex items-center gap-1.5 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                <Plus size={14} /> Añadir imagen
+              </button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {mediaKit.portfolioImages.map((image, index) => (
+              {safeArr(mediaKit.portfolioImages).map((image: any, index: number) => (
                 <div
                   key={index}
                   className="overflow-hidden rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)]"
                 >
-                  {image.trim() ? (
+                  {typeof image === 'string' && image.trim() ? (
                     <img
                       src={image}
                       alt={`Portfolio ${index + 1}`}
@@ -1030,7 +1216,7 @@ export default function Profile() {
                 <div>
                   <label className={labelClass}>Titulo del bloque de marcas</label>
                   <input
-                    value={mediaKit.brandsTitle}
+                    value={mediaKit.brandsTitle || ''}
                     onChange={(event) => setMediaKitField('brandsTitle', event.target.value)}
                     className={fieldClass}
                     style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -1048,11 +1234,16 @@ export default function Profile() {
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {mediaKit.trustedBrands.map((brand, index) => (
-                  <div key={index}>
-                    <label className={labelClass}>Marca {index + 1}</label>
+                {safeArr(mediaKit.trustedBrands).map((brand: any, index: number) => (
+                  <div key={index} className="group relative">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">Marca {index + 1}</label>
+                      <button type="button" onClick={() => removeStringListItem('trustedBrands', index)} className="text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     <input
-                      value={brand}
+                      value={typeof brand === 'string' ? brand : ''}
                       onChange={(event) =>
                         setStringListField('trustedBrands', index, event.target.value)
                       }
@@ -1063,6 +1254,9 @@ export default function Profile() {
                   </div>
                 ))}
               </div>
+              <button type="button" onClick={() => addStringListItem('trustedBrands')} className="mt-3 flex items-center gap-1.5 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                <Plus size={14} /> Añadir marca
+              </button>
             </div>
           </div>
         </SurfaceCard>
@@ -1080,7 +1274,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Titulo del bloque de tarifas</label>
               <input
-                value={mediaKit.servicesTitle}
+                value={mediaKit.servicesTitle || ''}
                 onChange={(event) => setMediaKitField('servicesTitle', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -1090,7 +1284,7 @@ export default function Profile() {
             <div>
               <label className={labelClass}>Descripcion del bloque de tarifas</label>
               <textarea
-                value={mediaKit.servicesDescription}
+                value={mediaKit.servicesDescription || ''}
                 onChange={(event) => setMediaKitField('servicesDescription', event.target.value)}
                 className={textareaClass}
                 style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -1099,29 +1293,32 @@ export default function Profile() {
             </div>
 
             <div className="grid gap-4">
-              {mediaKit.offerings.map((offering, index) => (
+              {safeArr(mediaKit.offerings).map((offering: any, index: number) => (
                 <div
                   key={index}
-                  className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
+                  className="group relative rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-muted)] p-4"
                 >
-                  <p className={labelClass}>Oferta {index + 1}</p>
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">Oferta {index + 1}</p>
+                    <button type="button" onClick={() => removeOffering(index)} className="text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100"><Trash2 size={14} /></button>
+                  </div>
                   <div className="grid gap-4">
                     <input
-                      value={offering.title}
+                      value={offering?.title || ''}
                       onChange={(event) => setOfferingField(index, 'title', event.target.value)}
                       className={fieldClass}
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="Nombre del formato"
                     />
                     <input
-                      value={offering.price}
+                      value={offering?.price || ''}
                       onChange={(event) => setOfferingField(index, 'price', event.target.value)}
                       className={fieldClass}
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="$550"
                     />
                     <textarea
-                      value={offering.description}
+                      value={offering?.description || ''}
                       onChange={(event) =>
                         setOfferingField(index, 'description', event.target.value)
                       }
@@ -1132,6 +1329,9 @@ export default function Profile() {
                   </div>
                 </div>
               ))}
+              <button type="button" onClick={addOffering} className="flex min-h-[60px] items-center justify-center gap-2 rounded-[1rem] border border-dashed border-[var(--line-soft)] bg-[var(--surface-card)] text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                <Plus size={16} /> <span className="text-sm font-bold">Añadir oferta</span>
+              </button>
             </div>
 
             <div className="border-t border-[var(--line-soft)] pt-5">
@@ -1139,7 +1339,7 @@ export default function Profile() {
                 <div>
                   <label className={labelClass}>Titulo del cierre</label>
                   <input
-                    value={mediaKit.closingTitle}
+                    value={mediaKit.closingTitle || ''}
                     onChange={(event) => setMediaKitField('closingTitle', event.target.value)}
                     className={fieldClass}
                     style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -1149,7 +1349,7 @@ export default function Profile() {
                 <div>
                   <label className={labelClass}>Descripcion del cierre</label>
                   <textarea
-                    value={mediaKit.closingDescription}
+                    value={mediaKit.closingDescription || ''}
                     onChange={(event) =>
                       setMediaKitField('closingDescription', event.target.value)
                     }
@@ -1161,7 +1361,7 @@ export default function Profile() {
                 <div>
                   <label className={labelClass}>Texto del footer</label>
                   <input
-                    value={mediaKit.footerNote}
+                    value={mediaKit.footerNote || ''}
                     onChange={(event) => setMediaKitField('footerNote', event.target.value)}
                     className={fieldClass}
                     style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
@@ -1177,7 +1377,7 @@ export default function Profile() {
       {isGoalsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div
-            className="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-[1.35rem] border bg-[var(--surface-card-strong)] shadow-[var(--shadow-medium)] [border-color:var(--line-soft)] sm:w-[min(680px,92vw)]"
+            className="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-[1.35rem] border bg-[var(--surface-card-strong)] shadow-[var(--shadow-medium)] [border-color:var(--line-soft)] sm:w-[min(1100px,96vw)]"
           >
             <div
               className="pointer-events-none absolute inset-0"
@@ -1189,17 +1389,19 @@ export default function Profile() {
             <div className="relative border-b px-5 py-5 [border-color:var(--line-soft)] sm:px-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                    Objetivos del año
-                  </h2>
+                  <div className="flex items-baseline gap-3">
+                    <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                      Objetivos del año
+                    </h2>
+                    <span className="hidden text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase sm:inline-block">
+                      Plan Estratégico
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                    Define 3 o 4 objetivos clave que guíen tu estrategia de contenido este año.
+                    Define tus metas clave, proyecciones de ingresos y estado general de tus verticales de negocio.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsGoalsModalOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-transform active:scale-95"
+                <button type="button" onClick={() => setIsGoalsModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-transform active:scale-95"
                   aria-label="Cerrar modal"
                 >
                   <X size={18} />
@@ -1207,28 +1409,110 @@ export default function Profile() {
               </div>
             </div>
             <div className="relative flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+              <p className="mb-4 text-[13px] font-medium leading-relaxed text-[var(--text-secondary)]">
+                <strong className="font-bold text-[var(--text-primary)]">Tip sobre Áreas o Verticales:</strong> Úsalas para categorizar tus distintas líneas de negocio o roles. <span className="opacity-85">Por ejemplo: Creación de contenido, radio, copywriter, host, administrativo.</span>
+              </p>
               <div className="grid gap-4">
-                {profileForm.goals.map((goal, index) => (
-                  <div key={index} className="group">
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
-                        <label className={labelClass}>Objetivo {index + 1}</label>
-                        <input
-                          value={goal}
-                          onChange={(event) => setGoalField(index, event.target.value)}
-                          className={fieldClass}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                          placeholder="Escribe un objetivo..."
-                        />
-                      </div>
+                {safeArr(profileForm.goals).map((goal: any, index: number) => (
+                  <div key={goal?.id || index} className="relative rounded-[1.2rem] border bg-[var(--surface-card)] p-5 shadow-sm [border-color:var(--line-soft)]">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                        Meta {index + 1}
+                      </h4>
                       <button
                         type="button"
                         onClick={() => deleteGoal(index)}
-                        className="mb-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-50/80 text-rose-500 transition-all hover:bg-rose-100 active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-all hover:bg-rose-50 hover:text-rose-500"
                         title="Eliminar objetivo"
                       >
                         <Trash2 size={16} />
                       </button>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Área / Vertical</label>
+                        <input
+                          value={goal?.area || ''}
+                          onChange={(event) => setGoalField(index, 'area', event.target.value)}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                        placeholder="Ej. Influencer, Host, Asesorías..."
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className={labelClass}>Objetivo General</label>
+                        <input
+                          value={goal?.generalGoal || ''}
+                          onChange={(event) => setGoalField(index, 'generalGoal', event.target.value)}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          placeholder="Ej. Aumentar y fidelizar la audiencia..."
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Métrica de éxito</label>
+                        <input
+                          value={goal?.successMetric || ''}
+                          onChange={(event) => setGoalField(index, 'successMetric', event.target.value)}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          placeholder="Ej. Número de seguidores"
+                        />
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Meta específica</label>
+                        <input
+                          value={goal?.specificTarget || ''}
+                          onChange={(event) => setGoalField(index, 'specificTarget', event.target.value)}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          placeholder="Ej. 300K"
+                        />
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Plazo</label>
+                        <input
+                          value={goal?.timeframe || ''}
+                          onChange={(event) => setGoalField(index, 'timeframe', event.target.value)}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          placeholder="Ej. Anual o Q3 2026"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Estado</label>
+                        <CustomSelect
+                          value={goal?.status || 'Pendiente'}
+                          onChange={(val) => setGoalField(index, 'status', val as GoalStatus)}
+                          options={GOAL_STATUSES.map((s) => ({ value: s, label: s }))}
+                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonClassName="font-medium bg-[var(--surface-muted)]"
+                        />
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Prioridad</label>
+                        <CustomSelect
+                          value={goal?.priority || 'Media'}
+                          onChange={(val) => setGoalField(index, 'priority', val as GoalPriority)}
+                          options={GOAL_PRIORITIES.map((s) => ({ value: s, label: s }))}
+                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonClassName="font-medium bg-[var(--surface-muted)]"
+                        />
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className={labelClass}>Est. Ingresos (USD)</label>
+                        <input
+                          type="number"
+                          value={goal?.revenueEstimation ?? ''}
+                          onChange={(event) => setGoalField(index, 'revenueEstimation', Number(event.target.value))}
+                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
+                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          placeholder="6000"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1239,7 +1523,7 @@ export default function Profile() {
                 <Button
                   tone="secondary"
                   onClick={addGoal}
-                  disabled={profileForm.goals.length >= 5}
+                  disabled={safeArr(profileForm.goals).length >= 10}
                   className="w-full"
                 >
                   Agregar objetivo
@@ -1266,41 +1550,6 @@ export default function Profile() {
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {previewHtml && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6 animate-in fade-in duration-200">
-          <div className="relative flex h-full w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-[var(--surface-card)] shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-5 py-4">
-              <div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">Vista Previa</h3>
-                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                  Así se verá tu Media Kit al exportarlo
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button accentColor={accentColor} onClick={handleGenerateMediaKit}>
-                  <Download size={16} />
-                  Generar PDF
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewHtml(null)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-transform active:scale-95"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900/50">
-              <iframe
-                srcDoc={previewHtml}
-                className="h-full w-full border-none"
-                title="Previsualización del Media Kit"
-              />
             </div>
           </div>
         </div>
