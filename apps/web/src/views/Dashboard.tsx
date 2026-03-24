@@ -8,7 +8,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { EmptyState, StatusBadge, SurfaceCard } from '../components/ui';
+import { Button, EmptyState, StatusBadge, SurfaceCard } from '../components/ui';
+import { toast } from '../lib/toast';
 import type { Task, TaskStatus } from '@shared/domain';
 import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
 
@@ -51,7 +52,7 @@ type OverviewItem = {
 };
 
 export default function Dashboard() {
-  const { tasks, partners, accentColor } = useAppContext();
+  const { tasks, partners, accentColor, updateTaskStatus } = useAppContext();
   const today = new Date();
   const todayIso = formatLocalDateISO(today);
   const startOfToday = startOfLocalDay(today);
@@ -60,6 +61,15 @@ export default function Dashboard() {
   const tomorrowIso = formatLocalDateISO(tomorrow);
   const weekEnd = new Date(startOfToday);
   weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await updateTaskStatus(taskId, 'Completada');
+      toast.success('¡Tarea completada!');
+    } catch (error) {
+      toast.error('Error al actualizar la tarea');
+    }
+  };
 
   const summary = useMemo(() => {
     const activePipelineTasks = tasks.filter((task) => task.status !== 'Cobrado');
@@ -182,6 +192,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:px-8 lg:pt-4 lg:pb-8">
+
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)]">
         <SurfaceCard className="relative overflow-hidden p-6 lg:p-8">
           <div
@@ -256,61 +267,69 @@ export default function Dashboard() {
         </SurfaceCard>
 
         <SurfaceCard className="p-6 lg:px-7 lg:py-7">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div>
+            <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
                 Agenda inmediata
               </p>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Las proximas entregas ordenadas por fecha.
-              </p>
             </div>
-            <StatusBadge tone="info">{upcomingTasks.length} proximas</StatusBadge>
-          </div>
 
-          <div className="mt-5 space-y-3">
-            {upcomingTasks.length > 0 ? (
-              upcomingTasks.map((task, index) => {
-                const partner = partners.find((item) => item.id === task.partnerId);
+            <div className="mt-4 flex flex-col gap-3">
+              {upcomingTasks.length > 0 ? (
+                upcomingTasks.map((task, index) => {
+                  const partner = partners.find((item) => item.id === task.partnerId);
 
-                return (
-                  <div
-                    key={task.id}
-                    className="group rounded-[1rem] border border-slate-200/70 bg-white/78 px-4 py-4 shadow-[0_10px_20px_-24px_rgba(15,23,42,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:border-slate-700/60 dark:bg-slate-950/14 dark:hover:border-slate-600"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem] text-sm font-black"
-                        style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
-                      >
-                        {String(index + 1).padStart(2, '0')}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-sm font-bold text-slate-800 dark:text-slate-100">
-                            {task.title}
-                          </h3>
-                          <StatusBadge tone={statusToneMap[task.status]}>{task.status}</StatusBadge>
+                  return (
+                    <div
+                      key={task.id}
+                      className="group rounded-[1rem] border border-slate-200/70 bg-white/78 px-4 py-4 shadow-[0_10px_20px_-24px_rgba(15,23,42,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:border-slate-700/60 dark:bg-slate-950/14 dark:hover:border-slate-600"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem] text-sm font-black"
+                          style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
+                        >
+                          {String(index + 1).padStart(2, '0')}
                         </div>
-                        <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                          {partner?.name || 'Sin marca'} {'\u00b7'} {formatTaskDate(task)}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-sm font-bold text-slate-800 dark:text-slate-100">
+                              {task.title}
+                            </h3>
+                            <StatusBadge tone={statusToneMap[task.status]}>{task.status}</StatusBadge>
+                          </div>
+                          <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                            {partner?.name || 'Sin marca'} {'\u00b7'} {formatTaskDate(task)}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                          <p className="text-sm font-black text-[var(--text-primary)]">
+                            {formatCurrency(task.value)}
+                          </p>
+                          {task.status !== 'Completada' && task.status !== 'Cobrado' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleCompleteTask(task.id)}
+                              className="flex items-center gap-1.5 rounded-[0.8rem] bg-[var(--surface-muted)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-secondary)] transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/15 dark:hover:text-emerald-400"
+                            >
+                              <CheckCircle2 size={14} />
+                              Completar
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <p className="shrink-0 text-sm font-black text-slate-800 dark:text-slate-100">
-                        {formatCurrency(task.value)}
-                      </p>
                     </div>
-                  </div>
-                );
-              })
-            ) : (
-              <EmptyState
-                icon={CalendarClock}
-                title="No hay entregables proximos"
-                description="Cuando anadas nuevas tareas o fechas, apareceran aqui para ayudarte a priorizar."
-                className="py-10"
-              />
-            )}
+                  );
+                })
+              ) : (
+                <EmptyState
+                  icon={CalendarClock}
+                  title="Día libre de entregas"
+                  description="Aprovecha el tiempo para prospectar nuevas marcas o planificar contenido."
+                  className="py-8"
+                />
+              )}
+            </div>
           </div>
         </SurfaceCard>
       </section>
@@ -321,9 +340,6 @@ export default function Dashboard() {
             <div>
               <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase dark:text-slate-500">
                 Estado operativo
-              </p>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Distribucion del pipeline y valor en cada fase.
               </p>
             </div>
             <StatusBadge tone="neutral">{tasks.length} tareas</StatusBadge>

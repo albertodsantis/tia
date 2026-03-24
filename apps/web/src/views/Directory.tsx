@@ -1,17 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import {
+  Activity,
+  AlignLeft,
+  Briefcase,
   Building2,
   CalendarDays,
-  Mail,
+  ChevronDown,
+  Copy,
   Instagram,
+  Mail,
+  MessageSquare,
+  PencilLine,
+  Plus,
   Search,
   Send,
-  Plus,
-  PencilLine,
   Trash2,
-  ChevronDown,
-  MessageSquare,
+  Type,
   Users,
 } from 'lucide-react';
 import { Contact, Partner, TaskStatus } from '@shared/domain';
@@ -26,7 +31,9 @@ import {
   SurfaceCard,
   cx,
 } from '../components/ui';
+import CustomSelect from '../components/CustomSelect';
 import { parseLocalDate } from '../lib/date';
+import { toast } from '../lib/toast';
 
 const PARTNER_STATUSES = [
   'Prospecto',
@@ -57,8 +64,6 @@ const STATUS_TONES: Record<Partner['status'], React.ComponentProps<typeof Status
 
 const fieldClass =
   'w-full rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:outline-none focus:ring-2';
-const selectClass =
-  'appearance-none rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-3 text-sm font-bold text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2';
 
 const statusLabel = (status: Partner['status']) => STATUS_LABELS[status] ?? status;
 const statusTone = (status: Partner['status']) => STATUS_TONES[status] ?? 'neutral';
@@ -213,6 +218,7 @@ export default function Directory() {
     setSelectedPartnerId(partnerId);
     setIsAddingPartner(false);
     setNewPartner({ name: '', status: 'Prospecto' });
+    toast.success(`Marca ${name} añadida al directorio`);
   };
 
   const handleAddContact = async (event: React.FormEvent) => {
@@ -221,6 +227,7 @@ export default function Directory() {
     await addContact(addingContactTo, newContact);
     setAddingContactTo(null);
     setNewContact({ name: '', role: '', email: '', ig: '' });
+    toast.success('Contacto guardado');
   };
 
   const handleEditContact = async (event: React.FormEvent) => {
@@ -228,6 +235,7 @@ export default function Directory() {
     if (!editingContact) return;
     await updateContact(editingContact.partnerId, editingContact.contact.id, editingContact.contact);
     setEditingContact(null);
+    toast.success('Contacto actualizado');
   };
 
   const handleDeleteContact = async () => {
@@ -235,6 +243,12 @@ export default function Directory() {
 
     await deleteContact(contactPendingDeletion.partnerId, contactPendingDeletion.contact.id);
     setContactPendingDeletion(null);
+    toast.info('Contacto eliminado');
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado al portapapeles`);
   };
 
   return (
@@ -360,35 +374,28 @@ export default function Directory() {
         </div>
 
         <div className="space-y-4">
-          <SurfaceCard className="p-5 sm:p-6">
-            {activePartner ? (
-              <>
+          {activePartner ? (
+            <SurfaceCard className="overflow-hidden p-0">
+              <div className="p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Marca activa</p>
                     <h2 className="mt-1.5 text-[1.55rem] font-bold tracking-tight text-[var(--text-primary)]">{activePartner.name}</h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-                      Gestiona estado, personas clave y entregables relacionados sin perder el contexto comercial.
-                    </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <StatusBadge tone={statusTone(activePartner.status)}>{statusLabel(activePartner.status)}</StatusBadge>
                       {nextDueTask ? <StatusBadge tone="neutral">{formatTaskDate(nextDueTask.dueDate)}</StatusBadge> : null}
                     </div>
                   </div>
 
-                  <select
+                  <CustomSelect
                     value={activePartner.status}
-                    onChange={(event) => void updatePartner(activePartner.id, { status: event.target.value as Partner['status'] })}
-                    className={selectClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                    aria-label={`Cambiar estado de ${activePartner.name}`}
-                  >
-                    {PARTNER_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {statusLabel(status as Partner['status'])}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => void updatePartner(activePartner.id, { status: val as Partner['status'] })}
+                    options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))}
+                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    ariaLabel={`Cambiar estado de ${activePartner.name}`}
+                    className="w-full sm:w-auto sm:min-w-[180px]"
+                    buttonClassName="shadow-sm"
+                  />
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
@@ -424,14 +431,9 @@ export default function Directory() {
                     </div>
                   </div>
                 ) : null}
-              </>
-            ) : (
-              <EmptyState icon={Building2} title="Selecciona una marca" description="Usa la lista de la izquierda para abrir el detalle de un partner." />
-            )}
-          </SurfaceCard>
+              </div>
 
-          {activePartner ? (
-            <SurfaceCard tone="muted" className="p-5 sm:p-6">
+              <div className="border-t border-[color:var(--line-soft)] bg-[var(--surface-muted)]/50 p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Pipeline abierto</p>
@@ -473,11 +475,9 @@ export default function Directory() {
                   />
                 )}
               </div>
-            </SurfaceCard>
-          ) : null}
+              </div>
 
-          {activePartner ? (
-            <SurfaceCard className="p-5 sm:p-6">
+              <div className="border-t border-[color:var(--line-soft)] p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70">Contactos</p>
@@ -505,13 +505,23 @@ export default function Directory() {
                           <p className="text-base font-bold text-[var(--text-primary)]">{contact.name}</p>
                           <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">{contact.role}</p>
                           <div className="mt-3 flex flex-wrap gap-3">
-                            <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-                              <Mail size={16} /> {contact.email}
-                            </a>
-                            {contact.ig.trim() ? (
-                              <a href={`https://instagram.com/${contact.ig.replace('@', '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-                                <Instagram size={16} /> {contact.ig}
+                            <div className="group flex items-center gap-1">
+                              <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                                <Mail size={16} /> {contact.email}
                               </a>
+                              <button type="button" onClick={() => handleCopy(contact.email, 'Email')} className="opacity-0 transition-opacity group-hover:opacity-100 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]" aria-label="Copiar email">
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                            {contact.ig.trim() ? (
+                              <div className="group flex items-center gap-1">
+                                <a href={`https://instagram.com/${contact.ig.replace('@', '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
+                                  <Instagram size={16} /> {contact.ig}
+                                </a>
+                                <button type="button" onClick={() => handleCopy(contact.ig, 'Usuario de Instagram')} className="opacity-0 transition-opacity group-hover:opacity-100 p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]" aria-label="Copiar Instagram">
+                                  <Copy size={14} />
+                                </button>
+                              </div>
                             ) : null}
                           </div>
                         </div>
@@ -544,8 +554,13 @@ export default function Directory() {
                   />
                 )}
               </div>
+              </div>
             </SurfaceCard>
-          ) : null}
+          ) : (
+            <SurfaceCard className="p-5 sm:p-6">
+              <EmptyState icon={Building2} title="Selecciona una marca" description="Usa la lista de la izquierda para abrir el detalle de un partner." />
+            </SurfaceCard>
+          )}
         </div>
       </div>
 
@@ -562,20 +577,33 @@ export default function Directory() {
       {isAddingPartner && (
         <OverlayModal tone="slate" onClose={() => setIsAddingPartner(false)}>
           <ModalPanel title="Nueva marca" description="Añade un partner para empezar a ordenar contactos y conversaciones." onClose={() => setIsAddingPartner(false)} size="sm">
-            <form onSubmit={handleAddPartner} className="space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Nombre</label>
-                <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Nike, Samsung, Zara" />
+            <form onSubmit={handleAddPartner} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Building2 size={14} />
+                    Nombre
+                  </label>
+                  <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. Nike, Samsung, Zara" />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Estado</label>
-                <select value={newPartner.status} onChange={(event) => setNewPartner({ ...newPartner, status: event.target.value as Partner['status'] })} className={cx(fieldClass, 'appearance-none')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties}>
-                  {PARTNER_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {statusLabel(status as Partner['status'])}
-                    </option>
-                  ))}
-                </select>
+              <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                  Detalles Operativos
+                </h4>
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Activity size={14} />
+                    Estado
+                  </label>
+                  <CustomSelect
+                    value={newPartner.status}
+                    onChange={(val) => setNewPartner({ ...newPartner, status: val as Partner['status'] })}
+                    options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))}
+                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    buttonClassName="font-medium bg-[var(--surface-card)]"
+                  />
+                </div>
               </div>
               <Button type="submit" accentColor={accentColor} className="w-full">Crear marca</Button>
             </form>
@@ -586,34 +614,47 @@ export default function Directory() {
       {composingTo && (
         <OverlayModal tone="slate" onClose={closeComposer}>
           <ModalPanel title={`Mensaje para ${composingTo.contact.name}`} description={composingTo.partner.name} onClose={closeComposer} size="lg">
-            <div className="space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Usar plantilla</label>
-                <select value={selectedTemplateId} onChange={(event) => handleTemplateSelect(event.target.value)} className={cx(fieldClass, 'appearance-none')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties}>
-                  <option value="">Selecciona una plantilla</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </select>
+            <div className="space-y-6">
+              <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <MessageSquare size={14} />
+                    Usar plantilla
+                  </label>
+                  <CustomSelect
+                    value={selectedTemplateId}
+                    onChange={handleTemplateSelect}
+                    options={[
+                      { value: '', label: 'Selecciona una plantilla' },
+                      ...templates.map((t) => ({ value: t.id, label: t.name }))
+                    ]}
+                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    buttonClassName="font-medium bg-[var(--surface-card)]"
+                  />
+                </div>
               </div>
 
               {selectedTemplateId ? (
-                <>
+                <div className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Asunto</label>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Type size={14} />
+                      Asunto
+                    </label>
                     <input value={messagePreview.subject} onChange={(event) => setMessagePreview({ ...messagePreview, subject: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Mensaje</label>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <AlignLeft size={14} />
+                      Mensaje
+                    </label>
                     <textarea value={messagePreview.body} onChange={(event) => setMessagePreview({ ...messagePreview, body: event.target.value })} className={cx(fieldClass, 'min-h-[180px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
                   </div>
                   <Button onClick={handleSend} accentColor={accentColor} className="w-full">
                     <Send size={18} />
                     Abrir en correo
                   </Button>
-                </>
+                </div>
               ) : (
                 <EmptyState icon={MessageSquare} title="Elige una plantilla" description="Selecciona una plantilla para previsualizar asunto y mensaje antes de abrir el correo." className="border-dashed" />
               )}
@@ -625,22 +666,43 @@ export default function Directory() {
       {addingContactTo && (
         <OverlayModal tone="slate" onClose={() => setAddingContactTo(null)}>
           <ModalPanel title="Nuevo contacto" description="Guarda la persona clave para esta marca." onClose={() => setAddingContactTo(null)} size="sm">
-            <form onSubmit={handleAddContact} className="space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Nombre</label>
-                <input required value={newContact.name} onChange={(event) => setNewContact({ ...newContact, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Juan Perez" />
+            <form onSubmit={handleAddContact} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Type size={14} />
+                    Nombre
+                  </label>
+                  <input required value={newContact.name} onChange={(event) => setNewContact({ ...newContact, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Juan Perez" />
+                </div>
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Briefcase size={14} />
+                    Rol
+                  </label>
+                  <input required value={newContact.role} onChange={(event) => setNewContact({ ...newContact, role: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="PR Manager" />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Rol</label>
-                <input required value={newContact.role} onChange={(event) => setNewContact({ ...newContact, role: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="PR Manager" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Email</label>
-                <input type="email" required value={newContact.email} onChange={(event) => setNewContact({ ...newContact, email: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="juan@brand.com" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Instagram</label>
-                <input value={newContact.ig} onChange={(event) => setNewContact({ ...newContact, ig: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
+              <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                  Medios de contacto
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Mail size={14} />
+                      Email
+                    </label>
+                    <input type="email" required value={newContact.email} onChange={(event) => setNewContact({ ...newContact, email: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="juan@brand.com" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Instagram size={14} />
+                      Instagram
+                    </label>
+                    <input value={newContact.ig} onChange={(event) => setNewContact({ ...newContact, ig: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
+                  </div>
+                </div>
               </div>
               <Button type="submit" accentColor={accentColor} className="w-full">Guardar contacto</Button>
             </form>
@@ -651,22 +713,43 @@ export default function Directory() {
       {editingContact && (
         <OverlayModal tone="slate" onClose={() => setEditingContact(null)}>
           <ModalPanel title="Editar contacto" description="Ajusta nombre, rol y medios de contacto." onClose={() => setEditingContact(null)} size="sm">
-            <form onSubmit={handleEditContact} className="space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Nombre</label>
-                <input required value={editingContact.contact.name} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, name: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Juan Perez" />
+            <form onSubmit={handleEditContact} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Type size={14} />
+                    Nombre
+                  </label>
+                  <input required value={editingContact.contact.name} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, name: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Juan Perez" />
+                </div>
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                    <Briefcase size={14} />
+                    Rol
+                  </label>
+                  <input required value={editingContact.contact.role} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, role: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="PR Manager" />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Rol</label>
-                <input required value={editingContact.contact.role} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, role: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="PR Manager" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Email</label>
-                <input required type="email" value={editingContact.contact.email} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, email: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="juan@example.com" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">Instagram</label>
-                <input required value={editingContact.contact.ig} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, ig: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
+              <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+                <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                  Medios de contacto
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Mail size={14} />
+                      Email
+                    </label>
+                    <input required type="email" value={editingContact.contact.email} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, email: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="juan@example.com" />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
+                      <Instagram size={14} />
+                      Instagram
+                    </label>
+                    <input required value={editingContact.contact.ig} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, ig: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="@juanperez" />
+                  </div>
+                </div>
               </div>
               <Button type="submit" accentColor={accentColor} className="w-full">Guardar cambios</Button>
             </form>

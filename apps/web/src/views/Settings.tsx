@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  AlignLeft,
   Bell,
   Calendar as CalendarIcon,
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   Shield,
   Sun,
   Trash2,
+  Type,
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import OverlayModal from '../components/OverlayModal';
@@ -23,6 +25,7 @@ import {
   ToggleSwitch,
   cx,
 } from '../components/ui';
+import { toast } from '../lib/toast';
 
 const ACCENT_OPTIONS = [
   { name: 'Arcilla', value: '#C96F5B' },
@@ -94,6 +97,7 @@ export default function Settings() {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           await updateProfile({ notificationsEnabled: true });
+          toast.success('Notificaciones activadas');
         } else {
           reportActionError('Debes permitir las notificaciones del navegador para activarlas.');
         }
@@ -104,12 +108,14 @@ export default function Settings() {
     }
 
     await updateProfile({ notificationsEnabled: false });
+    toast.info('Notificaciones desactivadas');
   };
 
   const connectGoogleCalendar = async () => {
     if (gcalConnected) {
       await fetch('/api/auth/logout', { method: 'POST' });
       setGcalConnected(false);
+      toast.info('Calendar desconectado');
       return;
     }
 
@@ -122,6 +128,7 @@ export default function Settings() {
         if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
           setGcalConnected(true);
           window.removeEventListener('message', handleMessage);
+          toast.success('Calendar conectado con éxito');
         }
       };
 
@@ -137,6 +144,7 @@ export default function Settings() {
     await addTemplate(newTemplate);
     setIsAddingTemplate(false);
     setNewTemplate({ name: '', subject: '', body: '' });
+    toast.success('Plantilla guardada correctamente');
   };
 
   const handleResetTour = () => {
@@ -405,9 +413,11 @@ export default function Settings() {
               </Button>
             }
           >
-            <form id="template-form" onSubmit={handleAddTemplate} className="space-y-4">
+          <form id="template-form" onSubmit={handleAddTemplate} className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400">
+                <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                  <Type size={14} />
                   Nombre de la plantilla
                 </label>
                 <input
@@ -419,37 +429,47 @@ export default function Settings() {
                   placeholder="Ej. Primer contacto"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400">
-                  Asunto
-                </label>
-                <input
-                  required
-                  value={newTemplate.subject}
-                  onChange={(event) => setNewTemplate({ ...newTemplate, subject: event.target.value })}
-                  className={fieldClass}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                  placeholder="Usa {{brandName}}, {{creatorName}}"
-                />
-              </div>
+            <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+              <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
+                Contenido del mensaje
+              </h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                    <Type size={14} />
+                    Asunto
+                  </label>
+                  <input
+                    required
+                    value={newTemplate.subject}
+                    onChange={(event) => setNewTemplate({ ...newTemplate, subject: event.target.value })}
+                    className={cx(fieldClass, 'bg-[var(--surface-card)]')}
+                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    placeholder="Usa {{brandName}}, {{creatorName}}"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400">
-                  Cuerpo del mensaje
-                </label>
-                <textarea
-                  required
-                  value={newTemplate.body}
-                  onChange={(event) => setNewTemplate({ ...newTemplate, body: event.target.value })}
-                  className={cx(fieldClass, 'min-h-[150px]')}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                  placeholder="Hola {{contactName}}..."
-                />
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  Variables disponibles: {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}'}
-                </p>
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                    <AlignLeft size={14} />
+                    Cuerpo del mensaje
+                  </label>
+                  <textarea
+                    required
+                    value={newTemplate.body}
+                    onChange={(event) => setNewTemplate({ ...newTemplate, body: event.target.value })}
+                    className={cx(fieldClass, 'min-h-[150px] bg-[var(--surface-card)]')}
+                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    placeholder="Hola {{contactName}}..."
+                  />
+                  <p className="mt-2 text-[11px] font-medium text-[var(--text-secondary)]">
+                    Variables disponibles: {'{{brandName}}, {{contactName}}, {{creatorName}}, {{deliverable}}'}
+                  </p>
+                </div>
               </div>
+            </div>
             </form>
           </ModalPanel>
         </OverlayModal>

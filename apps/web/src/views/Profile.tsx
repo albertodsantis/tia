@@ -3,6 +3,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Download,
+  Eye,
   Image,
   Save,
   Sparkles,
@@ -14,6 +15,7 @@ import {
 import type { MediaKitMetric, MediaKitOffer, SocialProfiles, UserProfile } from '@shared';
 import { useAppContext } from '../context/AppContext';
 import { Button, SurfaceCard, ModalPanel } from '../components/ui';
+import { toast } from '../lib/toast';
 
 const fieldClass =
   'w-full rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-3.5 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:outline-none focus:ring-2';
@@ -123,6 +125,7 @@ export default function Profile() {
   const [profileForm, setProfileForm] = useState<UserProfile>(profile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
   useEffect(() => {
     setProfileForm(profile);
@@ -237,12 +240,15 @@ export default function Profile() {
 
     try {
       await updateProfile(profileForm);
+      toast.success('Perfil guardado correctamente');
+    } catch (error) {
+      toast.error('Ocurrió un error al guardar');
     } finally {
       setIsSavingProfile(false);
     }
   };
 
-  const handleGenerateMediaKit = () => {
+  const generateHtml = (autoPrint = false) => {
     const socialLinks = socialProfileFields
       .map((field) => {
         const value = profileForm.socialProfiles[field.key].trim();
@@ -347,6 +353,8 @@ export default function Profile() {
     const nameParts = profileForm.name.trim().split(/\s+/).filter(Boolean);
     const leadingName = nameParts[0] || profileForm.name;
     const trailingName = nameParts.slice(1).join(' ');
+
+    const autoPrintScript = autoPrint ? '<script>window.onload = () => window.print();</script>' : '';
 
     const mediaKitHtml = `
       <html>
@@ -498,13 +506,16 @@ export default function Profile() {
     )}</p>
             </section>
           </main>
-          <script>
-            window.onload = () => window.print();
-          </script>
+          ${autoPrintScript}
         </body>
       </html>
     `;
 
+    return mediaKitHtml;
+  };
+
+  const handleGenerateMediaKit = () => {
+    const mediaKitHtml = generateHtml(true);
     const blob = new Blob([mediaKitHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
@@ -581,9 +592,13 @@ export default function Profile() {
                   <Save size={16} />
                   {isSavingProfile ? 'Guardando...' : 'Guardar cambios'}
                 </Button>
+                <Button tone="secondary" onClick={() => setPreviewHtml(generateHtml(false))}>
+                  <Eye size={16} />
+                  Vista previa
+                </Button>
                 <Button accentColor={accentColor} onClick={handleGenerateMediaKit}>
                   <Download size={16} />
-                  Generar media kit
+                  Generar PDF
                 </Button>
               </div>
             </div>
@@ -1251,6 +1266,41 @@ export default function Profile() {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewHtml && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6 animate-in fade-in duration-200">
+          <div className="relative flex h-full w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-[var(--surface-card)] shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-5 py-4">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">Vista Previa</h3>
+                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                  Así se verá tu Media Kit al exportarlo
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button accentColor={accentColor} onClick={handleGenerateMediaKit}>
+                  <Download size={16} />
+                  Generar PDF
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewHtml(null)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-transform active:scale-95"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+              <iframe
+                srcDoc={previewHtml}
+                className="h-full w-full border-none"
+                title="Previsualización del Media Kit"
+              />
             </div>
           </div>
         </div>
