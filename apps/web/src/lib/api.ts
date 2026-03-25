@@ -7,6 +7,9 @@ import type {
   CreateTaskRequest,
   CreateTemplateRequest,
   DeleteEntityResponse,
+  GoogleAuthUrlResponse,
+  LoginRequest,
+  MeResponse,
   Partner,
   SettingsResponse,
   Task,
@@ -43,6 +46,19 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export const authApi = {
+  me: () => apiRequest<MeResponse>('/api/auth/me'),
+  login: (payload: LoginRequest) =>
+    apiRequest<MeResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  logout: () =>
+    apiRequest<{ success: boolean }>('/api/auth/logout', { method: 'POST' }),
+  googleLoginUrl: () =>
+    apiRequest<GoogleAuthUrlResponse>('/api/auth/google/login-url'),
+};
 
 export const appApi = {
   getBootstrap: () => apiRequest<AppBootstrapResponse>('/api/v1/bootstrap'),

@@ -11,15 +11,18 @@ import {
   User,
   Users,
 } from 'lucide-react';
+import type { SessionUser } from '@shared';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Dashboard from './views/Dashboard';
 import Pipeline from './views/Pipeline';
 import Directory from './views/Directory';
 import Profile from './views/Profile';
 import Settings from './views/Settings';
+import Landing from './views/Landing';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import { SurfaceCard, cx } from './components/ui';
+import { authApi } from './lib/api';
 
 type TabId = 'dashboard' | 'pipeline' | 'directory' | 'profile' | 'settings';
 
@@ -537,7 +540,47 @@ const AppShell = () => {
   );
 };
 
+type AuthPhase = 'checking' | 'unauthenticated' | 'authenticated';
+
 export default function App() {
+  const [authPhase, setAuthPhase] = useState<AuthPhase>('checking');
+  const [, setSessionUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    authApi.me().then(({ user }) => {
+      if (user) {
+        setSessionUser(user);
+        setAuthPhase('authenticated');
+      } else {
+        setAuthPhase('unauthenticated');
+      }
+    }).catch(() => {
+      setAuthPhase('unauthenticated');
+    });
+  }, []);
+
+  const handleLogin = (user: SessionUser) => {
+    setSessionUser(user);
+    setAuthPhase('authenticated');
+  };
+
+  if (authPhase === 'checking') {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--surface-app)]">
+        <div className="text-center">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
+            Tía
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">Cargando…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authPhase === 'unauthenticated') {
+    return <Landing onLogin={handleLogin} />;
+  }
+
   return (
     <AppProvider>
       <AppShell />

@@ -125,6 +125,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     Object.entries(variables).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
+
+    // Guardamos en caché para que la Landing page pueda leerlo antes de iniciar sesión
+    localStorage.setItem('tia_accent_color', state.accentColor);
   }, [state.accentColor]);
 
   useEffect(() => {
