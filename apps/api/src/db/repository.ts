@@ -34,7 +34,7 @@ import type {
 } from '@shared';
 
 /* ================================================================
-   Validation helpers — copied verbatim from InMemoryAppStore
+   Validation helpers
    ================================================================ */
 
 const SOCIAL_PROFILE_KEYS = ['instagram', 'tiktok', 'x', 'threads', 'youtube'] as const;
@@ -227,7 +227,7 @@ function mapRowToGoal(row: any): Goal {
 }
 
 /* ================================================================
-   PostgresAppStore — drop-in replacement for InMemoryAppStore
+   PostgresAppStore — multi-tenant, all queries scoped by userId
    ================================================================ */
 
 export class PostgresAppStore {
@@ -235,13 +235,13 @@ export class PostgresAppStore {
 
   /* ---------- SNAPSHOT (bootstrap) ---------- */
 
-  async getSnapshot(): Promise<AppState> {
+  async getSnapshot(userId: string): Promise<AppState> {
     const [tasks, partners, profile, settings, templates] = await Promise.all([
-      this.listTasks(),
-      this.listPartners(),
-      this.getProfile(),
-      this.getSettings(),
-      this.listTemplates(),
+      this.listTasks(userId),
+      this.listPartners(userId),
+      this.getProfile(userId),
+      this.getSettings(userId),
+      this.listTemplates(userId),
     ]);
 
     return {
@@ -256,21 +256,23 @@ export class PostgresAppStore {
 
   /* ---------- DASHBOARD ---------- */
 
-  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+  async getDashboardSummary(userId: string): Promise<DashboardSummaryResponse> {
     const today = new Date().toISOString().split('T')[0];
 
     const [valueResult, todayResult, upcomingResult] = await Promise.all([
       this.pool.query(
-        `SELECT COALESCE(SUM(value), 0) AS total FROM tasks WHERE status != 'Cobrado'`,
+        `SELECT COALESCE(SUM(value), 0) AS total FROM tasks WHERE user_id = $1 AND status != 'Cobrado'`,
+        [userId],
       ),
       this.pool.query(
-        'SELECT COUNT(*) AS count FROM tasks WHERE due_date = $1',
-        [today],
+        'SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1 AND due_date = $2',
+        [userId, today],
       ),
       this.pool.query(
         `SELECT id, title, description, partner_id, status, due_date, value, gcal_event_id,
                 created_at, completed_at, cobrado_at, actual_payment
-         FROM tasks ORDER BY due_date ASC LIMIT 4`,
+         FROM tasks WHERE user_id = $1 ORDER BY due_date ASC LIMIT 4`,
+        [userId],
       ),
     ]);
 
@@ -283,16 +285,17 @@ export class PostgresAppStore {
 
   /* ---------- TASKS ---------- */
 
-  async listTasks(): Promise<Task[]> {
+  async listTasks(userId: string): Promise<Task[]> {
     const { rows } = await this.pool.query(
       `SELECT id, title, description, partner_id, status, due_date, value, gcal_event_id,
               created_at, completed_at, cobrado_at, actual_payment
-       FROM tasks ORDER BY due_date ASC`,
+       FROM tasks WHERE user_id = $1 ORDER BY due_date ASC`,
+      [userId],
     );
     return rows.map(mapRowToTask);
   }
 
-  async createTask(input: CreateTaskRequest): Promise<Task> {
+  async createTask(userId: string, input: CreateTaskRequest): Promise<Task> {
     const id = randomUUID();
     const title = normalizeRequiredText(input.title, 'El titulo');
     const description = normalizeRequiredText(input.description, 'La descripcion');
@@ -304,26 +307,26 @@ export class PostgresAppStore {
     const actualPayment = input.actualPayment !== undefined ? normalizeMoney(input.actualPayment) : null;
 
     const { rows: partnerRows } = await this.pool.query(
-      'SELECT 1 FROM partners WHERE id = $1',
-      [partnerId],
+      'SELECT 1 FROM partners WHERE id = $1 AND user_id = $2',
+      [partnerId, userId],
     );
     if (partnerRows.length === 0) {
       throw new Error('La marca seleccionada no existe.');
     }
 
     const { rows } = await this.pool.query(
-      `INSERT INTO tasks (id, title, description, partner_id, status, due_date, value, gcal_event_id, actual_payment)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO tasks (id, user_id, title, description, partner_id, status, due_date, value, gcal_event_id, actual_payment)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING created_at`,
-      [id, title, description, partnerId, status, dueDate, value, gcalEventId, actualPayment],
+      [id, userId, title, description, partnerId, status, dueDate, value, gcalEventId, actualPayment],
     );
 
     const createdAt = rows[0].created_at instanceof Date ? rows[0].created_at.toISOString() : rows[0].created_at;
 
     await this.pool.query(
-      `INSERT INTO task_status_history (task_id, from_status, to_status)
-       VALUES ($1, NULL, $2)`,
-      [id, status],
+      `INSERT INTO task_status_history (task_id, user_id, from_status, to_status)
+       VALUES ($1, $2, NULL, $3)`,
+      [id, userId, status],
     );
 
     return {
@@ -340,10 +343,10 @@ export class PostgresAppStore {
     };
   }
 
-  async updateTask(taskId: string, updates: UpdateTaskRequest): Promise<Task | null> {
+  async updateTask(userId: string, taskId: string, updates: UpdateTaskRequest): Promise<Task | null> {
     const { rows: existing } = await this.pool.query(
-      'SELECT status FROM tasks WHERE id = $1',
-      [taskId],
+      'SELECT status FROM tasks WHERE id = $1 AND user_id = $2',
+      [taskId, userId],
     );
     if (existing.length === 0) return null;
 
@@ -362,7 +365,7 @@ export class PostgresAppStore {
     }
     if (updates.partnerId !== undefined) {
       const pid = normalizeRequiredText(updates.partnerId, 'La marca');
-      const { rows: pr } = await this.pool.query('SELECT 1 FROM partners WHERE id = $1', [pid]);
+      const { rows: pr } = await this.pool.query('SELECT 1 FROM partners WHERE id = $1 AND user_id = $2', [pid, userId]);
       if (pr.length === 0) throw new Error('La marca seleccionada no existe.');
       setClauses.push(`partner_id = $${idx++}`);
       values.push(pid);
@@ -403,17 +406,18 @@ export class PostgresAppStore {
       const { rows } = await this.pool.query(
         `SELECT id, title, description, partner_id, status, due_date, value, gcal_event_id,
                 created_at, completed_at, cobrado_at, actual_payment
-         FROM tasks WHERE id = $1`,
-        [taskId],
+         FROM tasks WHERE id = $1 AND user_id = $2`,
+        [taskId, userId],
       );
       return mapRowToTask(rows[0]);
     }
 
     setClauses.push('updated_at = NOW()');
     values.push(taskId);
+    values.push(userId);
 
     const { rows: updated } = await this.pool.query(
-      `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING
+      `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${idx} AND user_id = $${idx + 1} RETURNING
        id, title, description, partner_id, status, due_date, value, gcal_event_id,
        created_at, completed_at, cobrado_at, actual_payment`,
       values,
@@ -421,33 +425,37 @@ export class PostgresAppStore {
 
     if (updates.status !== undefined && updates.status !== previousStatus) {
       await this.pool.query(
-        `INSERT INTO task_status_history (task_id, from_status, to_status)
-         VALUES ($1, $2, $3)`,
-        [taskId, previousStatus, updates.status],
+        `INSERT INTO task_status_history (task_id, user_id, from_status, to_status)
+         VALUES ($1, $2, $3, $4)`,
+        [taskId, userId, previousStatus, updates.status],
       );
     }
 
     return mapRowToTask(updated[0]);
   }
 
-  async deleteTask(taskId: string): Promise<DeleteEntityResponse> {
-    const { rowCount } = await this.pool.query('DELETE FROM tasks WHERE id = $1', [taskId]);
+  async deleteTask(userId: string, taskId: string): Promise<DeleteEntityResponse> {
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM tasks WHERE id = $1 AND user_id = $2',
+      [taskId, userId],
+    );
     return { success: (rowCount ?? 0) > 0 };
   }
 
   /* ---------- PARTNERS ---------- */
 
-  async listPartners(): Promise<Partner[]> {
+  async listPartners(userId: string): Promise<Partner[]> {
     const { rows: partnerRows } = await this.pool.query(
-      'SELECT * FROM partners ORDER BY created_at ASC',
+      'SELECT * FROM partners WHERE user_id = $1 ORDER BY created_at ASC',
+      [userId],
     );
 
     if (partnerRows.length === 0) return [];
 
     const partnerIds = partnerRows.map(r => r.id);
     const { rows: contactRows } = await this.pool.query(
-      'SELECT * FROM contacts WHERE partner_id = ANY($1) ORDER BY created_at ASC',
-      [partnerIds],
+      'SELECT * FROM contacts WHERE partner_id = ANY($1) AND user_id = $2 ORDER BY created_at ASC',
+      [partnerIds, userId],
     );
 
     const contactsByPartner = new Map<string, Contact[]>();
@@ -463,14 +471,14 @@ export class PostgresAppStore {
     }));
   }
 
-  async createPartner(input: CreatePartnerRequest): Promise<Partner> {
+  async createPartner(userId: string, input: CreatePartnerRequest): Promise<Partner> {
     const normalizedName = normalizePartnerName(input.name, 'El nombre de la marca');
     const lookupKey = getPartnerLookupKey(normalizedName);
 
-    // Dedup check
+    // Dedup check scoped to user
     const { rows: existing } = await this.pool.query(
-      'SELECT * FROM partners WHERE name_lookup = $1',
-      [lookupKey],
+      'SELECT * FROM partners WHERE name_lookup = $1 AND user_id = $2',
+      [lookupKey, userId],
     );
 
     if (existing.length > 0) {
@@ -496,20 +504,20 @@ export class PostgresAppStore {
     const source = normalizeText(input.source);
 
     const { rows } = await this.pool.query(
-      `INSERT INTO partners (id, name, name_lookup, status, logo, partnership_type,
+      `INSERT INTO partners (id, user_id, name, name_lookup, status, logo, partnership_type,
          key_terms, start_date, end_date, monthly_revenue, annual_revenue, main_channel, source)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING created_at`,
-      [id, normalizedName, lookupKey, status, logo, partnershipType,
+      [id, userId, normalizedName, lookupKey, status, logo, partnershipType,
        keyTerms, startDate, endDate, monthlyRevenue, annualRevenue, mainChannel, source],
     );
 
     const createdAt = rows[0].created_at instanceof Date ? rows[0].created_at.toISOString() : rows[0].created_at;
 
     await this.pool.query(
-      `INSERT INTO partner_status_history (partner_id, from_status, to_status)
-       VALUES ($1, NULL, $2)`,
-      [id, status],
+      `INSERT INTO partner_status_history (partner_id, user_id, from_status, to_status)
+       VALUES ($1, $2, NULL, $3)`,
+      [id, userId, status],
     );
 
     return {
@@ -530,10 +538,10 @@ export class PostgresAppStore {
     };
   }
 
-  async updatePartner(partnerId: string, updates: UpdatePartnerRequest): Promise<Partner | null> {
+  async updatePartner(userId: string, partnerId: string, updates: UpdatePartnerRequest): Promise<Partner | null> {
     const { rows: existing } = await this.pool.query(
-      'SELECT * FROM partners WHERE id = $1',
-      [partnerId],
+      'SELECT * FROM partners WHERE id = $1 AND user_id = $2',
+      [partnerId, userId],
     );
     if (existing.length === 0) return null;
 
@@ -547,8 +555,8 @@ export class PostgresAppStore {
       const lookupKey = getPartnerLookupKey(normalizedName);
 
       const { rows: dupes } = await this.pool.query(
-        'SELECT 1 FROM partners WHERE name_lookup = $1 AND id != $2',
-        [lookupKey, partnerId],
+        'SELECT 1 FROM partners WHERE name_lookup = $1 AND id != $2 AND user_id = $3',
+        [lookupKey, partnerId, userId],
       );
       if (dupes.length > 0) {
         throw new Error('Ya existe una marca con ese nombre.');
@@ -608,25 +616,26 @@ export class PostgresAppStore {
     if (setClauses.length > 0) {
       setClauses.push('updated_at = NOW()');
       values.push(partnerId);
+      values.push(userId);
 
       await this.pool.query(
-        `UPDATE partners SET ${setClauses.join(', ')} WHERE id = $${idx}`,
+        `UPDATE partners SET ${setClauses.join(', ')} WHERE id = $${idx} AND user_id = $${idx + 1}`,
         values,
       );
     }
 
     if (updates.status !== undefined && updates.status !== previousStatus) {
       await this.pool.query(
-        `INSERT INTO partner_status_history (partner_id, from_status, to_status)
-         VALUES ($1, $2, $3)`,
-        [partnerId, previousStatus, updates.status],
+        `INSERT INTO partner_status_history (partner_id, user_id, from_status, to_status)
+         VALUES ($1, $2, $3, $4)`,
+        [partnerId, userId, previousStatus, updates.status],
       );
     }
 
     // Re-fetch full partner with contacts
     const { rows: partnerRows } = await this.pool.query(
-      'SELECT * FROM partners WHERE id = $1',
-      [partnerId],
+      'SELECT * FROM partners WHERE id = $1 AND user_id = $2',
+      [partnerId, userId],
     );
     const partner = mapRowToPartner(partnerRows[0]);
 
@@ -641,10 +650,10 @@ export class PostgresAppStore {
 
   /* ---------- CONTACTS ---------- */
 
-  async addContact(partnerId: string, input: CreateContactRequest): Promise<Contact | null> {
+  async addContact(userId: string, partnerId: string, input: CreateContactRequest): Promise<Contact | null> {
     const { rows: partnerCheck } = await this.pool.query(
-      'SELECT 1 FROM partners WHERE id = $1',
-      [partnerId],
+      'SELECT 1 FROM partners WHERE id = $1 AND user_id = $2',
+      [partnerId, userId],
     );
     if (partnerCheck.length === 0) return null;
 
@@ -657,18 +666,18 @@ export class PostgresAppStore {
     const phone = normalizeOptionalText((input as any).phone) || '';
 
     await this.pool.query(
-      `INSERT INTO contacts (id, partner_id, name, role, email, ig, phone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [id, partnerId, name, role, email, ig, phone],
+      `INSERT INTO contacts (id, user_id, partner_id, name, role, email, ig, phone)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id, userId, partnerId, name, role, email, ig, phone],
     );
 
     return { id, name, role, email, ig, phone };
   }
 
-  async updateContact(contactId: string, updates: UpdateContactRequest): Promise<Contact | null> {
+  async updateContact(userId: string, contactId: string, updates: UpdateContactRequest): Promise<Contact | null> {
     const { rows: existing } = await this.pool.query(
-      'SELECT * FROM contacts WHERE id = $1',
-      [contactId],
+      'SELECT * FROM contacts WHERE id = $1 AND user_id = $2',
+      [contactId, userId],
     );
     if (existing.length === 0) return null;
 
@@ -705,29 +714,45 @@ export class PostgresAppStore {
 
     setClauses.push('updated_at = NOW()');
     values.push(contactId);
+    values.push(userId);
 
     const { rows: updated } = await this.pool.query(
-      `UPDATE contacts SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`,
+      `UPDATE contacts SET ${setClauses.join(', ')} WHERE id = $${idx} AND user_id = $${idx + 1} RETURNING *`,
       values,
     );
 
     return mapRowToContact(updated[0]);
   }
 
-  async deleteContact(contactId: string): Promise<DeleteEntityResponse> {
-    const { rowCount } = await this.pool.query('DELETE FROM contacts WHERE id = $1', [contactId]);
+  async deleteContact(userId: string, contactId: string): Promise<DeleteEntityResponse> {
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM contacts WHERE id = $1 AND user_id = $2',
+      [contactId, userId],
+    );
     return { success: (rowCount ?? 0) > 0 };
   }
 
   /* ---------- PROFILE ---------- */
 
-  async getProfile(): Promise<UserProfile> {
+  async getProfile(userId: string): Promise<UserProfile> {
     const [profileResult, goalsResult] = await Promise.all([
-      this.pool.query('SELECT * FROM user_profile WHERE id = 1'),
-      this.pool.query('SELECT * FROM goals ORDER BY sort_order ASC'),
+      this.pool.query('SELECT * FROM user_profile WHERE user_id = $1', [userId]),
+      this.pool.query('SELECT * FROM goals WHERE user_id = $1 ORDER BY sort_order ASC', [userId]),
     ]);
 
     const row = profileResult.rows[0];
+
+    if (!row) {
+      return {
+        name: '',
+        avatar: '',
+        handle: '',
+        socialProfiles: createEmptySocialProfiles(),
+        mediaKit: createDefaultMediaKitProfile(),
+        goals: [],
+        notificationsEnabled: false,
+      };
+    }
 
     const socialProfiles = {
       ...createEmptySocialProfiles(),
@@ -750,22 +775,23 @@ export class PostgresAppStore {
     };
   }
 
-  async updateProfile(updates: UpdateProfileRequest): Promise<UserProfile> {
+  async updateProfile(userId: string, updates: UpdateProfileRequest): Promise<UserProfile> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
 
       // Fetch current state for merge logic
       const { rows: profileRows } = await client.query(
-        'SELECT * FROM user_profile WHERE id = 1',
+        'SELECT * FROM user_profile WHERE user_id = $1',
+        [userId],
       );
       const currentRow = profileRows[0];
       const currentSocialProfiles = {
         ...createEmptySocialProfiles(),
-        ...(currentRow.social_profiles || {}),
+        ...(currentRow?.social_profiles || {}),
       };
       const currentMediaKit = normalizeMediaKitProfile(
-        currentRow.media_kit || {},
+        currentRow?.media_kit || {},
         createDefaultMediaKitProfile(),
       );
 
@@ -831,8 +857,9 @@ export class PostgresAppStore {
 
       if (setClauses.length > 0) {
         setClauses.push('updated_at = NOW()');
+        values.push(userId);
         await client.query(
-          `UPDATE user_profile SET ${setClauses.join(', ')} WHERE id = 1`,
+          `UPDATE user_profile SET ${setClauses.join(', ')} WHERE user_id = $${idx}`,
           values,
         );
       }
@@ -843,7 +870,7 @@ export class PostgresAppStore {
           throw new Error('Los objetivos deben ser un array.');
         }
 
-        await client.query('DELETE FROM goals');
+        await client.query('DELETE FROM goals WHERE user_id = $1', [userId]);
 
         const normalizedGoals = updates.goals.map((goal: any, index: number) => ({
           id: normalizeText(goal.id) || randomUUID(),
@@ -860,10 +887,10 @@ export class PostgresAppStore {
 
         for (const g of normalizedGoals) {
           await client.query(
-            `INSERT INTO goals (id, area, general_goal, success_metric, specific_target,
+            `INSERT INTO goals (id, user_id, area, general_goal, success_metric, specific_target,
                timeframe, status, priority, revenue_estimation, sort_order)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-            [g.id, g.area, g.generalGoal, g.successMetric, g.specificTarget,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+            [g.id, userId, g.area, g.generalGoal, g.successMetric, g.specificTarget,
              g.timeframe, g.status, g.priority, g.revenueEstimation, g.sortOrder],
           );
         }
@@ -877,20 +904,26 @@ export class PostgresAppStore {
       client.release();
     }
 
-    return this.getProfile();
+    return this.getProfile(userId);
   }
 
   /* ---------- SETTINGS ---------- */
 
-  async getSettings(): Promise<SettingsResponse> {
-    const { rows } = await this.pool.query('SELECT * FROM user_settings WHERE id = 1');
+  async getSettings(userId: string): Promise<SettingsResponse> {
+    const { rows } = await this.pool.query(
+      'SELECT * FROM user_settings WHERE user_id = $1',
+      [userId],
+    );
+    if (rows.length === 0) {
+      return { accentColor: '#C96F5B', theme: 'light' };
+    }
     return {
       accentColor: rows[0].accent_color,
       theme: rows[0].theme as any,
     };
   }
 
-  async updateSettings(updates: UpdateSettingsRequest): Promise<SettingsResponse> {
+  async updateSettings(userId: string, updates: UpdateSettingsRequest): Promise<SettingsResponse> {
     const setClauses: string[] = [];
     const values: any[] = [];
     let idx = 1;
@@ -909,57 +942,64 @@ export class PostgresAppStore {
 
     if (setClauses.length > 0) {
       setClauses.push('updated_at = NOW()');
+      values.push(userId);
       await this.pool.query(
-        `UPDATE user_settings SET ${setClauses.join(', ')} WHERE id = 1`,
+        `UPDATE user_settings SET ${setClauses.join(', ')} WHERE user_id = $${idx}`,
         values,
       );
     }
 
-    return this.getSettings();
+    return this.getSettings(userId);
   }
 
   /* ---------- TEMPLATES ---------- */
 
-  async listTemplates(): Promise<Template[]> {
-    const { rows } = await this.pool.query('SELECT * FROM templates ORDER BY created_at ASC');
+  async listTemplates(userId: string): Promise<Template[]> {
+    const { rows } = await this.pool.query(
+      'SELECT * FROM templates WHERE user_id = $1 ORDER BY created_at ASC',
+      [userId],
+    );
     return rows.map(r => ({ id: r.id, name: r.name, subject: r.subject, body: r.body }));
   }
 
-  async createTemplate(input: CreateTemplateRequest): Promise<Template> {
+  async createTemplate(userId: string, input: CreateTemplateRequest): Promise<Template> {
     const id = randomUUID();
     const name = normalizeRequiredText(input.name, 'El nombre de la plantilla');
     const subject = normalizeRequiredText(input.subject, 'El asunto');
     const body = normalizeRequiredText(input.body, 'El cuerpo del mensaje');
 
     await this.pool.query(
-      'INSERT INTO templates (id, name, subject, body) VALUES ($1,$2,$3,$4)',
-      [id, name, subject, body],
+      'INSERT INTO templates (id, user_id, name, subject, body) VALUES ($1,$2,$3,$4,$5)',
+      [id, userId, name, subject, body],
     );
 
     return { id, name, subject, body };
   }
 
-  async deleteTemplate(templateId: string): Promise<DeleteEntityResponse> {
-    const { rowCount } = await this.pool.query('DELETE FROM templates WHERE id = $1', [templateId]);
+  async deleteTemplate(userId: string, templateId: string): Promise<DeleteEntityResponse> {
+    const { rowCount } = await this.pool.query(
+      'DELETE FROM templates WHERE id = $1 AND user_id = $2',
+      [templateId, userId],
+    );
     return { success: (rowCount ?? 0) > 0 };
   }
 
   /* ---------- STATUS HISTORY ---------- */
 
-  async getTaskStatusHistory(taskId: string): Promise<TaskStatusTransition[]> {
+  async getTaskStatusHistory(userId: string, taskId: string): Promise<TaskStatusTransition[]> {
     const { rows } = await this.pool.query(
       `SELECT id, task_id, from_status, to_status, changed_at
-       FROM task_status_history WHERE task_id = $1 ORDER BY changed_at ASC`,
-      [taskId],
+       FROM task_status_history WHERE task_id = $1 AND user_id = $2 ORDER BY changed_at ASC`,
+      [taskId, userId],
     );
     return rows.map(mapRowToTaskStatusTransition);
   }
 
-  async getPartnerStatusHistory(partnerId: string): Promise<PartnerStatusTransition[]> {
+  async getPartnerStatusHistory(userId: string, partnerId: string): Promise<PartnerStatusTransition[]> {
     const { rows } = await this.pool.query(
       `SELECT id, partner_id, from_status, to_status, changed_at
-       FROM partner_status_history WHERE partner_id = $1 ORDER BY changed_at ASC`,
-      [partnerId],
+       FROM partner_status_history WHERE partner_id = $1 AND user_id = $2 ORDER BY changed_at ASC`,
+      [partnerId, userId],
     );
     return rows.map(mapRowToPartnerStatusTransition);
   }

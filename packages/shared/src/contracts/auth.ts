@@ -26,6 +26,7 @@ export interface LoginRequest {
 }
 
 export interface SessionUser {
+  id: string;
   email: string;
   name: string;
   avatar: string;

@@ -9,7 +9,7 @@
 
 ## Project
 
-Tia is a micro SaaS CRM for content creators/influencers. Monorepo structure:
+Tia is a multi-user personal CRM for content creators/influencers. Each user has their own isolated data (tasks, partners, profile, settings, templates). No collaborative workspaces — each account is a personal workspace. Monorepo structure:
 
 - `apps/web/src/` — React 19 SPA (Vite, Tailwind CSS 4, TypeScript)
 - `apps/api/src/` — Express backend (auth, business logic, integrations)
@@ -22,8 +22,8 @@ Tia is a micro SaaS CRM for content creators/influencers. Monorepo structure:
 
 ## Current State
 
-- In-memory storage (PostgreSQL migration pending)
-- No real authentication yet
+- PostgreSQL (Supabase) with multi-tenant data isolation (all tables scoped by user_id)
+- Email/password + Google OAuth authentication (bcrypt, express-session)
 - No CI/CD or production deployment
 
 ## Key Conventions

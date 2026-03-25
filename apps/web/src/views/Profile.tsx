@@ -674,7 +674,7 @@ export default function Profile() {
                         Plan Estratégico
                       </p>
                       <p className="mt-0.5 truncate text-[1.05rem] font-black tracking-tight text-[var(--text-primary)]">
-                        Objetivos del Año
+                        Plan Estratégico
                       </p>
                       <p className="mt-1 truncate text-[11px] font-medium text-[var(--text-secondary)]">
                         {safeArr(profileForm.goals).length > 0
@@ -1393,14 +1393,9 @@ export default function Profile() {
             <div className="relative border-b px-5 py-5 [border-color:var(--line-soft)] sm:px-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="flex items-baseline gap-3">
-                    <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                      Objetivos del año
-                    </h2>
-                    <span className="hidden text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase sm:inline-block">
-                      Plan Estratégico
-                    </span>
-                  </div>
+                  <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                    Plan Estratégico
+                  </h2>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                     Define tus metas clave, proyecciones de ingresos y estado general de tus verticales de negocio.
                   </p>
@@ -1477,12 +1472,16 @@ export default function Profile() {
                       </div>
                       <div className="sm:col-span-1">
                         <label className={labelClass}>Plazo</label>
-                        <input
-                          value={goal?.timeframe || ''}
-                          onChange={(event) => setGoalField(index, 'timeframe', event.target.value)}
-                          className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
-                          placeholder="Ej. Anual o Q3 2026"
+                        <CustomSelect
+                          value={goal?.timeframe || '1 año'}
+                          onChange={(val) => setGoalField(index, 'timeframe', val)}
+                          options={[
+                            { value: '1 año', label: '1 año' },
+                            { value: '2 años', label: '2 años' },
+                            { value: '3 años', label: '3 años' },
+                          ]}
+                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonClassName="font-medium bg-[var(--surface-muted)]"
                         />
                       </div>
 

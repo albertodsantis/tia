@@ -16,16 +16,34 @@ import type {
 
 type OAuthClient = InstanceType<typeof google.auth.OAuth2>;
 
-interface AppStore {
-  updateProfile(updates: { name?: string; avatar?: string }): any;
-}
-
 const BCRYPT_ROUNDS = 10;
+
+/** Create profile + settings rows for a new user (idempotent via ON CONFLICT). */
+async function ensureUserData(
+  pool: pg.Pool,
+  userId: string,
+  name: string,
+  email: string,
+  avatar = '',
+) {
+  const mediaKit = JSON.stringify({ contactEmail: email });
+  await pool.query(
+    `INSERT INTO user_profile (user_id, name, avatar, media_kit)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id) DO UPDATE SET name = $2, avatar = $3`,
+    [userId, name, avatar, mediaKit],
+  );
+  await pool.query(
+    `INSERT INTO user_settings (user_id)
+     VALUES ($1)
+     ON CONFLICT (user_id) DO NOTHING`,
+    [userId],
+  );
+}
 
 export function createAuthRouter(
   oauth2Client: OAuthClient,
   appUrl: string,
-  appStore: AppStore,
   pool: pg.Pool,
 ) {
   const router = Router();
@@ -73,14 +91,18 @@ export function createAuthRouter(
       }
 
       const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      const userId = randomUUID();
 
       await pool.query(
         `INSERT INTO users (id, email, password_hash, name, provider)
          VALUES ($1, $2, $3, $4, 'email')`,
-        [randomUUID(), trimmedEmail, passwordHash, trimmedName],
+        [userId, trimmedEmail, passwordHash, trimmedName],
       );
 
+      await ensureUserData(pool, userId, trimmedName, trimmedEmail);
+
       const user: SessionUser = {
+        id: userId,
         email: trimmedEmail,
         name: trimmedName,
         avatar: '',
@@ -88,12 +110,6 @@ export function createAuthRouter(
       };
 
       setSessionUser(req, user);
-
-      try {
-        await appStore.updateProfile({ name: user.name });
-      } catch (err) {
-        console.error('Failed to sync profile on register:', err);
-      }
 
       const response: MeResponse = { user };
       res.status(201).json(response);
@@ -133,7 +149,11 @@ export function createAuthRouter(
         return res.status(401).json({ error: 'Email o contraseña incorrectos.' });
       }
 
+      // Ensure profile/settings exist (idempotent — handles legacy users)
+      await ensureUserData(pool, dbUser.id, dbUser.name, dbUser.email, dbUser.avatar || '');
+
       const user: SessionUser = {
+        id: dbUser.id,
         email: dbUser.email,
         name: dbUser.name,
         avatar: dbUser.avatar || '',
@@ -141,12 +161,6 @@ export function createAuthRouter(
       };
 
       setSessionUser(req, user);
-
-      try {
-        await appStore.updateProfile({ name: user.name });
-      } catch (err) {
-        console.error('Failed to sync profile on login:', err);
-      }
 
       const response: MeResponse = { user };
       res.json(response);
@@ -170,11 +184,10 @@ export function createAuthRouter(
   router.delete('/account', async (req, res) => {
     const sessionUser = getSessionUser(req);
 
-    if (sessionUser?.email) {
+    if (sessionUser?.id) {
       try {
-        await pool.query('DELETE FROM users WHERE LOWER(email) = $1', [
-          sessionUser.email.toLowerCase(),
-        ]);
+        // CASCADE deletes profile, settings, tasks, partners, etc.
+        await pool.query('DELETE FROM users WHERE id = $1', [sessionUser.id]);
       } catch (err) {
         console.error('Error deleting user row:', err);
       }
@@ -264,21 +277,28 @@ export function createAuthRouter(
           [googleEmail],
         );
 
+        let userId: string;
+
         if (existing.length === 0) {
+          userId = randomUUID();
           await pool.query(
             `INSERT INTO users (id, email, password_hash, name, avatar, provider)
              VALUES ($1, $2, '', $3, $4, 'google')`,
-            [randomUUID(), googleEmail, googleName, googleAvatar],
+            [userId, googleEmail, googleName, googleAvatar],
           );
         } else {
+          userId = existing[0].id;
           await pool.query(
             `UPDATE users SET name = $1, avatar = $2, provider = 'google', updated_at = NOW()
-             WHERE LOWER(email) = $3`,
-            [googleName, googleAvatar, googleEmail],
+             WHERE id = $3`,
+            [googleName, googleAvatar, userId],
           );
         }
 
+        await ensureUserData(pool, userId, googleName, googleEmail, googleAvatar);
+
         const user: SessionUser = {
+          id: userId,
           email: googleEmail,
           name: googleName,
           avatar: googleAvatar,
@@ -286,16 +306,6 @@ export function createAuthRouter(
         };
 
         setSessionUser(req, user);
-
-        try {
-          await appStore.updateProfile({
-            name: user.name,
-            ...(user.avatar ? { avatar: user.avatar } : {}),
-          });
-        } catch (err) {
-          console.error('Failed to sync profile on Google login:', err);
-        }
-
         (req.session as any).tokens = tokens;
 
         res.send(`
