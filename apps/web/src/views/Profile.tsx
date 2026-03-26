@@ -133,7 +133,7 @@ function SectionHeader({
 }
 
 export default function Profile() {
-  const { profile, updateProfile, accentColor, partners, addPartner } = useAppContext();
+  const { profile, updateProfile, accentColor, accentHex, partners, addPartner } = useAppContext();
   const [profileForm, setProfileForm] = useState<UserProfile>(() => {
     const safeGoals = safeArr(profile?.goals).map((g: any, i) =>
           typeof g === 'string'
@@ -484,7 +484,7 @@ export default function Profile() {
         <head>
           <title>Media kit - ${escapeHtml(profileForm.name)}</title>
           <style>
-            :root { --accent: ${accentColor}; --text: #1f2937; --muted: #64748b; --surface: #ffffff; --soft: #f8fafc; --line: rgba(148, 163, 184, 0.22); }
+            :root { --accent: ${accentHex}; --text: #1f2937; --muted: #64748b; --surface: #ffffff; --soft: #f8fafc; --line: rgba(148, 163, 184, 0.22); }
             * { box-sizing: border-box; }
             body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%); -webkit-font-smoothing: antialiased; }
             .page { max-width: 1120px; margin: 0 auto; padding: 48px 28px 72px; }
@@ -676,17 +676,17 @@ export default function Profile() {
                 type="button"
                 onClick={() => setIsGoalsModalOpen(true)}
                 className="group relative w-full overflow-hidden rounded-[1.35rem] border border-[var(--line-soft)] bg-[var(--surface-card)] p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_var(--btn-glow)] active:scale-95"
-                style={{ '--btn-glow': `${accentColor}40` } as React.CSSProperties}
+                style={{ '--btn-glow': `${accentHex}40` } as React.CSSProperties}
               >
                 <div
                   className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: `linear-gradient(135deg, ${accentColor}12 0%, transparent 100%)` }}
+                  style={{ background: `linear-gradient(135deg, ${accentHex}12 0%, transparent 100%)` }}
                 />
                 <div className="relative flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                      style={{ backgroundColor: accentColor, color: '#fff' }}
+                      style={{ backgroundColor: accentHex, color: '#fff' }}
                     >
                       <Target size={22} strokeWidth={2.5} />
                     </div>
@@ -707,14 +707,14 @@ export default function Profile() {
                   <div
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--text-primary)] transition-transform duration-300 group-hover:translate-x-1"
                   >
-                    <ChevronRight size={18} strokeWidth={2.5} style={{ color: accentColor }} />
+                    <ChevronRight size={18} strokeWidth={2.5} style={{ color: accentHex }} />
                   </div>
                 </div>
               </button>
 
               <div className="flex items-center justify-end gap-3">
                 <Button
-                  accentColor={accentColor}
+                  accentColor={accentHex}
                   onClick={handleOpenMediaKit}
                   className="flex-1 justify-center sm:flex-none"
                 >
@@ -783,7 +783,7 @@ export default function Profile() {
                 value={profileForm.name || ''}
                 onChange={(event) => setProfileField('name', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="Nombre artistico o profesional"
               />
             </div>
@@ -793,7 +793,7 @@ export default function Profile() {
                 value={profileForm.handle || ''}
                 onChange={(event) => setProfileField('handle', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="@tuusuario"
               />
             </div>
@@ -803,7 +803,7 @@ export default function Profile() {
                 value={profileForm.avatar || ''}
                 onChange={(url) => setProfileField('avatar', url)}
                 category="avatar"
-                accentColor={accentColor}
+                accentColor={accentHex}
                 uploadsEnabled={uploadsEnabled}
                 aspectRatio="aspect-square"
                 placeholder="Subir avatar"
@@ -816,7 +816,7 @@ export default function Profile() {
                 value={mediaKit.periodLabel || ''}
                 onChange={(event) => setMediaKitField('periodLabel', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="Media Kit - Marzo 2026"
               />
             </div>
@@ -826,7 +826,7 @@ export default function Profile() {
                 value={mediaKit.tagline || ''}
                 onChange={(event) => setMediaKitField('tagline', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="Humor, estilo, verticales o posicionamiento"
               />
             </div>
@@ -836,7 +836,7 @@ export default function Profile() {
                 value={mediaKit.contactEmail || ''}
                 onChange={(event) => setMediaKitField('contactEmail', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="contacto@..."
               />
             </div>
@@ -846,7 +846,7 @@ export default function Profile() {
                 value={mediaKit.updatedLabel || ''}
                 onChange={(event) => setMediaKitField('updatedLabel', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="Marzo 2026"
               />
             </div>
@@ -862,7 +862,7 @@ export default function Profile() {
                     value={profileForm.socialProfiles?.[field.key] || ''}
                     onChange={(event) => setSocialField(field.key, event.target.value)}
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder={field.placeholder}
                   />
                 </div>
@@ -879,7 +879,7 @@ export default function Profile() {
                 value={mediaKit.featuredImage || ''}
                 onChange={(url) => setMediaKitField('featuredImage', url)}
                 category="media-kit"
-                accentColor={accentColor}
+                accentColor={accentHex}
                 uploadsEnabled={uploadsEnabled}
                 aspectRatio="aspect-video"
                 placeholder="Subir portada"
@@ -891,7 +891,7 @@ export default function Profile() {
                 value={mediaKit.aboutTitle || ''}
                 onChange={(event) => setMediaKitField('aboutTitle', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="Hola! Soy..."
               />
             </div>
@@ -910,7 +910,7 @@ export default function Profile() {
                     setStringListField('aboutParagraphs', index, event.target.value)
                   }
                   className={textareaClass}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                  style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                   placeholder="Describe tu voz, tu universo y como trabajas con marcas."
                 />
                 </div>
@@ -928,7 +928,7 @@ export default function Profile() {
                       value={typeof tag === 'string' ? tag : ''}
                       onChange={(event) => setStringListField('topicTags', index, event.target.value)}
                       className={fieldClass}
-                      style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                       placeholder={`#Tag${index + 1}`}
                     />
                     <button type="button" onClick={() => removeStringListItem('topicTags', index)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
@@ -969,7 +969,7 @@ export default function Profile() {
                       setMetricField('insightStats', index, 'label', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="Seguidores"
                   />
                   <label className={`${labelClass} mt-4`}>Valor</label>
@@ -979,7 +979,7 @@ export default function Profile() {
                       setMetricField('insightStats', index, 'value', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="22K"
                   />
                 </div>
@@ -1019,7 +1019,7 @@ export default function Profile() {
                       setMetricField('audienceGender', index, 'label', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                   <label className={`${labelClass} mt-4`}>Valor</label>
@@ -1029,7 +1029,7 @@ export default function Profile() {
                       setMetricField('audienceGender', index, 'value', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                 </div>
@@ -1065,7 +1065,7 @@ export default function Profile() {
                       setMetricField('ageDistribution', index, 'label', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                   <label className={`${labelClass} mt-4`}>Valor</label>
@@ -1075,7 +1075,7 @@ export default function Profile() {
                       setMetricField('ageDistribution', index, 'value', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                 </div>
@@ -1111,7 +1111,7 @@ export default function Profile() {
                       setMetricField('topCountries', index, 'label', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                   <label className={`${labelClass} mt-4`}>Valor</label>
@@ -1121,7 +1121,7 @@ export default function Profile() {
                       setMetricField('topCountries', index, 'value', event.target.value)
                     }
                     className={fieldClass}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder=""
                   />
                 </div>
@@ -1153,7 +1153,7 @@ export default function Profile() {
                   value={typeof image === 'string' ? image : ''}
                   onChange={(url) => setStringListField('portfolioImages', index, url)}
                   category="portfolio"
-                  accentColor={accentColor}
+                  accentColor={accentHex}
                   uploadsEnabled={uploadsEnabled}
                   aspectRatio="aspect-[4/3]"
                   placeholder={`Imagen ${index + 1}`}
@@ -1174,7 +1174,7 @@ export default function Profile() {
                 value={mediaKit.brandsTitle || ''}
                 onChange={(event) => setMediaKitField('brandsTitle', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1208,7 +1208,7 @@ export default function Profile() {
                     await addPartner({ name, status: 'Prospecto', contacts: [] } as any);
                     toast.success(`${name} añadida al directorio`);
                   }}
-                  accentColor={accentColor}
+                  accentColor={accentHex}
                 />
               </div>
             ))}
@@ -1226,7 +1226,7 @@ export default function Profile() {
                 value={mediaKit.servicesTitle || ''}
                 onChange={(event) => setMediaKitField('servicesTitle', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1236,7 +1236,7 @@ export default function Profile() {
                 value={mediaKit.servicesDescription || ''}
                 onChange={(event) => setMediaKitField('servicesDescription', event.target.value)}
                 className={textareaClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1256,14 +1256,14 @@ export default function Profile() {
                       value={offering?.title || ''}
                       onChange={(event) => setOfferingField(index, 'title', event.target.value)}
                       className={fieldClass}
-                      style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                       placeholder=""
                     />
                     <input
                       value={offering?.price || ''}
                       onChange={(event) => setOfferingField(index, 'price', event.target.value)}
                       className={fieldClass}
-                      style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                       placeholder=""
                     />
                     <textarea
@@ -1272,7 +1272,7 @@ export default function Profile() {
                         setOfferingField(index, 'description', event.target.value)
                       }
                       className={textareaClass}
-                      style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                       placeholder=""
                     />
                   </div>
@@ -1293,7 +1293,7 @@ export default function Profile() {
                 value={mediaKit.closingTitle || ''}
                 onChange={(event) => setMediaKitField('closingTitle', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1305,7 +1305,7 @@ export default function Profile() {
                   setMediaKitField('closingDescription', event.target.value)
                 }
                 className={textareaClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1315,7 +1315,7 @@ export default function Profile() {
                 value={mediaKit.footerNote || ''}
                 onChange={(event) => setMediaKitField('footerNote', event.target.value)}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1380,7 +1380,7 @@ export default function Profile() {
                           value={goal?.area || ''}
                           onChange={(event) => setGoalField(index, 'area', event.target.value)}
                           className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                         placeholder=""
                         />
                       </div>
@@ -1390,7 +1390,7 @@ export default function Profile() {
                           value={goal?.generalGoal || ''}
                           onChange={(event) => setGoalField(index, 'generalGoal', event.target.value)}
                           className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           placeholder=""
                         />
                       </div>
@@ -1401,7 +1401,7 @@ export default function Profile() {
                           value={goal?.successMetric || ''}
                           onChange={(event) => setGoalField(index, 'successMetric', event.target.value)}
                           className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           placeholder=""
                         />
                       </div>
@@ -1411,7 +1411,7 @@ export default function Profile() {
                           value={goal?.specificTarget || ''}
                           onChange={(event) => setGoalField(index, 'specificTarget', event.target.value)}
                           className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           placeholder=""
                         />
                       </div>
@@ -1425,7 +1425,7 @@ export default function Profile() {
                             { value: '2 años', label: '2 años' },
                             { value: '3 años', label: '3 años' },
                           ]}
-                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           buttonClassName="font-medium bg-[var(--surface-muted)]"
                         />
                       </div>
@@ -1436,7 +1436,7 @@ export default function Profile() {
                           value={goal?.status || 'Pendiente'}
                           onChange={(val) => setGoalField(index, 'status', val as GoalStatus)}
                           options={GOAL_STATUSES.map((s) => ({ value: s, label: s }))}
-                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           buttonClassName="font-medium bg-[var(--surface-muted)]"
                         />
                       </div>
@@ -1446,7 +1446,7 @@ export default function Profile() {
                           value={goal?.priority || 'Media'}
                           onChange={(val) => setGoalField(index, 'priority', val as GoalPriority)}
                           options={GOAL_PRIORITIES.map((s) => ({ value: s, label: s }))}
-                          buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           buttonClassName="font-medium bg-[var(--surface-muted)]"
                         />
                       </div>
@@ -1457,7 +1457,7 @@ export default function Profile() {
                           value={goal?.revenueEstimation ?? ''}
                           onChange={(event) => setGoalField(index, 'revenueEstimation', Number(event.target.value))}
                           className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
-                          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                          style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                           placeholder=""
                         />
                       </div>
@@ -1485,7 +1485,7 @@ export default function Profile() {
                     Cancelar
                   </button>
                   <Button
-                    accentColor={accentColor}
+                    accentColor={accentHex}
                     onClick={async () => {
                       await handleSaveProfile();
                       setIsGoalsModalOpen(false);

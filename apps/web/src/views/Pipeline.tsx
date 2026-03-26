@@ -365,6 +365,7 @@ export default function Pipeline() {
     tasks,
     partners,
     accentColor,
+    accentHex,
     addTask,
     findPartnerByName,
     ensurePartnerByName,
@@ -713,7 +714,7 @@ export default function Pipeline() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accentColor }} />
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accentHex }} />
                 <p className="truncate text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
                   {partner?.name || 'Sin marca'}
                 </p>
@@ -748,7 +749,7 @@ export default function Pipeline() {
               disabled={updatingTaskId === task.id}
               onChange={(val) => void changeStatus(task.id, val as TaskStatus)}
               options={STATUSES.map(s => ({ value: s, label: s }))}
-              buttonStyle={getStatusSelectStyle(task.status, accentColor)}
+              buttonStyle={getStatusSelectStyle(task.status, accentHex)}
               buttonClassName="py-2.5 px-3 rounded-[0.8rem]"
             />
 
@@ -844,7 +845,7 @@ export default function Pipeline() {
             disabled={updatingTaskId === task.id}
             onChange={(val) => void changeStatus(task.id, val as TaskStatus)}
             options={STATUSES.map(s => ({ value: s, label: s }))}
-            buttonStyle={getStatusSelectStyle(task.status, accentColor)}
+            buttonStyle={getStatusSelectStyle(task.status, accentHex)}
             buttonClassName="py-2.5 px-3 rounded-[0.8rem]"
             className="w-full xl:w-[10.5rem]"
           />
@@ -921,7 +922,7 @@ export default function Pipeline() {
             )}
             style={
               !isSelected && dayTasks.length > 0
-                ? { backgroundColor: accentColor, color: 'var(--accent-foreground)' }
+                ? { backgroundColor: accentHex, color: 'var(--accent-foreground)' }
                 : undefined
             }
           >
@@ -1000,7 +1001,7 @@ export default function Pipeline() {
                     : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]/50 hover:text-[var(--text-primary)]',
                 )}
               >
-                <tab.icon size={18} style={view === tab.id ? { color: accentColor } : undefined} />
+                <tab.icon size={18} style={view === tab.id ? { color: accentHex } : undefined} />
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
@@ -1014,7 +1015,7 @@ export default function Pipeline() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="w-full rounded-[1rem] border bg-[var(--surface-muted)] py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:border-transparent focus:bg-[var(--surface-card)] focus:outline-none focus:ring-2 [border-color:var(--line-soft)]"
-              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
             />
           </div>
 
@@ -1028,7 +1029,7 @@ export default function Pipeline() {
               <DownloadCloud size={16} />
               Actualizar Calendar
             </Button>
-            <Button accentColor={accentColor} onClick={openCreate} className="flex-1 sm:flex-none">
+            <Button accentColor={accentHex} onClick={openCreate} className="flex-1 sm:flex-none">
               <Plus size={16} />
               Nueva tarea
             </Button>
@@ -1052,7 +1053,7 @@ export default function Pipeline() {
                     {currentStatusIdx + 1} de {STATUSES.length}
                   </p>
                   <div className="mt-1 flex items-center justify-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={getStatusDotStyle(currentStatus, accentColor)} />
+                    <span className="h-2.5 w-2.5 rounded-full" style={getStatusDotStyle(currentStatus, accentHex)} />
                     <h2 className="text-lg font-extrabold text-[var(--text-primary)]">{currentStatus}</h2>
                   </div>
                 </div>
@@ -1070,7 +1071,7 @@ export default function Pipeline() {
               {visibleTasks.length > 0 ? (
                 visibleTasks.map((task) => (
                   <React.Fragment key={task.id}>
-                    <SwipeableTaskCard task={task} onSwipe={handleSwipe} accentColor={accentColor}>
+                    <SwipeableTaskCard task={task} onSwipe={handleSwipe} accentColor={accentHex}>
                       {renderTaskCard(task)}
                     </SwipeableTaskCard>
                   </React.Fragment>
@@ -1105,7 +1106,7 @@ export default function Pipeline() {
                             <div className="flex items-center gap-2">
                               <span
                                 className="h-2.5 w-2.5 rounded-full"
-                                style={getStatusDotStyle(status, accentColor)}
+                                style={getStatusDotStyle(status, accentHex)}
                               />
                               <h2 className="text-[1rem] font-extrabold text-[var(--text-primary)]">
                                 {status}
@@ -1179,7 +1180,7 @@ export default function Pipeline() {
             title="Todavía no hay tareas"
             description="Añade tu primera entrega para empezar a construir el pipeline."
             action={
-              <Button accentColor={accentColor} onClick={openCreate}>
+              <Button accentColor={accentHex} onClick={openCreate}>
                 <Plus size={16} />
                 Crear tarea
               </Button>
@@ -1330,7 +1331,7 @@ export default function Pipeline() {
                 <Button
                   type="submit"
                   form="pipeline-task-form"
-                  accentColor={accentColor}
+                  accentColor={accentHex}
                   className="flex-1"
                   disabled={isSubmittingTask}
                 >
@@ -1355,7 +1356,7 @@ export default function Pipeline() {
                 value={form.title}
                 onChange={(event) => setForm({ ...form, title: event.target.value })}
                 className={fieldClass}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1370,7 +1371,7 @@ export default function Pipeline() {
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
                 className={cx(fieldClass, 'min-h-[110px]')}
-                style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
             </div>
@@ -1400,7 +1401,7 @@ export default function Pipeline() {
                       setIsPartnerPickerOpen(true);
                     }}
                     className={cx(fieldClass, 'bg-[var(--surface-card)]')}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="Busca en Directorio o escribe una marca nueva"
                   />
 
@@ -1464,7 +1465,7 @@ export default function Pipeline() {
                   value={form.value}
                   onChange={(event) => setForm({ ...form, value: event.target.value })}
                   className={cx(fieldClass, 'bg-[var(--surface-card)]')}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                  style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                   placeholder=""
                 />
               </div>
@@ -1480,7 +1481,7 @@ export default function Pipeline() {
                   value={form.dueDate}
                   onChange={(event) => setForm({ ...form, dueDate: event.target.value })}
                   className={cx(fieldClass, 'bg-[var(--surface-card)]')}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                  style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 />
               </div>
 
@@ -1493,7 +1494,7 @@ export default function Pipeline() {
                   value={form.status}
                   onChange={(val) => setForm({ ...form, status: val as TaskStatus })}
                   options={STATUSES.map(s => ({ value: s, label: s }))}
-                  buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                  buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                   buttonClassName="py-3.5 font-medium bg-[var(--surface-card)] border-[var(--line-soft)] focus:border-transparent"
                 />
               </div>

@@ -45,7 +45,7 @@ const formatTaskDate = (task: Task) =>
 
 /* ── GoalsMarquee ───────────────────────────────────────────── */
 
-function GoalsMarquee({ goals, accentColor }: { goals: string[]; accentColor: string }) {
+function GoalsMarquee({ goals, accentHex }: { goals: string[]; accentHex: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInteractingRef = useRef(false);
   const dragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
@@ -113,7 +113,7 @@ function GoalsMarquee({ goals, accentColor }: { goals: string[]; accentColor: st
             <div className="flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100">
               <div
                 className="h-1 w-1 shrink-0 rounded-full"
-                style={{ backgroundColor: accentColor }}
+                style={{ backgroundColor: accentHex }}
               />
               <span className="text-[13px] font-medium tracking-wide text-[var(--text-secondary)]">
                 {goal}
@@ -131,12 +131,12 @@ function GoalsMarquee({ goals, accentColor }: { goals: string[]; accentColor: st
 function TaskCard({
   task,
   partner,
-  accentColor,
+  accentHex,
   onComplete,
 }: {
   task: Task;
   partner: { id: string; name: string } | undefined;
-  accentColor: string;
+  accentHex: string;
   onComplete: (id: string) => void;
 }) {
   return (
@@ -173,7 +173,7 @@ function TaskCard({
 
 /* ── RevenueChart ───────────────────────────────────────────── */
 
-function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: string }) {
+function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }) {
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
@@ -219,14 +219,14 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
             <span className="flex items-center gap-1.5">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-[3px]"
-                style={{ backgroundColor: `${accentColor}35` }}
+                style={{ backgroundColor: `${accentHex}35` }}
               />
               Proyectado
             </span>
             <span className="flex items-center gap-1.5">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-[3px]"
-                style={{ backgroundColor: accentColor }}
+                style={{ backgroundColor: accentHex }}
               />
               Cobrado
             </span>
@@ -245,7 +245,7 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
             <p className="text-[10px] font-bold tracking-[0.12em] text-[var(--text-secondary)] uppercase">
               Cobrado
             </p>
-            <p className="text-lg font-black" style={{ color: accentColor }}>
+            <p className="text-lg font-black" style={{ color: accentHex }}>
               {formatCurrency(yearCollected)}
             </p>
           </div>
@@ -287,7 +287,7 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
                   </p>
                   <p
                     className="whitespace-nowrap text-[11px] font-bold"
-                    style={{ color: accentColor }}
+                    style={{ color: accentHex }}
                   >
                     {formatCurrency(month.collected)} cobr.
                   </p>
@@ -302,14 +302,14 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
                   className="w-full max-w-[14px] rounded-t-[3px] transition-all duration-200 sm:max-w-[18px]"
                   style={{
                     height: projH,
-                    backgroundColor: `${accentColor}35`,
+                    backgroundColor: `${accentHex}35`,
                   }}
                 />
                 <div
                   className="w-full max-w-[14px] rounded-t-[3px] transition-all duration-200 sm:max-w-[18px]"
                   style={{
                     height: collH,
-                    backgroundColor: accentColor,
+                    backgroundColor: accentHex,
                     opacity: month.collected > 0 ? 1 : 0.15,
                   }}
                 />
@@ -328,7 +328,7 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
               {isCurrent && (
                 <div
                   className="mt-0.5 h-1 w-1 rounded-full"
-                  style={{ backgroundColor: accentColor }}
+                  style={{ backgroundColor: accentHex }}
                 />
               )}
             </div>
@@ -342,7 +342,7 @@ function RevenueChart({ tasks, accentColor }: { tasks: Task[]; accentColor: stri
 /* ── Dashboard ──────────────────────────────────────────────── */
 
 export default function Dashboard() {
-  const { tasks, partners, accentColor, updateTaskStatus, profile } = useAppContext();
+  const { tasks, partners, accentColor, accentHex, updateTaskStatus, profile } = useAppContext();
   const today = new Date();
   const todayIso = formatLocalDateISO(today);
   const startOfToday = startOfLocalDay(today);
@@ -512,7 +512,7 @@ export default function Dashboard() {
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:px-8 lg:pt-4 lg:pb-8">
       {/* Goals Marquee */}
       {generalGoals.length > 0 && (
-        <GoalsMarquee goals={generalGoals} accentColor={accentColor} />
+        <GoalsMarquee goals={generalGoals} accentHex={accentHex} />
       )}
 
       {/* Main 2-col grid */}
@@ -524,7 +524,7 @@ export default function Dashboard() {
             <div
               className="pointer-events-none absolute inset-0"
               style={{
-                background: `radial-gradient(circle at top right, ${accentColor}20 0%, transparent 55%)`,
+                background: `radial-gradient(circle at top right, ${accentHex}20 0%, transparent 55%)`,
                 opacity: 0.6,
               }}
             />
@@ -602,7 +602,7 @@ export default function Dashboard() {
                   </p>
                   <p
                     className="mt-1 text-xl font-black tracking-tight"
-                    style={{ color: accentColor }}
+                    style={{ color: accentHex }}
                   >
                     {formatCurrency(periodSummary.closedPipelineValue)}
                   </p>
@@ -661,7 +661,7 @@ export default function Dashboard() {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${Math.min((periodSummary.closedPipelineValue / estimatedRevenue) * 100, 100)}%`,
-                        backgroundColor: accentColor,
+                        backgroundColor: accentHex,
                       }}
                     />
                   </div>
@@ -740,7 +740,7 @@ export default function Dashboard() {
                   labelClassName="text-amber-600 dark:text-amber-400"
                   tasks={groupedAgenda.overdue}
                   partners={partners}
-                  accentColor={accentColor}
+                  accentHex={accentHex}
                   onComplete={handleCompleteTask}
                 />
               )}
@@ -751,7 +751,7 @@ export default function Dashboard() {
                   label={`Hoy (${groupedAgenda.todayTasks.length})`}
                   tasks={groupedAgenda.todayTasks}
                   partners={partners}
-                  accentColor={accentColor}
+                  accentHex={accentHex}
                   onComplete={handleCompleteTask}
                 />
               )}
@@ -762,7 +762,7 @@ export default function Dashboard() {
                   label={`Mañana (${groupedAgenda.tomorrowTasks.length})`}
                   tasks={groupedAgenda.tomorrowTasks}
                   partners={partners}
-                  accentColor={accentColor}
+                  accentHex={accentHex}
                   onComplete={handleCompleteTask}
                 />
               )}
@@ -773,7 +773,7 @@ export default function Dashboard() {
                   label={`Esta semana (${groupedAgenda.thisWeekTasks.length})`}
                   tasks={groupedAgenda.thisWeekTasks}
                   partners={partners}
-                  accentColor={accentColor}
+                  accentHex={accentHex}
                   onComplete={handleCompleteTask}
                 />
               )}
@@ -790,7 +790,7 @@ export default function Dashboard() {
       </section>
 
       {/* Revenue Chart – full width */}
-      <RevenueChart tasks={tasks} accentColor={accentColor} />
+      <RevenueChart tasks={tasks} accentHex={accentHex} />
     </div>
   );
 }
@@ -803,7 +803,7 @@ function AgendaGroup({
   labelClassName,
   tasks,
   partners,
-  accentColor,
+  accentHex,
   onComplete,
 }: {
   label: string;
@@ -811,7 +811,7 @@ function AgendaGroup({
   labelClassName?: string;
   tasks: Task[];
   partners: Array<{ id: string; name: string }>;
-  accentColor: string;
+  accentHex: string;
   onComplete: (id: string) => void;
 }) {
   return (
@@ -835,7 +835,7 @@ function AgendaGroup({
               <TaskCard
                 task={task}
                 partner={partner}
-                accentColor={accentColor}
+                accentHex={accentHex}
                 onComplete={onComplete}
               />
             </React.Fragment>

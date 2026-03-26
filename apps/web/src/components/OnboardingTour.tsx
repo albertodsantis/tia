@@ -6,7 +6,7 @@ import { getAccessibleAccentForeground } from '../lib/accent';
 const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
 
 export default function OnboardingTour() {
-  const { theme, accentColor } = useAppContext();
+  const { theme, accentColor, accentHex } = useAppContext();
   const [run, setRun] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window === 'undefined' ? true : window.matchMedia('(min-width: 1024px)').matches,
@@ -16,7 +16,7 @@ export default function OnboardingTour() {
       ? 360
       : Math.min(window.innerWidth - 24, window.innerWidth >= 1024 ? 384 : 320),
   );
-  const accentForeground = getAccessibleAccentForeground(accentColor || '#c96f5b');
+  const accentForeground = getAccessibleAccentForeground(accentHex);
   const isDark = theme === 'dark';
   const tooltipBackground = isDark ? '#261f1b' : '#fffaf4';
   const tooltipSurface = isDark ? '#2f2722' : '#fffdf9';
@@ -181,7 +181,7 @@ export default function OnboardingTour() {
         options: {
           zIndex: 10000,
           width: tooltipWidth,
-          primaryColor: accentColor || '#c96f5b',
+          primaryColor: accentHex,
           backgroundColor: tooltipBackground,
           textColor: tooltipText,
           arrowColor: tooltipBackground,
@@ -220,7 +220,7 @@ export default function OnboardingTour() {
           borderTop: `1px solid ${tooltipBorder}`,
         },
         buttonNext: {
-          backgroundColor: accentColor || '#c96f5b',
+          backgroundColor: accentHex,
           color: accentForeground,
           borderRadius: '9999px',
           padding: '9px 18px',
@@ -241,10 +241,10 @@ export default function OnboardingTour() {
           borderRadius: '1.4rem',
         },
         beaconInner: {
-          backgroundColor: accentColor || '#c96f5b',
+          backgroundColor: accentHex,
         },
         beaconOuter: {
-          borderColor: accentColor || '#c96f5b',
+          borderColor: accentHex,
         },
       }}
     />

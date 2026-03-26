@@ -24,6 +24,7 @@ import Settings from './views/Settings';
 import Landing from './views/Landing';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
+import WelcomeColorPicker from './views/WelcomeColorPicker';
 import { SurfaceCard, cx } from './components/ui';
 import { authApi } from './lib/api';
 import { supabase } from './lib/supabase';
@@ -354,6 +355,7 @@ const MainLayout = () => {
   const mainRegionRef = useRef<HTMLElement | null>(null);
   const {
     accentColor,
+    accentHex,
     profile,
     isBootstrapping,
     bootstrapError,
@@ -479,7 +481,7 @@ const MainLayout = () => {
             type="button"
             onClick={() => void refreshAppData()}
             className="mt-6 w-full rounded-[1rem] py-3.5 text-sm font-bold shadow-[0_12px_30px_-16px_var(--accent-glow)]"
-            style={{ backgroundColor: accentColor, color: 'var(--accent-foreground)' }}
+            style={{ backgroundColor: accentHex, color: 'var(--accent-foreground)' }}
           >
             Reintentar
           </button>
@@ -493,7 +495,7 @@ const MainLayout = () => {
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
           className="absolute -top-28 right-[-6%] h-80 w-80 rounded-full blur-3xl opacity-60"
-          style={{ backgroundColor: `${accentColor}22` }}
+          style={{ backgroundColor: `${accentHex}22` }}
         />
         <div className="absolute bottom-0 left-[-4%] h-72 w-72 rounded-full bg-emerald-200/20 blur-3xl dark:bg-emerald-400/10" />
       </div>
@@ -507,7 +509,7 @@ const MainLayout = () => {
                 onTabChange={setActiveTab}
                 onWheelCapture={handleDesktopSidebarWheelCapture}
                 onLogout={onLogout}
-                accentColor={accentColor}
+                accentColor={accentHex}
                 profileAvatar={profile.avatar}
                 profileName={profile.name}
               />
@@ -527,7 +529,7 @@ const MainLayout = () => {
               <div
                 className="pointer-events-none absolute inset-0 opacity-75 transition-colors duration-700"
                 style={{
-                  background: `radial-gradient(circle at top left, ${accentColor}30 0%, ${accentColor}10 35%, transparent 65%)`,
+                  background: `radial-gradient(circle at top left, ${accentHex}30 0%, ${accentHex}10 35%, transparent 65%)`,
                 }}
               />
 
@@ -594,7 +596,7 @@ const MainLayout = () => {
                 <MobileBottomNav
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
-                  accentColor={accentColor}
+                  accentColor={accentHex}
                 />
               ) : null}
 
@@ -607,8 +609,28 @@ const MainLayout = () => {
   );
 };
 
+const ONBOARDING_KEY = 'tia_onboarding_done';
+
 const AppShell = () => {
-  const { isBootstrapping, bootstrapError } = useAppContext();
+  const { isBootstrapping, bootstrapError, profile, setAccentColor } = useAppContext();
+  const [showColorPicker, setShowColorPicker] = useState(
+    () => !localStorage.getItem(ONBOARDING_KEY),
+  );
+
+  const handleColorSelected = async (color: string) => {
+    await setAccentColor(color);
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    setShowColorPicker(false);
+  };
+
+  if (!isBootstrapping && !bootstrapError && showColorPicker) {
+    return (
+      <WelcomeColorPicker
+        userName={profile.name}
+        onSelect={handleColorSelected}
+      />
+    );
+  }
 
   return (
     <>

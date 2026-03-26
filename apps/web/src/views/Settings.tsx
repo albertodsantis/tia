@@ -30,8 +30,10 @@ import {
 } from '../components/ui';
 import { authApi } from '../lib/api';
 import { toast } from '../lib/toast';
+import { getGradientCss, isGradientAccent } from '../lib/accent';
 
 const ACCENT_OPTIONS = [
+  { name: 'Instagram', value: 'gradient:instagram' },
   { name: 'Arcilla', value: '#C96F5B' },
   { name: 'Terracota', value: '#C65D4B' },
   { name: 'Cobre', value: '#B86A45' },
@@ -58,6 +60,7 @@ const fieldClass =
 export default function Settings() {
   const {
     accentColor,
+    accentHex,
     setAccentColor,
     profile,
     updateProfile,
@@ -177,7 +180,7 @@ export default function Settings() {
               <div className="flex items-center gap-3">
                 <span
                   className="block h-11 w-11 rounded-[0.9rem] border-4 border-white shadow-sm dark:border-slate-700"
-                  style={{ backgroundColor: activeAccent.value }}
+                  style={{ background: isGradientAccent(activeAccent.value) ? (getGradientCss(activeAccent.value) || activeAccent.value) : activeAccent.value }}
                 />
                 <div>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -225,7 +228,7 @@ export default function Settings() {
                           'block h-11 w-11 rounded-[0.9rem] border-4 border-white shadow-sm transition-all dark:border-slate-700',
                           isSelected ? 'scale-110 ring-2 ring-slate-900/20 dark:ring-white/20' : 'hover:scale-105',
                         )}
-                        style={{ backgroundColor: option.value }}
+                        style={{ background: isGradientAccent(option.value) ? (getGradientCss(option.value) || option.value) : option.value }}
                       />
                     </button>
                   );
@@ -239,7 +242,7 @@ export default function Settings() {
                 title="Modo oscuro"
                 description="Cambia la iluminacion general del workspace."
                 onClick={() => void setTheme(theme === 'dark' ? 'light' : 'dark')}
-                trailing={<ToggleSwitch checked={theme === 'dark'} accentColor={accentColor} />}
+                trailing={<ToggleSwitch checked={theme === 'dark'} accentColor={accentHex} />}
                 className="px-0 py-3"
               />
             </div>
@@ -252,21 +255,21 @@ export default function Settings() {
                 title="Notificaciones push"
                 description="Recibe avisos cuando haya entregas cercanas o cambios relevantes."
                 onClick={() => void toggleNotifications()}
-                trailing={<ToggleSwitch checked={profile.notificationsEnabled} accentColor={accentColor} />}
+                trailing={<ToggleSwitch checked={profile.notificationsEnabled} accentColor={accentHex} />}
                 className="px-0 py-3"
               />
               <SettingRow
                 icon={CalendarIcon}
                 title="Sincronizacion con Calendar"
                 description="Proximamente. La integracion con Google Calendar estara disponible en una version futura."
-                trailing={<ToggleSwitch checked={false} accentColor={accentColor} disabled />}
+                trailing={<ToggleSwitch checked={false} accentColor={accentHex} disabled />}
                 className="cursor-not-allowed px-0 py-3 opacity-60"
               />
               <SettingRow
                 icon={Shield}
                 title="Privacidad y seguridad"
                 description="Controla sesiones, permisos y preferencias sensibles."
-                trailing={<ToggleSwitch checked={false} accentColor={accentColor} disabled />}
+                trailing={<ToggleSwitch checked={false} accentColor={accentHex} disabled />}
                 className="cursor-not-allowed px-0 py-3"
               />
             </div>
@@ -290,7 +293,7 @@ export default function Settings() {
 
           <div className="mt-5 space-y-4">
             <Button
-              accentColor={accentColor}
+              accentColor={accentHex}
               onClick={() => {
                 setEditingTemplateId(null);
                 setNewTemplate({ name: '', subject: '', body: '' });
@@ -331,7 +334,7 @@ export default function Settings() {
                   <div className="flex min-w-0 items-start gap-4">
                     <div
                       className="mt-0.5 flex shrink-0 items-center justify-center"
-                      style={{ color: accentColor }}
+                      style={{ color: accentHex }}
                     >
                       <MessageSquare size={18} />
                     </div>
@@ -373,7 +376,7 @@ export default function Settings() {
                 title="Aun no hay plantillas"
                 description="Crea una plantilla para acelerar respuestas, follow-ups y primeros contactos."
                 action={
-                  <Button accentColor={accentColor} onClick={() => {
+                  <Button accentColor={accentHex} onClick={() => {
                     setEditingTemplateId(null);
                     setNewTemplate({ name: '', subject: '', body: '' });
                     setIsAddingTemplate(true);
@@ -518,7 +521,7 @@ export default function Settings() {
                     <Trash2 size={18} />
                   </Button>
                 )}
-                <Button type="submit" form="template-form" accentColor={accentColor} className="flex-1 justify-center" disabled={savingTemplate}>
+                <Button type="submit" form="template-form" accentColor={accentHex} className="flex-1 justify-center" disabled={savingTemplate}>
                   {editingTemplateId ? 'Guardar cambios' : 'Guardar plantilla'}
                 </Button>
               </div>
@@ -536,7 +539,7 @@ export default function Settings() {
                   value={newTemplate.name}
                   onChange={(event) => setNewTemplate({ ...newTemplate, name: event.target.value })}
                   className={fieldClass}
-                  style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                  style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                   placeholder="Ej. Primer contacto"
                 />
               </div>
@@ -559,7 +562,7 @@ export default function Settings() {
                     onChange={(event) => setNewTemplate({ ...newTemplate, subject: event.target.value })}
                     onFocus={() => setActiveTemplateField('subject')}
                     className={cx(fieldClass, 'bg-[var(--surface-card)]')}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="Ej. Propuesta de colaboracion"
                   />
                 </div>
@@ -576,7 +579,7 @@ export default function Settings() {
                     onChange={(event) => setNewTemplate({ ...newTemplate, body: event.target.value })}
                     onFocus={() => setActiveTemplateField('body')}
                     className={cx(fieldClass, 'min-h-[150px] bg-[var(--surface-card)]')}
-                    style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="Hola {{contactName}}, me encantaria..."
                   />
                 </div>

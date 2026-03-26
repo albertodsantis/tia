@@ -102,6 +102,7 @@ export default function Directory() {
   const {
     partners,
     accentColor,
+    accentHex,
     templates,
     profile,
     addContact,
@@ -365,7 +366,7 @@ export default function Directory() {
               >
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: `${accentColor}14`, color: accentColor }}
+                  style={{ backgroundColor: `${accentHex}14`, color: accentHex }}
                 >
                   <item.icon size={15} strokeWidth={2.4} />
                 </div>
@@ -387,13 +388,13 @@ export default function Directory() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className={cx(fieldClass, 'py-4 pl-14 pr-5 text-[15px]')}
-              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
             />
           </div>
 
           <SurfaceCard className="p-3 sm:p-4">
             <div className="mb-3 px-2 pt-1">
-              <Button accentColor={accentColor} onClick={() => setIsAddingPartner(true)} className="w-full py-2.5 text-xs">
+              <Button accentColor={accentHex} onClick={() => setIsAddingPartner(true)} className="w-full py-2.5 text-xs">
                 <Plus size={14} />
                 Añadir
               </Button>
@@ -446,7 +447,7 @@ export default function Directory() {
                   description="Prueba con otro termino o crea una nueva marca para empezar."
                   className="border-dashed"
                   action={
-                    <Button accentColor={accentColor} onClick={() => setIsAddingPartner(true)}>
+                    <Button accentColor={accentHex} onClick={() => setIsAddingPartner(true)}>
                       <Plus size={16} />
                       Añadir marca
                     </Button>
@@ -484,7 +485,7 @@ export default function Directory() {
                     value={activePartner.status}
                     onChange={(val) => void updatePartner(activePartner.id, { status: val as Partner['status'] })}
                     options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))}
-                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     ariaLabel={`Cambiar estado de ${activePartner.name}`}
                     className="w-full sm:w-auto sm:min-w-[180px]"
                     buttonClassName="shadow-sm"
@@ -600,7 +601,7 @@ export default function Directory() {
                   <h3 className="text-lg font-bold text-[var(--text-primary)]">Red de la marca</h3>
                   <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Contactos</span>
                 </div>
-                <Button accentColor={accentColor} onClick={() => setAddingContactTo(activePartner.id)}>
+                <Button accentColor={accentHex} onClick={() => setAddingContactTo(activePartner.id)}>
                   <Plus size={16} />
                   Añadir contacto
                 </Button>
@@ -655,7 +656,7 @@ export default function Directory() {
 
                         <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
                           <IconButton icon={PencilLine} label={`Editar contacto ${contact.name}`} onClick={() => handleOpenEditContact(activePartner.id, contact)} className="h-10 w-10 rounded-[0.8rem] bg-[var(--surface-muted)] text-[var(--text-secondary)]" />
-                          <IconButton icon={MessageCircle} label={`Redactar WhatsApp para ${contact.name}`} onClick={() => setComposingTo({ contact, partner: activePartner })} tone="primary" accentColor={accentColor} className="h-10 w-10 rounded-[0.8rem]" />
+                          <IconButton icon={MessageCircle} label={`Redactar WhatsApp para ${contact.name}`} onClick={() => setComposingTo({ contact, partner: activePartner })} tone="primary" accentColor={accentHex} className="h-10 w-10 rounded-[0.8rem]" />
                         </div>
                       </div>
                     </div>
@@ -666,7 +667,7 @@ export default function Directory() {
                     title="Aún no hay contactos"
                     description="Añade el primer contacto para empezar a redactar mensajes y hacer seguimiento."
                     action={
-                      <Button accentColor={accentColor} onClick={() => setAddingContactTo(activePartner.id)}>
+                      <Button accentColor={accentHex} onClick={() => setAddingContactTo(activePartner.id)}>
                         <Plus size={16} />
                         Añadir contacto
                       </Button>
@@ -705,21 +706,21 @@ export default function Directory() {
                       <Building2 size={14} />
                       Nombre
                     </label>
-                    <input required value={editingPartner.name} onChange={(event) => setEditingPartner({ ...editingPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input required value={editingPartner.name} onChange={(event) => setEditingPartner({ ...editingPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <Layers size={14} />
                       Canal Principal
                     </label>
-                    <input value={editingPartner.mainChannel || ''} onChange={(event) => setEditingPartner({ ...editingPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input value={editingPartner.mainChannel || ''} onChange={(event) => setEditingPartner({ ...editingPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <FileText size={14} />
                       Condiciones del acuerdo
                     </label>
-                    <textarea value={editingPartner.keyTerms || ''} onChange={(event) => setEditingPartner({ ...editingPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
+                    <textarea value={editingPartner.keyTerms || ''} onChange={(event) => setEditingPartner({ ...editingPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
                   </div>
                 </div>
 
@@ -741,7 +742,7 @@ export default function Directory() {
                           startDate: pt === 'Por definir' ? '' : editingPartner.startDate,
                           endDate: pt === 'Plazo Fijo' ? editingPartner.endDate : '',
                         });
-                      }} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
+                      }} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
                     </div>
                     {(editingPartner.partnershipType || 'Por definir') !== 'Por definir' && (
                       <div className={cx('grid gap-4', ((editingPartner.partnershipType || 'Por definir') === 'Permanente' || (editingPartner.partnershipType || 'Por definir') === 'One Time') ? 'grid-cols-1' : 'grid-cols-2')}>
@@ -750,7 +751,7 @@ export default function Directory() {
                             <CalendarDays size={14} />
                             {(editingPartner.partnershipType || 'Por definir') === 'One Time' ? 'Fecha' : 'Inicio'}
                           </label>
-                          <input type="date" value={editingPartner.startDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                          <input type="date" value={editingPartner.startDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                         </div>
                         {(editingPartner.partnershipType || 'Por definir') === 'Plazo Fijo' && (
                           <div>
@@ -758,7 +759,7 @@ export default function Directory() {
                               <CalendarDays size={14} />
                               Fin
                             </label>
-                            <input type="date" value={editingPartner.endDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                            <input type="date" value={editingPartner.endDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                           </div>
                         )}
                       </div>
@@ -769,20 +770,20 @@ export default function Directory() {
                           <CircleDollarSign size={14} />
                           Mensual
                         </label>
-                        <input type="number" value={editingPartner.monthlyRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, monthlyRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="1200" />
+                        <input type="number" value={editingPartner.monthlyRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, monthlyRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="1200" />
                       </div>
                       <div>
                         <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                           <CircleDollarSign size={14} />
                           Anual
                         </label>
-                        <input type="number" value={editingPartner.annualRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, annualRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="14400" />
+                        <input type="number" value={editingPartner.annualRevenue || ''} onChange={(event) => setEditingPartner({ ...editingPartner, annualRevenue: Number(event.target.value) })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="14400" />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <Button type="submit" accentColor={accentColor} className="w-full" disabled={saving}>Guardar cambios</Button>
+              <Button type="submit" accentColor={accentHex} className="w-full" disabled={saving}>Guardar cambios</Button>
             </form>
           </ModalPanel>
         </OverlayModal>
@@ -799,21 +800,21 @@ export default function Directory() {
                       <Building2 size={14} />
                       Nombre
                     </label>
-                    <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <Layers size={14} />
                       Canal Principal
                     </label>
-                    <input value={newPartner.mainChannel} onChange={(event) => setNewPartner({ ...newPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input value={newPartner.mainChannel} onChange={(event) => setNewPartner({ ...newPartner, mainChannel: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <FileText size={14} />
                       Condiciones del acuerdo
                     </label>
-                    <textarea value={newPartner.keyTerms} onChange={(event) => setNewPartner({ ...newPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
+                    <textarea value={newPartner.keyTerms} onChange={(event) => setNewPartner({ ...newPartner, keyTerms: event.target.value })} className={cx(fieldClass, 'min-h-[118px]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="Ej. 4 Historias/mes, 1 Reel" />
                   </div>
                 </div>
 
@@ -822,7 +823,7 @@ export default function Directory() {
                     <h4 className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
                       Detalles Operativos
                     </h4>
-                    <CustomSelect value={newPartner.status} onChange={(val) => setNewPartner({ ...newPartner, status: val as Partner['status'] })} options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="py-1 px-3 text-xs bg-[var(--surface-card)]" />
+                    <CustomSelect value={newPartner.status} onChange={(val) => setNewPartner({ ...newPartner, status: val as Partner['status'] })} options={PARTNER_STATUSES.map(s => ({ value: s, label: statusLabel(s) }))} buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties} buttonClassName="py-1 px-3 text-xs bg-[var(--surface-card)]" />
                   </div>
                   <div className="grid gap-4">
                     <div>
@@ -838,7 +839,7 @@ export default function Directory() {
                           startDate: pt === 'Por definir' ? '' : newPartner.startDate,
                           endDate: pt === 'Plazo Fijo' ? newPartner.endDate : '',
                         });
-                      }} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
+                      }} options={PARTNERSHIP_TYPES.map(s => ({ value: s, label: s }))} buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties} buttonClassName="font-medium bg-[var(--surface-card)]" />
                     </div>
                     {newPartner.partnershipType !== 'Por definir' && (
                       <div className={cx('grid gap-4', (newPartner.partnershipType === 'Permanente' || newPartner.partnershipType === 'One Time') ? 'grid-cols-1' : 'grid-cols-2')}>
@@ -847,7 +848,7 @@ export default function Directory() {
                             <CalendarDays size={14} />
                             {newPartner.partnershipType === 'One Time' ? 'Fecha' : 'Inicio'}
                           </label>
-                          <input type="date" value={newPartner.startDate} onChange={(event) => setNewPartner({ ...newPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                          <input type="date" value={newPartner.startDate} onChange={(event) => setNewPartner({ ...newPartner, startDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                         </div>
                         {newPartner.partnershipType === 'Plazo Fijo' && (
                           <div>
@@ -855,7 +856,7 @@ export default function Directory() {
                               <CalendarDays size={14} />
                               Fin
                             </label>
-                            <input type="date" value={newPartner.endDate} onChange={(event) => setNewPartner({ ...newPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} />
+                            <input type="date" value={newPartner.endDate} onChange={(event) => setNewPartner({ ...newPartner, endDate: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                           </div>
                         )}
                       </div>
@@ -866,20 +867,20 @@ export default function Directory() {
                           <CircleDollarSign size={14} />
                           Mensual
                         </label>
-                        <input type="number" value={newPartner.monthlyRevenue} onChange={(event) => setNewPartner({ ...newPartner, monthlyRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="1200" />
+                        <input type="number" value={newPartner.monthlyRevenue} onChange={(event) => setNewPartner({ ...newPartner, monthlyRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="1200" />
                       </div>
                       <div>
                         <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                           <CircleDollarSign size={14} />
                           Anual
                         </label>
-                        <input type="number" value={newPartner.annualRevenue} onChange={(event) => setNewPartner({ ...newPartner, annualRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="14400" />
+                        <input type="number" value={newPartner.annualRevenue} onChange={(event) => setNewPartner({ ...newPartner, annualRevenue: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="14400" />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <Button type="submit" accentColor={accentColor} className="w-full" disabled={saving}>Crear marca</Button>
+              <Button type="submit" accentColor={accentHex} className="w-full" disabled={saving}>Crear marca</Button>
             </form>
           </ModalPanel>
         </OverlayModal>
@@ -902,7 +903,7 @@ export default function Directory() {
                       { value: '', label: 'Mensaje libre (Sin plantilla)' },
                       ...templates.map((t) => ({ value: t.id, label: t.name }))
                     ]}
-                    buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                    buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     buttonClassName="font-medium bg-[var(--surface-card)]"
                   />
                 </div>
@@ -914,7 +915,7 @@ export default function Directory() {
                     <AlignLeft size={14} />
                     Mensaje
                   </label>
-                  <textarea value={messagePreview.body} onChange={(event) => setMessagePreview({ ...messagePreview, body: event.target.value })} className={cx(fieldClass, 'min-h-[180px]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="Escribe tu mensaje aquí..." />
+                  <textarea value={messagePreview.body} onChange={(event) => setMessagePreview({ ...messagePreview, body: event.target.value })} className={cx(fieldClass, 'min-h-[180px]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="Escribe tu mensaje aquí..." />
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
@@ -947,14 +948,14 @@ export default function Directory() {
                     <Type size={14} />
                     Nombre
                   </label>
-                  <input required value={newContact.name} onChange={(event) => setNewContact({ ...newContact, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                  <input required value={newContact.name} onChange={(event) => setNewContact({ ...newContact, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                 </div>
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                     <Briefcase size={14} />
                     Rol
                   </label>
-                  <input required value={newContact.role} onChange={(event) => setNewContact({ ...newContact, role: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                  <input required value={newContact.role} onChange={(event) => setNewContact({ ...newContact, role: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                 </div>
               </div>
               <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
@@ -967,14 +968,14 @@ export default function Directory() {
                       <Mail size={14} />
                       Email
                     </label>
-                    <input type="email" required value={newContact.email} onChange={(event) => setNewContact({ ...newContact, email: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input type="email" required value={newContact.email} onChange={(event) => setNewContact({ ...newContact, email: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <Instagram size={14} />
                       Instagram
                     </label>
-                    <input value={newContact.ig} onChange={(event) => setNewContact({ ...newContact, ig: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input value={newContact.ig} onChange={(event) => setNewContact({ ...newContact, ig: event.target.value })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
@@ -986,16 +987,16 @@ export default function Directory() {
                         value={newContact.phonePrefix}
                         onChange={(val) => setNewContact({ ...newContact, phonePrefix: val })}
                         options={PHONE_PREFIXES}
-                        buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                        buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                         className="!w-[100px] shrink-0"
                         buttonClassName="bg-[var(--surface-card)]"
                       />
-                      <input type="tel" value={newContact.phoneNumber} onChange={(event) => setNewContact({ ...newContact, phoneNumber: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                      <input type="tel" value={newContact.phoneNumber} onChange={(event) => setNewContact({ ...newContact, phoneNumber: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                     </div>
                   </div>
                 </div>
               </div>
-              <Button type="submit" accentColor={accentColor} className="w-full" disabled={saving}>Guardar contacto</Button>
+              <Button type="submit" accentColor={accentHex} className="w-full" disabled={saving}>Guardar contacto</Button>
             </form>
           </ModalPanel>
         </OverlayModal>
@@ -1011,14 +1012,14 @@ export default function Directory() {
                     <Type size={14} />
                     Nombre
                   </label>
-                  <input required value={editingContact.contact.name} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, name: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                  <input required value={editingContact.contact.name} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, name: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                 </div>
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                     <Briefcase size={14} />
                     Rol
                   </label>
-                  <input required value={editingContact.contact.role} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, role: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                  <input required value={editingContact.contact.role} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, role: event.target.value } })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                 </div>
               </div>
               <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
@@ -1031,14 +1032,14 @@ export default function Directory() {
                       <Mail size={14} />
                       Email
                     </label>
-                    <input required type="email" value={editingContact.contact.email} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, email: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input required type="email" value={editingContact.contact.email} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, email: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                       <Instagram size={14} />
                       Instagram
                     </label>
-                    <input required value={editingContact.contact.ig} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, ig: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                    <input required value={editingContact.contact.ig} onChange={(event) => setEditingContact({ ...editingContact, contact: { ...editingContact.contact, ig: event.target.value } })} className={cx(fieldClass, 'bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
@@ -1050,11 +1051,11 @@ export default function Directory() {
                         value={editingContact.prefix}
                         onChange={(val) => setEditingContact({ ...editingContact, prefix: val })}
                         options={PHONE_PREFIXES}
-                        buttonStyle={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+                        buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                         className="!w-[100px] shrink-0"
                         buttonClassName="bg-[var(--surface-card)]"
                       />
-                      <input type="tel" value={editingContact.number} onChange={(event) => setEditingContact({ ...editingContact, number: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentColor } as React.CSSProperties} placeholder="" />
+                      <input type="tel" value={editingContact.number} onChange={(event) => setEditingContact({ ...editingContact, number: event.target.value })} className={cx(fieldClass, 'flex-1 bg-[var(--surface-card)]')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                     </div>
                   </div>
                 </div>
@@ -1072,7 +1073,7 @@ export default function Directory() {
                 >
                   <Trash2 size={18} />
                 </Button>
-                <Button type="submit" accentColor={accentColor} className="flex-1 justify-center" disabled={saving}>Guardar cambios</Button>
+                <Button type="submit" accentColor={accentHex} className="flex-1 justify-center" disabled={saving}>Guardar cambios</Button>
               </div>
             </form>
           </ModalPanel>

@@ -238,7 +238,7 @@ export function Button({
       style={
         tone === 'primary'
           ? {
-              backgroundColor: accentColor || 'var(--accent-color)',
+              background: accentColor || 'var(--accent-gradient, var(--accent-color))',
               color: 'var(--accent-foreground)',
             }
           : undefined
@@ -291,7 +291,7 @@ export function IconButton({
       style={
         tone === 'primary'
           ? {
-              backgroundColor: accentColor || 'var(--accent-color)',
+              background: accentColor || 'var(--accent-gradient, var(--accent-color))',
               color: 'var(--accent-foreground)',
             }
           : undefined
@@ -318,7 +318,7 @@ export function ToggleSwitch({
         checked ? '' : 'bg-[var(--surface-muted)]',
         disabled ? 'opacity-55' : '',
       )}
-      style={checked ? { backgroundColor: accentColor || 'var(--accent-color)' } : undefined}
+      style={checked ? { background: accentColor || 'var(--accent-gradient, var(--accent-color))' } : undefined}
       aria-hidden="true"
     >
       <div

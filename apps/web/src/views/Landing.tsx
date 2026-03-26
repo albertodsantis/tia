@@ -17,10 +17,11 @@ import { cx } from '../components/ui';
 
 type AuthMode = 'login' | 'register';
 
-// Brand colors derived from the Tía mushroom logo
-const BRAND_PINK = '#FF2D9B';
-const BRAND_CYAN = '#00D4FF';
-const BRAND_MID = '#A86BDD'; // midpoint for single-color accents
+// Brand colors — Instagram-style gradient palette
+const BRAND_GOLD = '#FCAF45';
+const BRAND_ORANGE = '#F56040';
+const BRAND_PINK = '#E1306C';
+const BRAND_PURPLE = '#833AB4';
 
 const features = [
   {
@@ -138,15 +139,15 @@ export default function Landing({
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
           className="absolute -top-32 right-[-8%] h-96 w-96 rounded-full blur-[100px] opacity-40"
-          style={{ backgroundColor: BRAND_PINK }}
+          style={{ backgroundColor: BRAND_ORANGE }}
         />
         <div
           className="absolute bottom-[-5%] left-[-6%] h-80 w-80 rounded-full blur-[100px] opacity-30"
-          style={{ backgroundColor: BRAND_CYAN }}
+          style={{ backgroundColor: BRAND_PURPLE }}
         />
         <div
           className="absolute top-1/2 left-1/3 h-64 w-64 rounded-full blur-[120px] opacity-20"
-          style={{ backgroundColor: BRAND_MID }}
+          style={{ backgroundColor: BRAND_PINK }}
         />
       </div>
 
@@ -156,9 +157,11 @@ export default function Landing({
           <div className="flex items-center gap-2.5">
             <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="logo-grad" x1="0%" y1="50%" x2="100%" y2="50%">
-                  <stop offset="0%" stopColor={BRAND_PINK}/>
-                  <stop offset="100%" stopColor={BRAND_CYAN}/>
+                <linearGradient id="logo-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={BRAND_GOLD}/>
+                  <stop offset="30%" stopColor={BRAND_ORANGE}/>
+                  <stop offset="60%" stopColor={BRAND_PINK}/>
+                  <stop offset="100%" stopColor={BRAND_PURPLE}/>
                 </linearGradient>
               </defs>
               <ellipse cx="32" cy="22" rx="22" ry="12" fill="url(#logo-grad)"/>
@@ -182,7 +185,7 @@ export default function Landing({
           <div className="max-w-2xl">
             <div
               className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] uppercase"
-              style={{ backgroundColor: `${BRAND_PINK}14`, color: BRAND_PINK }}
+              style={{ backgroundColor: `${BRAND_ORANGE}14`, color: BRAND_ORANGE }}
             >
               <Sparkles size={13} strokeWidth={2.5} />
               CRM para creadores
@@ -193,7 +196,7 @@ export default function Landing({
               <span
                 className="bg-clip-text text-transparent"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, ${BRAND_PINK}, ${BRAND_CYAN})`,
+                  backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
                 }}
               >
                 partnerships creativos
@@ -220,7 +223,7 @@ export default function Landing({
                     >
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-lg"
-                        style={{ backgroundColor: `${BRAND_MID}18`, color: BRAND_MID }}
+                        style={{ backgroundColor: `${BRAND_PURPLE}18`, color: BRAND_PURPLE }}
                       >
                         <Icon size={16} strokeWidth={2.2} />
                       </div>
@@ -244,7 +247,7 @@ export default function Landing({
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{
-                  background: `radial-gradient(circle at top left, ${BRAND_PINK}18 0%, transparent 50%)`,
+                  background: `radial-gradient(circle at top left, ${BRAND_ORANGE}18 0%, transparent 50%)`,
                 }}
               />
 
@@ -388,8 +391,8 @@ export default function Landing({
                     disabled={loading || !email.trim() || !password || (!isLogin && !name.trim())}
                     className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                     style={{
-                      backgroundImage: `linear-gradient(135deg, ${BRAND_PINK}, ${BRAND_CYAN})`,
-                      boxShadow: `0 12px 30px -16px ${BRAND_MID}80`,
+                      backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
+                      boxShadow: `0 12px 30px -16px ${BRAND_PINK}80`,
                     }}
                   >
                     {loading
@@ -422,7 +425,7 @@ export default function Landing({
                 >
                   <div
                     className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: `${BRAND_MID}18`, color: BRAND_MID }}
+                    style={{ backgroundColor: `${BRAND_PURPLE}18`, color: BRAND_PURPLE }}
                   >
                     <Icon size={16} strokeWidth={2.2} />
                   </div>
