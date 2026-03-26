@@ -6,7 +6,7 @@ import { getAccessibleAccentForeground } from '../lib/accent';
 const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
 
 export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
-  const { theme, accentColor, accentHex } = useAppContext();
+  const { theme, accentColor, accentHex, accentGradient } = useAppContext();
   const [run, setRun] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window === 'undefined' ? true : window.matchMedia('(min-width: 1024px)').matches,
@@ -220,7 +220,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           borderTop: `1px solid ${tooltipBorder}`,
         },
         buttonNext: {
-          backgroundColor: accentHex,
+          background: accentGradient,
           color: accentForeground,
           borderRadius: '9999px',
           padding: '9px 18px',
@@ -241,7 +241,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           borderRadius: '1.4rem',
         },
         beaconInner: {
-          backgroundColor: accentHex,
+          background: accentGradient,
         },
         beaconOuter: {
           borderColor: accentHex,

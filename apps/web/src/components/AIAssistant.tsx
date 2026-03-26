@@ -18,6 +18,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
     templates,
     accentColor,
     accentHex,
+    accentGradient,
     addTask,
     addPartner,
     ensurePartnerByName,
@@ -318,7 +319,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
           <div
             className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] shadow-[0_10px_26px_-18px_var(--accent-glow)]"
             style={{
-              backgroundColor: accentHex,
+              background: accentGradient,
               color: 'var(--accent-foreground)',
             }}
           >
@@ -368,7 +369,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-[1rem] shadow-[0_14px_30px_-20px_var(--accent-glow)]"
                   style={{
-                    backgroundColor: accentHex,
+                    background: accentGradient,
                     color: 'var(--accent-foreground)',
                   }}
                 >
@@ -457,7 +458,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                   disabled={!input.trim() || isProcessing}
                   className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] transition-transform active:scale-95 disabled:opacity-50"
                   style={{
-                    backgroundColor: accentHex,
+                    background: accentGradient,
                     color: 'var(--accent-foreground)',
                   }}
                 >

@@ -366,6 +366,7 @@ export default function Pipeline() {
     partners,
     accentColor,
     accentHex,
+    accentGradient,
     addTask,
     findPartnerByName,
     ensurePartnerByName,
@@ -714,7 +715,7 @@ export default function Pipeline() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accentHex }} />
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: accentGradient }} />
                 <p className="truncate text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
                   {partner?.name || 'Sin marca'}
                 </p>
@@ -922,7 +923,7 @@ export default function Pipeline() {
             )}
             style={
               !isSelected && dayTasks.length > 0
-                ? { backgroundColor: accentHex, color: 'var(--accent-foreground)' }
+                ? { background: accentGradient, color: 'var(--accent-foreground)' }
                 : undefined
             }
           >

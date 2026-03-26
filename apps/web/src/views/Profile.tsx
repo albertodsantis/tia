@@ -133,7 +133,7 @@ function SectionHeader({
 }
 
 export default function Profile() {
-  const { profile, updateProfile, accentColor, accentHex, partners, addPartner } = useAppContext();
+  const { profile, updateProfile, accentColor, accentHex, accentGradient, partners, addPartner } = useAppContext();
   const [profileForm, setProfileForm] = useState<UserProfile>(() => {
     const safeGoals = safeArr(profile?.goals).map((g: any, i) =>
           typeof g === 'string'
@@ -686,7 +686,7 @@ export default function Profile() {
                   <div className="flex items-center gap-4">
                     <div
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                      style={{ backgroundColor: accentHex, color: '#fff' }}
+                      style={{ background: accentGradient, color: '#fff' }}
                     >
                       <Target size={22} strokeWidth={2.5} />
                     </div>

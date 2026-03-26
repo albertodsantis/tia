@@ -45,7 +45,7 @@ const formatTaskDate = (task: Task) =>
 
 /* ── GoalsMarquee ───────────────────────────────────────────── */
 
-function GoalsMarquee({ goals, accentHex }: { goals: string[]; accentHex: string }) {
+function GoalsMarquee({ goals, accentHex, accentGradient }: { goals: string[]; accentHex: string; accentGradient: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInteractingRef = useRef(false);
   const dragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
@@ -113,7 +113,7 @@ function GoalsMarquee({ goals, accentHex }: { goals: string[]; accentHex: string
             <div className="flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100">
               <div
                 className="h-1 w-1 shrink-0 rounded-full"
-                style={{ backgroundColor: accentHex }}
+                style={{ background: accentGradient }}
               />
               <span className="text-[13px] font-medium tracking-wide text-[var(--text-secondary)]">
                 {goal}
@@ -173,7 +173,7 @@ function TaskCard({
 
 /* ── RevenueChart ───────────────────────────────────────────── */
 
-function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }) {
+function RevenueChart({ tasks, accentHex, accentGradient }: { tasks: Task[]; accentHex: string; accentGradient: string }) {
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
@@ -226,7 +226,7 @@ function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }
             <span className="flex items-center gap-1.5">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-[3px]"
-                style={{ backgroundColor: accentHex }}
+                style={{ background: accentGradient }}
               />
               Cobrado
             </span>
@@ -309,7 +309,7 @@ function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }
                   className="w-full max-w-[14px] rounded-t-[3px] transition-all duration-200 sm:max-w-[18px]"
                   style={{
                     height: collH,
-                    backgroundColor: accentHex,
+                    background: accentGradient,
                     opacity: month.collected > 0 ? 1 : 0.15,
                   }}
                 />
@@ -328,7 +328,7 @@ function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }
               {isCurrent && (
                 <div
                   className="mt-0.5 h-1 w-1 rounded-full"
-                  style={{ backgroundColor: accentHex }}
+                  style={{ background: accentGradient }}
                 />
               )}
             </div>
@@ -342,7 +342,7 @@ function RevenueChart({ tasks, accentHex }: { tasks: Task[]; accentHex: string }
 /* ── Dashboard ──────────────────────────────────────────────── */
 
 export default function Dashboard() {
-  const { tasks, partners, accentColor, accentHex, updateTaskStatus, profile } = useAppContext();
+  const { tasks, partners, accentColor, accentHex, accentGradient, updateTaskStatus, profile } = useAppContext();
   const today = new Date();
   const todayIso = formatLocalDateISO(today);
   const startOfToday = startOfLocalDay(today);
@@ -512,7 +512,7 @@ export default function Dashboard() {
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:px-8 lg:pt-4 lg:pb-8">
       {/* Goals Marquee */}
       {generalGoals.length > 0 && (
-        <GoalsMarquee goals={generalGoals} accentHex={accentHex} />
+        <GoalsMarquee goals={generalGoals} accentHex={accentHex} accentGradient={accentGradient} />
       )}
 
       {/* Main 2-col grid */}
@@ -661,7 +661,7 @@ export default function Dashboard() {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${Math.min((periodSummary.closedPipelineValue / estimatedRevenue) * 100, 100)}%`,
-                        backgroundColor: accentHex,
+                        background: accentGradient,
                       }}
                     />
                   </div>
@@ -790,7 +790,7 @@ export default function Dashboard() {
       </section>
 
       {/* Revenue Chart – full width */}
-      <RevenueChart tasks={tasks} accentHex={accentHex} />
+      <RevenueChart tasks={tasks} accentHex={accentHex} accentGradient={accentGradient} />
     </div>
   );
 }

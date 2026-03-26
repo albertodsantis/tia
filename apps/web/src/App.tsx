@@ -213,6 +213,7 @@ const DesktopSidebar = ({
   onWheelCapture,
   onLogout,
   accentColor,
+  accentGradient,
   profileAvatar,
   profileName,
 }: {
@@ -221,6 +222,7 @@ const DesktopSidebar = ({
   onWheelCapture?: React.WheelEventHandler<HTMLElement>;
   onLogout: () => void;
   accentColor: string;
+  accentGradient: string;
   profileAvatar: string;
   profileName: string;
 }) => (
@@ -282,7 +284,7 @@ const DesktopSidebar = ({
                       <span
                         aria-hidden="true"
                         className="h-5 w-1 shrink-0 rounded-full"
-                        style={{ backgroundColor: accentColor }}
+                        style={{ background: accentGradient }}
                       />
                     ) : null}
                     <p className="truncate text-sm font-bold" style={isActive ? { color: accentColor } : { color: 'var(--text-primary)' }}>{tab.label}</p>
@@ -301,10 +303,12 @@ const MobileBottomNav = ({
   activeTab,
   onTabChange,
   accentColor,
+  accentGradient,
 }: {
   activeTab: TabId;
   onTabChange: (tabId: TabId) => void;
   accentColor: string;
+  accentGradient: string;
 }) => (
   <div
     className="fixed inset-x-0 bottom-0 z-[90] flex justify-between border-t bg-[var(--surface-card-strong)] px-3 backdrop-blur-2xl transition-colors duration-300 [border-color:var(--line-soft)] lg:hidden"
@@ -357,6 +361,7 @@ const MainLayout = () => {
   const {
     accentColor,
     accentHex,
+    accentGradient,
     profile,
     isBootstrapping,
     bootstrapError,
@@ -482,7 +487,7 @@ const MainLayout = () => {
             type="button"
             onClick={() => void refreshAppData()}
             className="mt-6 w-full rounded-[1rem] py-3.5 text-sm font-bold shadow-[0_12px_30px_-16px_var(--accent-glow)]"
-            style={{ backgroundColor: accentHex, color: 'var(--accent-foreground)' }}
+            style={{ background: accentGradient, color: 'var(--accent-foreground)' }}
           >
             Reintentar
           </button>
@@ -511,6 +516,7 @@ const MainLayout = () => {
                 onWheelCapture={handleDesktopSidebarWheelCapture}
                 onLogout={onLogout}
                 accentColor={accentHex}
+                accentGradient={accentGradient}
                 profileAvatar={profile.avatar}
                 profileName={profile.name}
               />
@@ -601,6 +607,7 @@ const MainLayout = () => {
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
                   accentColor={accentHex}
+                  accentGradient={accentGradient}
                 />
               ) : null}
 

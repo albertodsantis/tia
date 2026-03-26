@@ -15,11 +15,12 @@ import type {
   UserProfile,
 } from '@shared';
 import { appApi } from '../lib/api';
-import { getAccentCssVariables, getRepresentativeHex } from '../lib/accent';
+import { getAccentCssVariables, getGradientCss, getRepresentativeHex, isGradientAccent } from '../lib/accent';
 import { addLocalDays, formatLocalDateISO } from '../lib/date';
 
 interface AppContextType extends AppState {
   accentHex: string;
+  accentGradient: string;
   isBootstrapping: boolean;
   bootstrapError: string | null;
   actionError: string | null;
@@ -478,12 +479,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
   };
 
   const accentHex = getRepresentativeHex(state.accentColor);
+  const accentGradient = isGradientAccent(state.accentColor)
+    ? (getGradientCss(state.accentColor) || accentHex)
+    : accentHex;
 
   return (
     <AppContext.Provider
       value={{
         ...state,
         accentHex,
+        accentGradient,
         isBootstrapping,
         bootstrapError,
         actionError,
