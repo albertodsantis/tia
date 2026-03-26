@@ -153,12 +153,16 @@ export default function Landing({
         {/* Nav */}
         <nav className="flex items-center justify-between py-6 sm:py-8">
           <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white text-sm font-extrabold"
-              style={{ backgroundColor: ACCENT }}
-            >
-              T
-            </div>
+            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logo-grad" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stopColor="#FF2D9B"/>
+                  <stop offset="100%" stopColor="#00D4FF"/>
+                </linearGradient>
+              </defs>
+              <ellipse cx="32" cy="22" rx="22" ry="12" fill="url(#logo-grad)"/>
+              <rect x="26" y="22" width="12" height="22" rx="6" fill="url(#logo-grad)" opacity="0.65"/>
+            </svg>
             <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">
               Tía
             </span>
