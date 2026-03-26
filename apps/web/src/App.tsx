@@ -702,7 +702,7 @@ export default function App() {
       <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--surface-app)]">
         <div className="text-center">
           <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            Tía
+            Tia
           </p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">Cargando…</p>
         </div>

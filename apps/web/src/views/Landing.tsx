@@ -168,7 +168,7 @@ export default function Landing({
               <rect x="26" y="22" width="12" height="22" rx="6" fill="url(#logo-grad)" opacity="0.65"/>
             </svg>
             <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">
-              Tía
+              Tia
             </span>
           </div>
           <a
@@ -444,7 +444,7 @@ export default function Landing({
         {/* Footer */}
         <div className="border-t py-8 text-center [border-color:var(--line-soft)] lg:mt-16">
           <p className="text-xs text-[var(--text-secondary)]/60">
-            Tía — workspace operativo para creadores de contenido
+            Tia — workspace operativo para creadores de contenido
           </p>
         </div>
       </div>

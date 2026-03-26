@@ -79,7 +79,7 @@ export default function WelcomeColorPicker({
 
         {/* Heading */}
         <h1 className="mt-6 text-center text-2xl font-extrabold tracking-tight text-[var(--text-primary)] sm:text-3xl">
-          Bienvenid@ a Tía{firstName ? `, ${firstName}` : ''}
+          Bienvenid@ a Tia{firstName ? `, ${firstName}` : ''}
         </h1>
         <p className="mt-3 text-center text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
           Elige el color de acento para tu workspace. Esto define la personalidad de tu espacio — puedes cambiarlo cuando quieras en Ajustes.
