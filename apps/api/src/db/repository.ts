@@ -83,8 +83,17 @@ function normalizeEmail(email: string | undefined) {
   return normalized.toLowerCase();
 }
 
+const ALLOWED_GRADIENTS = new Set(['instagram']);
+
 function normalizeAccentColor(color: string | undefined) {
   const normalized = normalizeRequiredText(color, 'El color');
+  if (normalized.startsWith('gradient:')) {
+    const key = normalized.slice('gradient:'.length);
+    if (!ALLOWED_GRADIENTS.has(key)) {
+      throw new Error('El gradiente no es valido.');
+    }
+    return normalized;
+  }
   if (!/^#[0-9A-Fa-f]{6}$/.test(normalized)) {
     throw new Error('El color debe ser un hex valido.');
   }

@@ -33,7 +33,7 @@ import { toast } from '../lib/toast';
 import { getGradientCss, isGradientAccent } from '../lib/accent';
 
 const ACCENT_OPTIONS = [
-  { name: 'Instagram', value: 'gradient:instagram' },
+  { name: 'Tia', value: 'gradient:instagram' },
   { name: 'Arcilla', value: '#C96F5B' },
   { name: 'Terracota', value: '#C65D4B' },
   { name: 'Cobre', value: '#B86A45' },
