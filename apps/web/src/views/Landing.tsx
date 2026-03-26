@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -16,6 +16,11 @@ import { supabase } from '../lib/supabase';
 import { cx } from '../components/ui';
 
 type AuthMode = 'login' | 'register';
+
+// Brand colors derived from the Tía mushroom logo
+const BRAND_PINK = '#FF2D9B';
+const BRAND_CYAN = '#00D4FF';
+const BRAND_MID = '#A86BDD'; // midpoint for single-color accents
 
 const features = [
   {
@@ -55,13 +60,6 @@ export default function Landing({
 }: {
   onLogin: (user: SessionUser) => void;
 }) {
-  const [ACCENT, setACCENT] = useState('#C96F5B');
-
-  useEffect(() => {
-    const savedAccent = localStorage.getItem('tia_accent_color');
-    if (savedAccent) setACCENT(savedAccent);
-  }, []);
-
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -136,16 +134,19 @@ export default function Landing({
 
   return (
     <div className="min-h-[100dvh] bg-[var(--surface-app)] font-sans text-[var(--text-primary)]">
-      {/* Background accents */}
+      {/* Background accents — brand gradient glows */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
-          className="absolute -top-32 right-[-8%] h-96 w-96 rounded-full blur-[100px] opacity-50"
-          style={{ backgroundColor: `${ACCENT}30` }}
+          className="absolute -top-32 right-[-8%] h-96 w-96 rounded-full blur-[100px] opacity-40"
+          style={{ backgroundColor: BRAND_PINK }}
         />
-        <div className="absolute bottom-[-5%] left-[-6%] h-80 w-80 rounded-full bg-emerald-200/20 blur-[100px] dark:bg-emerald-400/10" />
         <div
-          className="absolute top-1/2 left-1/3 h-64 w-64 rounded-full blur-[120px] opacity-30"
-          style={{ backgroundColor: `${ACCENT}18` }}
+          className="absolute bottom-[-5%] left-[-6%] h-80 w-80 rounded-full blur-[100px] opacity-30"
+          style={{ backgroundColor: BRAND_CYAN }}
+        />
+        <div
+          className="absolute top-1/2 left-1/3 h-64 w-64 rounded-full blur-[120px] opacity-20"
+          style={{ backgroundColor: BRAND_MID }}
         />
       </div>
 
@@ -156,8 +157,8 @@ export default function Landing({
             <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="logo-grad" x1="0%" y1="50%" x2="100%" y2="50%">
-                  <stop offset="0%" stopColor="#FF2D9B"/>
-                  <stop offset="100%" stopColor="#00D4FF"/>
+                  <stop offset="0%" stopColor={BRAND_PINK}/>
+                  <stop offset="100%" stopColor={BRAND_CYAN}/>
                 </linearGradient>
               </defs>
               <ellipse cx="32" cy="22" rx="22" ry="12" fill="url(#logo-grad)"/>
@@ -181,7 +182,7 @@ export default function Landing({
           <div className="max-w-2xl">
             <div
               className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] uppercase"
-              style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+              style={{ backgroundColor: `${BRAND_PINK}14`, color: BRAND_PINK }}
             >
               <Sparkles size={13} strokeWidth={2.5} />
               CRM para creadores
@@ -192,7 +193,7 @@ export default function Landing({
               <span
                 className="bg-clip-text text-transparent"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, ${ACCENT}, #E8956E)`,
+                  backgroundImage: `linear-gradient(135deg, ${BRAND_PINK}, ${BRAND_CYAN})`,
                 }}
               >
                 partnerships creativos
@@ -219,7 +220,7 @@ export default function Landing({
                     >
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-lg"
-                        style={{ backgroundColor: `${ACCENT}12`, color: ACCENT }}
+                        style={{ backgroundColor: `${BRAND_MID}18`, color: BRAND_MID }}
                       >
                         <Icon size={16} strokeWidth={2.2} />
                       </div>
@@ -243,7 +244,7 @@ export default function Landing({
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{
-                  background: `radial-gradient(circle at top left, ${ACCENT}18 0%, transparent 50%)`,
+                  background: `radial-gradient(circle at top left, ${BRAND_PINK}18 0%, transparent 50%)`,
                 }}
               />
 
@@ -385,8 +386,11 @@ export default function Landing({
                   <button
                     type="submit"
                     disabled={loading || !email.trim() || !password || (!isLogin && !name.trim())}
-                    className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold shadow-[0_12px_30px_-16px_var(--accent-glow)] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ backgroundColor: ACCENT, color: '#fff' }}
+                    className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, ${BRAND_PINK}, ${BRAND_CYAN})`,
+                      boxShadow: `0 12px 30px -16px ${BRAND_MID}80`,
+                    }}
                   >
                     {loading
                       ? (isLogin ? 'Ingresando…' : 'Creando cuenta…')
@@ -418,7 +422,7 @@ export default function Landing({
                 >
                   <div
                     className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: `${ACCENT}12`, color: ACCENT }}
+                    style={{ backgroundColor: `${BRAND_MID}18`, color: BRAND_MID }}
                   >
                     <Icon size={16} strokeWidth={2.2} />
                   </div>

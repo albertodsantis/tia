@@ -7,7 +7,8 @@ const webRoot = __dirname;
 const repoRoot = path.resolve(webRoot, '../..');
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, repoRoot, '');
+  // loadEnv reads .env files (local dev); process.env has system vars (Railway/production)
+  const fileEnv = loadEnv(mode, repoRoot, '');
 
   return {
     root: webRoot,
@@ -15,8 +16,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(''),
-      'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || ''),
-      'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || ''),
+      'process.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL || fileEnv.SUPABASE_URL || ''),
+      'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY || fileEnv.SUPABASE_ANON_KEY || ''),
     },
     resolve: {
       alias: {
