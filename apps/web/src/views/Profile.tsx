@@ -152,6 +152,8 @@ export default function Profile() {
   updateProfileRef.current = updateProfile;
   const profileFormRef = useRef(profileForm);
   profileFormRef.current = profileForm;
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSavingExplicitly = useRef(false);
 
   useEffect(() => {
     appApi.getUploadStatus().then((res) => setUploadsEnabled(res.enabled)).catch(() => {});
@@ -160,6 +162,7 @@ export default function Profile() {
   // Flush any unsaved changes on unmount (e.g. user switches tab)
   useEffect(() => {
     return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       const pending = JSON.stringify(profileFormRef.current);
       if (pending !== lastSavedProfile.current) {
         updateProfileRef.current(profileFormRef.current);
@@ -180,9 +183,16 @@ export default function Profile() {
 
     setSaveStatus('saving');
     const timer = setTimeout(async () => {
+      // Re-check: explicit save may have already persisted this data
+      if (isSavingExplicitly.current) return;
+      const freshString = JSON.stringify(profileFormRef.current);
+      if (freshString === lastSavedProfile.current) {
+        setSaveStatus('idle');
+        return;
+      }
       try {
-        await updateProfileRef.current(profileForm);
-        lastSavedProfile.current = currentString;
+        await updateProfileRef.current(profileFormRef.current);
+        lastSavedProfile.current = freshString;
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
       } catch {
@@ -190,7 +200,8 @@ export default function Profile() {
       }
     }, 1000);
 
-    return () => clearTimeout(timer);
+    debounceTimerRef.current = timer;
+    return () => { clearTimeout(timer); debounceTimerRef.current = null; };
   }, [profileForm]);
 
   const mediaKit = profileForm.mediaKit || ({} as any);
@@ -361,15 +372,27 @@ export default function Profile() {
   };
 
   const handleSaveProfile = async () => {
+    // Cancel any pending auto-save to prevent race conditions
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
     setIsSavingProfile(true);
+    isSavingExplicitly.current = true;
+
+    const snapshot = profileFormRef.current;
+    const snapshotString = JSON.stringify(snapshot);
 
     try {
-      await updateProfile(profileForm);
-      lastSavedProfile.current = JSON.stringify(profileForm);
+      await updateProfile(snapshot);
+      lastSavedProfile.current = snapshotString;
+      setSaveStatus('idle');
       toast.success('Perfil guardado correctamente');
     } catch (error) {
       toast.error('Ocurrió un error al guardar');
     } finally {
+      isSavingExplicitly.current = false;
       setIsSavingProfile(false);
     }
   };
