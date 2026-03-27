@@ -26,7 +26,7 @@ import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import WelcomeColorPicker from './views/WelcomeColorPicker';
 import RoadmapButton from './components/RoadmapButton';
-import { SurfaceCard, cx } from './components/ui';
+import { Avatar, SurfaceCard, cx } from './components/ui';
 import { authApi } from './lib/api';
 import { supabase } from './lib/supabase';
 
@@ -232,10 +232,11 @@ const DesktopSidebar = ({
   >
     <div className="px-1">
       <div className="flex items-center gap-3 px-3">
-        <img
+        <Avatar
           src={profileAvatar}
-          alt={profileName}
-          className="h-12 w-12 rounded-[1rem] border object-cover shadow-sm [border-color:var(--line-soft)]"
+          name={profileName}
+          size={48}
+          className="border shadow-sm [border-color:var(--line-soft)]"
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-[var(--text-primary)]">{profileName}</p>

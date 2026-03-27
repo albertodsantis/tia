@@ -217,7 +217,7 @@ export function Button({
 }) {
   const toneClass =
     tone === 'primary'
-      ? 'border border-transparent shadow-[0_12px_30px_-16px_var(--accent-glow)]'
+      ? 'shadow-[0_12px_30px_-16px_var(--accent-glow)]'
       : tone === 'danger'
         ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
         : tone === 'ghost'
@@ -454,5 +454,53 @@ export function ModalPanel({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || !parts[0]) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function Avatar({
+  src,
+  name,
+  size = 48,
+  className,
+}: {
+  src?: string;
+  name: string;
+  size?: number;
+  className?: string;
+}) {
+  const [failed, setFailed] = React.useState(false);
+  const showFallback = !src || failed;
+
+  React.useEffect(() => { setFailed(false); }, [src]);
+
+  if (showFallback) {
+    return (
+      <div
+        className={cx(
+          'flex shrink-0 items-center justify-center rounded-[1rem] bg-[var(--surface-muted)] text-[var(--text-secondary)] select-none',
+          className,
+        )}
+        style={{ width: size, height: size, fontSize: size * 0.38 }}
+      >
+        <span className="font-bold leading-none">{getInitials(name)}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      onError={() => setFailed(true)}
+      className={cx('shrink-0 rounded-[1rem] object-cover', className)}
+      style={{ width: size, height: size }}
+    />
   );
 }

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import type { Goal, GoalPriority, GoalStatus, MediaKitMetric, MediaKitOffer, MediaKitProfile, Partner, SocialProfiles, UserProfile } from '@shared';
 import { useAppContext } from '../context/AppContext';
-import { Button, SurfaceCard, ModalPanel, cx } from '../components/ui';
+import { Avatar, Button, SurfaceCard, ModalPanel, cx } from '../components/ui';
 import CustomSelect from '../components/CustomSelect';
 import ImageUpload from '../components/ImageUpload';
 import { appApi } from '../lib/api';
@@ -656,10 +656,11 @@ export default function Profile() {
         <div className="relative">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-w-0 items-start gap-4">
-              <img
-                src={profileForm.avatar || ''}
-                alt={profileForm.name || 'Avatar'}
-                className="h-24 w-24 shrink-0 rounded-[1.25rem] border border-white/70 object-cover shadow-[0_22px_42px_-24px_rgba(63,43,34,0.38)]"
+              <Avatar
+                src={profileForm.avatar}
+                name={profileForm.name || 'Usuario'}
+                size={96}
+                className="border border-white/70 shadow-[0_22px_42px_-24px_rgba(63,43,34,0.38)]"
               />
               <div className="min-w-0">
                 <h1 className="mt-2 text-[1.75rem] font-extrabold tracking-tight text-[var(--text-primary)] lg:text-[2.15rem]">
