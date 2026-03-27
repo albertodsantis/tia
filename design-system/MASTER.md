@@ -33,7 +33,7 @@ Tia is a Spanish-first micro SaaS CRM for content creators and creator operators
 The product must feel:
 
 - operational, not decorative
-- warm, soft, and credible
+- clean, focused, and credible
 - mobile-first in hierarchy, but fully usable as a desktop workspace
 - compact enough for daily work without looking dense or hostile
 
@@ -53,16 +53,16 @@ Mandatory principles:
 
 ## 5. Brand Direction
 
-Approved identity direction: `Soft Studio Console`
+Approved identity direction: `Clean Creator Console`
 
 Visual thesis:
 
-- a calm creator-operations console with soft materials, restrained contrast, and a highly usable daily-work rhythm
+- a focused creator-operations workspace with clean surfaces, restrained contrast, and a highly usable daily-work rhythm
 
 Approved visual direction:
 
-- soft workspace SaaS
-- tactile surfaces
+- clean workspace SaaS
+- neutral surfaces with clear hierarchy
 - subtle accent gradients in app framing
 - strong readability
 - compact headers inside content, not oversized page heroes
@@ -71,7 +71,7 @@ Approved visual direction:
 
 Material direction:
 
-- low-noise surfaces with soft separation
+- low-noise surfaces with clean separation
 - blurred or translucent treatment only when readability stays excellent
 - thin borders, diffused shadows, and tonal grouping before heavy card framing
 - panels should feel layered, not boxed
@@ -90,8 +90,8 @@ Tone direction:
 - modern
 - premium without luxury theatrics
 - creator-friendly without becoming playful or juvenile
-- light mode: warm and inviting
-- dark mode: neutral and clean (no warm/earthy tint)
+- light mode: clean and inviting
+- dark mode: neutral and clean (no warm/earthy tint, minimal background tinting)
 
 Disallowed drift:
 
@@ -226,7 +226,7 @@ Accent rules:
 - every accent variant must preserve AA contrast on light and dark surfaces
 - foreground color is computed automatically via WCAG luminance, never hardcoded
 - semantic states (success, warning, danger, info) must remain visually distinct from accent states
-- accent should feel warm and intentional, not neon or candy-like
+- accent should feel intentional and clean, not neon or candy-like
 
 ### 6.4 Typography
 
@@ -323,12 +323,12 @@ background-image:
 Dark mode:
 ```css
 background-image:
-  radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 18%, transparent) 0%, transparent 32%),
-  radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.08) 0%, transparent 28%),
-  linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 88%, black) 0%, var(--surface-app) 100%);
+  radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 6%, transparent) 0%, transparent 28%),
+  radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.04) 0%, transparent 24%),
+  linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%);
 ```
 
-This creates a subtle accent-tinted atmosphere at top-right and a cool slate tone at bottom-left.
+Dark mode background tinting is kept minimal (6% accent vs 14% in light) to maintain a neutral, clean feel.
 
 ## 7. Canonical Layout Rules
 

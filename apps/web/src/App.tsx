@@ -630,7 +630,11 @@ const AppShell = () => {
   const needsColorPicker = !isBootstrapping && !bootstrapError && !colorPicked && accentColor === DEFAULT_ACCENT;
 
   const handleColorSelected = async (color: string) => {
-    await setAccentColor(color);
+    try {
+      await setAccentColor(color);
+    } catch {
+      // Let the user proceed even if the API call fails
+    }
     setColorPicked(true);
   };
 

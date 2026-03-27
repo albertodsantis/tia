@@ -1474,7 +1474,7 @@ export default function Pipeline() {
               <div>
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <CalendarDays size={14} />
-                  Fecha
+                  Fecha límite
                 </label>
                 <input
                   type="date"
