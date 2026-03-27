@@ -783,17 +783,6 @@ export default function Profile() {
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
               <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
-                Portada
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                1
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
-                Identidad, tagline, contacto y enlaces.
-              </p>
-            </div>
-            <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
                 Insights
               </p>
               <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
