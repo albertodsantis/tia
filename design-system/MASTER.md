@@ -86,11 +86,12 @@ Composition direction:
 
 Tone direction:
 
-- warm
 - composed
 - modern
 - premium without luxury theatrics
 - creator-friendly without becoming playful or juvenile
+- light mode: warm and inviting
+- dark mode: neutral and clean (no warm/earthy tint)
 
 Disallowed drift:
 
@@ -126,16 +127,16 @@ Dark mode (`.dark`):
 
 | Token | Value |
 |---|---|
-| `--surface-app` | `#171311` |
-| `--surface-shell` | `rgba(27, 22, 19, 0.9)` |
-| `--surface-card` | `rgba(35, 29, 26, 0.84)` |
-| `--surface-card-strong` | `rgba(42, 34, 30, 0.96)` |
-| `--surface-muted` | `rgba(38, 31, 27, 0.78)` |
-| `--surface-overlay` | `rgba(27, 22, 19, 0.68)` |
-| `--text-primary` | `#f7f2ec` |
-| `--text-secondary` | `#b6aba2` |
-| `--line-soft` | `rgba(247, 242, 236, 0.1)` |
-| `--line-strong` | `rgba(247, 242, 236, 0.16)` |
+| `--surface-app` | `#111114` |
+| `--surface-shell` | `rgba(18, 18, 22, 0.9)` |
+| `--surface-card` | `rgba(26, 26, 31, 0.84)` |
+| `--surface-card-strong` | `rgba(32, 32, 37, 0.96)` |
+| `--surface-muted` | `rgba(28, 28, 33, 0.78)` |
+| `--surface-overlay` | `rgba(18, 18, 22, 0.68)` |
+| `--text-primary` | `#ededf0` |
+| `--text-secondary` | `#a1a1ab` |
+| `--line-soft` | `rgba(237, 237, 240, 0.1)` |
+| `--line-strong` | `rgba(237, 237, 240, 0.16)` |
 
 Note: border variables are named `--line-soft` and `--line-strong` in the implementation, not `--border-*`.
 
@@ -164,7 +165,7 @@ Dark mode:
 | `--shadow-medium` | `0 28px 70px -40px rgba(0, 0, 0, 0.58)` |
 | `--shadow-floating` | `0 24px 48px -24px rgba(0, 0, 0, 0.44)` |
 
-Note: shadows use warm brown tones (`rgba(59, 43, 34, ...)`) in light mode and pure black in dark mode, with large negative spread values to keep them soft and tightly scoped.
+Note: shadows use warm brown tones (`rgba(59, 43, 34, ...)`) in light mode and pure black in dark mode. Large negative spread values keep them soft and tightly scoped.
 
 ### 6.3 Accent System
 
@@ -323,11 +324,11 @@ Dark mode:
 ```css
 background-image:
   radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 18%, transparent) 0%, transparent 32%),
-  radial-gradient(circle at bottom left, rgba(114, 151, 140, 0.1) 0%, transparent 28%),
+  radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.08) 0%, transparent 28%),
   linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 88%, black) 0%, var(--surface-app) 100%);
 ```
 
-This creates a subtle accent-tinted atmosphere at top-right and a muted eucalyptus tone at bottom-left.
+This creates a subtle accent-tinted atmosphere at top-right and a cool slate tone at bottom-left.
 
 ## 7. Canonical Layout Rules
 
