@@ -150,15 +150,17 @@ export default function Profile() {
   updateProfileRef.current = updateProfile;
   const profileFormRef = useRef(profileForm);
   profileFormRef.current = profileForm;
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedDisplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     appApi.getUploadStatus().then((res) => setUploadsEnabled(res.enabled)).catch(() => {});
   }, []);
 
-  // Clean up any pending debounce timer on unmount
+  // Sync external profile changes into local form state
   useEffect(() => {
     if (!profile) return;
-    // No sobrescribir si el usuario está editando en el modal
     if (isGoalsModalOpen) return;
 
     const safeGoals = safeArr(profile.goals).map((g: any, i) =>
@@ -175,6 +177,43 @@ export default function Profile() {
       lastSavedProfile.current = incomingString;
     }
   }, [profile, isGoalsModalOpen]);
+
+  // Debounced auto-save for profile fields (goals save via modal button)
+  useEffect(() => {
+    if (isGoalsModalOpen) return;
+
+    const currentString = JSON.stringify(profileForm);
+    if (currentString === lastSavedProfile.current) return;
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      try {
+        const saved = await updateProfileRef.current(profileFormRef.current);
+        // Don't overwrite profileForm — user may have kept typing
+        lastSavedProfile.current = JSON.stringify(saved);
+        setSaveStatus('saved');
+        if (savedDisplayTimer.current) clearTimeout(savedDisplayTimer.current);
+        savedDisplayTimer.current = setTimeout(() => setSaveStatus('idle'), 2500);
+      } catch {
+        setSaveStatus('idle');
+        toast.error('Error al guardar');
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [profileForm, isGoalsModalOpen]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      if (savedDisplayTimer.current) clearTimeout(savedDisplayTimer.current);
+    };
+  }, []);
 
   const mediaKit = profileForm.mediaKit || ({} as any);
   const configuredPortfolio = getFilledCount(mediaKit.portfolioImages);
@@ -638,6 +677,20 @@ export default function Profile() {
 
   return (
     <div className="space-y-5 p-4 pb-6 lg:space-y-6 lg:px-8 lg:pt-4 lg:pb-8">
+      <div className="flex h-5 items-center justify-end">
+        {saveStatus === 'saving' && (
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+            <Loader2 size={13} className="animate-spin" />
+            Guardando...
+          </span>
+        )}
+        {saveStatus === 'saved' && (
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
+            <CheckCircle2 size={13} />
+            Guardado
+          </span>
+        )}
+      </div>
       <SurfaceCard className="relative overflow-hidden p-6 lg:p-7">
         <div
           className="pointer-events-none absolute inset-0"
