@@ -159,14 +159,10 @@ export default function Profile() {
     appApi.getUploadStatus().then((res) => setUploadsEnabled(res.enabled)).catch(() => {});
   }, []);
 
-  // Flush any unsaved changes on unmount (e.g. user switches tab)
+  // Clean up any pending debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      const pending = JSON.stringify(profileFormRef.current);
-      if (pending !== lastSavedProfile.current) {
-        updateProfileRef.current(profileFormRef.current);
-      }
     };
   }, []);
 
@@ -191,8 +187,10 @@ export default function Profile() {
         return;
       }
       try {
-        await updateProfileRef.current(profileFormRef.current);
-        lastSavedProfile.current = freshString;
+        const saved = await updateProfileRef.current(profileFormRef.current);
+        setProfileForm(saved);
+        profileFormRef.current = saved;
+        lastSavedProfile.current = JSON.stringify(saved);
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
       } catch {
@@ -381,12 +379,12 @@ export default function Profile() {
     setIsSavingProfile(true);
     isSavingExplicitly.current = true;
 
-    const snapshot = profileFormRef.current;
-    const snapshotString = JSON.stringify(snapshot);
-
     try {
-      await updateProfile(snapshot);
-      lastSavedProfile.current = snapshotString;
+      const saved = await updateProfile(profileFormRef.current);
+      // Sync local state from API response so local + context + server are all identical
+      setProfileForm(saved);
+      profileFormRef.current = saved;
+      lastSavedProfile.current = JSON.stringify(saved);
       setSaveStatus('idle');
       toast.success('Perfil guardado correctamente');
     } catch (error) {

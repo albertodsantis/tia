@@ -39,7 +39,7 @@ interface AppContextType extends AppState {
   addContact: (partnerId: string, contact: Omit<Contact, 'id'>) => Promise<void>;
   updateContact: (partnerId: string, contactId: string, updates: Partial<Contact>) => Promise<void>;
   deleteContact: (partnerId: string, contactId: string) => Promise<void>;
-  updateProfile: (profile: UpdateProfileRequest) => Promise<void>;
+  updateProfile: (profile: UpdateProfileRequest) => Promise<UserProfile>;
   setAccentColor: (color: string) => Promise<void>;
   setTheme: (theme: AppTheme) => Promise<void>;
   addTemplate: (template: Omit<Template, 'id'>) => Promise<void>;
@@ -406,17 +406,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     }
   };
 
-  const updateProfile = async (profile: UpdateProfileRequest) => {
+  const updateProfile = async (profile: UpdateProfileRequest): Promise<UserProfile> => {
     setActionError(null);
 
     try {
       const updatedProfile = await appApi.updateProfile(profile);
+      const normalized = normalizeProfile(updatedProfile);
       setState((current) => ({
         ...current,
-        profile: normalizeProfile(updatedProfile),
+        profile: normalized,
       }));
+      return normalized;
     } catch (error) {
-      trackError(error);
+      return trackError(error);
     }
   };
 
