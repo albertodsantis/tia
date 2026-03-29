@@ -439,10 +439,10 @@ export function ModalPanel({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-muted)] text-[var(--text-secondary)] transition-transform active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
               aria-label="Cerrar modal"
             >
-              <X size={18} />
+              <X size={18} weight="regular" />
             </button>
           ) : null}
         </div>

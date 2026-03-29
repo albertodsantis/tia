@@ -980,7 +980,7 @@ export default function Profile() {
                       placeholder={`#Tag${index + 1}`}
                     />
                     <button type="button" onClick={() => removeStringListItem('topicTags', index)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-rose-500 group-hover:opacity-100">
-                      <X size={14} />
+                      <X size={14} weight="regular" />
                     </button>
                   </div>
                 ))}

@@ -98,9 +98,9 @@ export default function RoadmapButton({ compact }: { compact?: boolean }) {
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
                   >
-                    <X size={15} />
+                    <X size={15} weight="regular" />
                   </button>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">

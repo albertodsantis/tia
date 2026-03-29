@@ -42,7 +42,7 @@ export default function Toaster() {
             className="ml-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             aria-label="Cerrar notificación"
           >
-            <X size={16} />
+            <X size={16} weight="regular" />
           </button>
         </div>
       ))}

@@ -390,9 +390,9 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--line-soft)] bg-white/70 text-[var(--text-secondary)] transition-colors hover:bg-white"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
               >
-                <X size={18} />
+                <X size={18} weight="regular" />
               </button>
             </div>
 
