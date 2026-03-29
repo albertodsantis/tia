@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ChartBar, CalendarDots, Image, Rocket, Sparkle, X } from '@phosphor-icons/react';
-import { useAppContext } from '../context/AppContext';
 
 const BRAND_GOLD = '#FCAF45';
 const BRAND_ORANGE = '#F56040';
@@ -36,7 +35,10 @@ const ROADMAP_ITEMS = [
 
 export default function RoadmapButton({ compact }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
-  const { accentGradient, accentColor } = useAppContext();
+
+  // Usamos los colores por defecto de la marca para que funcione fuera del AppProvider
+  const accentColor = BRAND_ORANGE;
+  const accentGradient = `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`;
 
   return (
     <div className="relative">
@@ -46,7 +48,7 @@ export default function RoadmapButton({ compact }: { compact?: boolean }) {
         className="group relative flex items-center gap-2 overflow-hidden rounded-full py-2 pl-3 pr-4 text-xs font-extrabold transition-all hover:scale-105 hover:shadow-lg active:scale-[0.97]"
         style={{
           background: accentGradient,
-          color: 'var(--accent-foreground)',
+          color: '#ffffff',
           boxShadow: `0 4px 20px -6px ${accentColor}90`,
           ...(compact ? { padding: '0.375rem 0.75rem 0.375rem 0.625rem', fontSize: '11px' } : {}),
         }}
@@ -80,7 +82,7 @@ export default function RoadmapButton({ compact }: { compact?: boolean }) {
                   <div className="flex items-center gap-2">
                     <div
                       className="flex h-7 w-7 items-center justify-center rounded-lg"
-                      style={{ background: accentGradient, color: 'var(--accent-foreground)' }}
+                      style={{ background: accentGradient, color: '#ffffff' }}
                     >
                       <Rocket size={13} />
                     </div>
