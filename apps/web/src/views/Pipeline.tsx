@@ -1378,7 +1378,7 @@ export default function Pipeline() {
             </div>
           </div>
 
-          <div className="rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
+          <div className="overflow-hidden rounded-[1.2rem] border bg-[var(--surface-muted)]/50 p-4 sm:p-5 [border-color:var(--line-soft)]">
             <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
               Detalles Operativos
             </h4>

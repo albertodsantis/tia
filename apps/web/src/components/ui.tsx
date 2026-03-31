@@ -447,7 +447,7 @@ export function ModalPanel({
           ) : null}
         </div>
       </div>
-      <div className="relative flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
+      <div className="relative flex-1 overflow-x-hidden overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
       {footer ? (
         <div className="relative border-t px-5 py-4 [border-color:var(--line-soft)] sm:px-6">
           {footer}
