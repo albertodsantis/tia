@@ -1345,7 +1345,7 @@ export default function Pipeline() {
               </div>
             }
           >
-        <form id="pipeline-task-form" onSubmit={saveTask} className="space-y-6">
+        <form id="pipeline-task-form" onSubmit={saveTask} className="min-w-0 space-y-6">
           <div className="space-y-4">
             <div>
               <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
@@ -1471,7 +1471,7 @@ export default function Pipeline() {
                 />
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 overflow-hidden">
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <CalendarDots size={14} />
                   Fecha límite
@@ -1481,8 +1481,8 @@ export default function Pipeline() {
                   required
                   value={form.dueDate}
                   onChange={(event) => setForm({ ...form, dueDate: event.target.value })}
-                  className={cx(fieldClass, 'bg-[var(--surface-card)] max-w-full min-w-0')}
-                  style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                  className={cx(fieldClass, 'bg-[var(--surface-card)] !w-full max-w-full min-w-0')}
+                  style={{ '--tw-ring-color': accentHex, maxWidth: '100%' } as React.CSSProperties}
                 />
               </div>
 
