@@ -1382,7 +1382,7 @@ export default function Pipeline() {
             <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
               Detalles Operativos
             </h4>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <Buildings size={14} />
@@ -1454,7 +1454,7 @@ export default function Pipeline() {
                 </p>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <CurrencyCircleDollar size={14} />
                   Valor
