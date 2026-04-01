@@ -1525,8 +1525,8 @@ export default function Profile() {
                       <label className={labelClass}>Est. Ingresos (USD)</label>
                       <input
                         type="number"
-                        value={goal?.revenueEstimation ?? ''}
-                        onChange={(event) => setGoalField(index, 'revenueEstimation', Number(event.target.value))}
+                        value={goal?.revenueEstimation || ''}
+                        onChange={(event) => setGoalField(index, 'revenueEstimation', event.target.value ? Number(event.target.value) : 0)}
                         className={cx(fieldClass, 'bg-[var(--surface-muted)]')}
                         style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                         placeholder=""
