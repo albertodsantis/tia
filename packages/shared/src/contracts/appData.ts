@@ -72,7 +72,6 @@ export interface AppSettingsResponse {
 
 export interface CreateTemplateRequest {
   name: string;
-  subject: string;
   body: string;
 }
 

@@ -176,25 +176,21 @@ const initialState: AppState = {
     {
       id: 't1',
       name: '1. Primer contacto (Outreach)',
-      subject: 'Propuesta de colaboración - {{brandName}} x {{creatorName}}',
       body: 'Hola {{contactName}},\n\nHe estado siguiendo el trabajo de {{brandName}} y me encanta su enfoque. Mi audiencia conecta muchísimo con su sector y creo que haríamos un gran equipo.\n\nTe dejo mi Media Kit interactivo para que conozcas más de mi perfil y métricas:\n{{mediaKitLink}}\n\n¿Tienen disponibilidad para una breve llamada la próxima semana y explorar ideas?\n\nSaludos,\n{{creatorName}}',
     },
     {
       id: 't2',
       name: '2. Seguimiento (Follow-up)',
-      subject: 'Re: Propuesta de colaboración - {{brandName}} x {{creatorName}}',
       body: 'Hola {{contactName}},\n\nTe escribo rápidamente para hacer seguimiento a mi correo anterior. Entiendo que deben estar a tope, pero me encantaría saber si pudieron revisar mi perfil.\n\nSigo a su disposición si quieren agendar una llamada rápida.\n\nAbrazo,\n{{creatorName}}',
     },
     {
       id: 't3',
       name: '3. Envío de entregable',
-      subject: 'Contenido listo para revisión - {{brandName}}',
       body: 'Hola {{contactName}},\n\n¡Espero que estés genial!\n\nTe comparto el enlace con el contenido de la campaña listo para su revisión. Quedo atento a tus comentarios para aplicar ajustes si es necesario o proceder con la publicación.\n\n¡Gracias!\n{{creatorName}}',
     },
     {
       id: 't4',
       name: '4. Recordatorio de pago',
-      subject: 'Recordatorio: Factura pendiente - {{brandName}}',
       body: 'Hola {{contactName}},\n\nEspero que todo vaya de maravilla.\n\nTe escribo para dejarte un amable recordatorio sobre la factura correspondiente a nuestra última colaboración. Si necesitas que adjunte nuevamente el documento o los datos bancarios, házmelo saber.\n\nQuedo atento a cualquier novedad.\n\nUn saludo,\n{{creatorName}}',
     },
   ],
@@ -806,7 +802,6 @@ class InMemoryAppStore {
     const template: Template = {
       id: randomUUID(),
       name: normalizeRequiredText(input.name, 'El nombre de la plantilla'),
-      subject: normalizeRequiredText(input.subject, 'El asunto'),
       body: normalizeRequiredText(input.body, 'El cuerpo del mensaje'),
     };
 

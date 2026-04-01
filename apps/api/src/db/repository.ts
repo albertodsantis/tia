@@ -1004,21 +1004,20 @@ export class PostgresAppStore {
       'SELECT * FROM templates WHERE user_id = $1 ORDER BY created_at ASC',
       [userId],
     );
-    return rows.map(r => ({ id: r.id, name: r.name, subject: r.subject, body: r.body }));
+    return rows.map(r => ({ id: r.id, name: r.name, body: r.body }));
   }
 
   async createTemplate(userId: string, input: CreateTemplateRequest): Promise<Template> {
     const id = randomUUID();
     const name = normalizeRequiredText(input.name, 'El nombre de la plantilla');
-    const subject = normalizeRequiredText(input.subject, 'El asunto');
     const body = normalizeRequiredText(input.body, 'El cuerpo del mensaje');
 
     await this.pool.query(
-      'INSERT INTO templates (id, user_id, name, subject, body) VALUES ($1,$2,$3,$4,$5)',
-      [id, userId, name, subject, body],
+      'INSERT INTO templates (id, user_id, name, body) VALUES ($1,$2,$3,$4)',
+      [id, userId, name, body],
     );
 
-    return { id, name, subject, body };
+    return { id, name, body };
   }
 
   async deleteTemplate(userId: string, templateId: string): Promise<DeleteEntityResponse> {

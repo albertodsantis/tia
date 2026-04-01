@@ -75,17 +75,15 @@ export default function Settings() {
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [isAccentPaletteOpen, setIsAccentPaletteOpen] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({ name: '', subject: '', body: '' });
+  const [newTemplate, setNewTemplate] = useState({ name: '', body: '' });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [activeTemplateField, setActiveTemplateField] = useState<'subject' | 'body'>('body');
-  const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const insertVariable = useCallback(
     (varKey: string) => {
       const token = `{{${varKey}}}`;
-      const el = activeTemplateField === 'subject' ? subjectRef.current : bodyRef.current;
+      const el = bodyRef.current;
       if (!el) return;
 
       const start = el.selectionStart ?? el.value.length;
@@ -94,7 +92,7 @@ export default function Settings() {
       const after = el.value.slice(end);
       const updated = before + token + after;
 
-      setNewTemplate((prev) => ({ ...prev, [activeTemplateField]: updated }));
+      setNewTemplate((prev) => ({ ...prev, body: updated }));
 
       requestAnimationFrame(() => {
         el.focus();
@@ -102,7 +100,7 @@ export default function Settings() {
         el.setSelectionRange(cursor, cursor);
       });
     },
-    [activeTemplateField],
+    [],
   );
 
   const activeAccent =
@@ -140,13 +138,13 @@ export default function Settings() {
         await deleteTemplate(editingTemplateId);
         await addTemplate(newTemplate);
         setIsAddingTemplate(false);
-        setNewTemplate({ name: '', subject: '', body: '' });
+        setNewTemplate({ name: '', body: '' });
         setEditingTemplateId(null);
         toast.success('Plantilla actualizada correctamente');
       } else {
         await addTemplate(newTemplate);
         setIsAddingTemplate(false);
-        setNewTemplate({ name: '', subject: '', body: '' });
+        setNewTemplate({ name: '', body: '' });
         toast.success('Plantilla guardada correctamente');
       }
     } finally { setSavingTemplate(false); }
@@ -296,7 +294,7 @@ export default function Settings() {
               accentColor={accentGradient}
               onClick={() => {
                 setEditingTemplateId(null);
-                setNewTemplate({ name: '', subject: '', body: '' });
+                setNewTemplate({ name: '', body: '' });
                 setIsAddingTemplate(true);
               }}
               className="w-full justify-center"
@@ -345,9 +343,6 @@ export default function Settings() {
                         </h3>
                         <StatusBadge tone="neutral">Base</StatusBadge>
                       </div>
-                      <p className="mt-2 text-xs font-semibold tracking-[0.08em] text-slate-400 uppercase dark:text-slate-500">
-                        {template.subject}
-                      </p>
                       <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
                         {template.body}
                       </p>
@@ -358,7 +353,7 @@ export default function Settings() {
                     type="button"
                     onClick={() => {
                       setEditingTemplateId(template.id);
-                      setNewTemplate({ name: template.name, subject: template.subject, body: template.body });
+                      setNewTemplate({ name: template.name, body: template.body });
                       setIsAddingTemplate(true);
                     }}
                     className="flex shrink-0 items-center justify-center text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
@@ -378,7 +373,7 @@ export default function Settings() {
                 action={
                   <Button accentColor={accentGradient} onClick={() => {
                     setEditingTemplateId(null);
-                    setNewTemplate({ name: '', subject: '', body: '' });
+                    setNewTemplate({ name: '', body: '' });
                     setIsAddingTemplate(true);
                   }}>
                     <Plus size={16} weight="regular" />
@@ -552,23 +547,6 @@ export default function Settings() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
-                    <TextT size={14} />
-                    Asunto
-                  </label>
-                  <input
-                    ref={subjectRef}
-                    required
-                    value={newTemplate.subject}
-                    onChange={(event) => setNewTemplate({ ...newTemplate, subject: event.target.value })}
-                    onFocus={() => setActiveTemplateField('subject')}
-                    className={cx(fieldClass, 'bg-[var(--surface-card)]')}
-                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-                    placeholder="Ej. Propuesta de colaboracion"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                     <TextAlignLeft size={14} />
                     Cuerpo del mensaje
                   </label>
@@ -577,7 +555,6 @@ export default function Settings() {
                     required
                     value={newTemplate.body}
                     onChange={(event) => setNewTemplate({ ...newTemplate, body: event.target.value })}
-                    onFocus={() => setActiveTemplateField('body')}
                     className={cx(fieldClass, 'min-h-[150px] bg-[var(--surface-card)]')}
                     style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                     placeholder="Hola {{contactName}}, me encantaria..."
@@ -586,7 +563,7 @@ export default function Settings() {
 
                 <div>
                   <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
-                    Insertar variable en {activeTemplateField === 'subject' ? 'asunto' : 'cuerpo'}
+                    Insertar variable
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {TEMPLATE_VARIABLES.map((v) => (

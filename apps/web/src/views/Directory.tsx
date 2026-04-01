@@ -117,7 +117,7 @@ export default function Directory() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(partners[0]?.id ?? null);
   const [composingTo, setComposingTo] = useState<{ contact: Contact; partner: Partner } | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [messagePreview, setMessagePreview] = useState({ subject: '', body: '' });
+  const [messagePreview, setMessagePreview] = useState({ body: '' });
   const [isAddingPartner, setIsAddingPartner] = useState(false);
   const [addingContactTo, setAddingContactTo] = useState<string | null>(null);
   const [editingContact, setEditingContact] = useState<{ partnerId: string; contact: Contact; prefix: string; number: string } | null>(null);
@@ -201,14 +201,14 @@ export default function Directory() {
   const closeComposer = () => {
     setComposingTo(null);
     setSelectedTemplateId('');
-    setMessagePreview({ subject: '', body: '' });
+    setMessagePreview({ body: '' });
   };
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplateId(templateId);
     const template = templates.find((item) => item.id === templateId);
     if (!template || !composingTo) {
-      setMessagePreview({ subject: '', body: '' });
+      setMessagePreview({ body: '' });
       return;
     }
 
@@ -225,14 +225,13 @@ export default function Directory() {
         .replace(/{{mediaKitLink}}/g, mediaKitLink);
 
     setMessagePreview({
-      subject: replaceVars(template.subject),
       body: replaceVars(template.body),
     });
   };
 
   const handleSendEmail = () => {
     if (!composingTo) return;
-    const subject = messagePreview.subject || `Contacto con ${composingTo.partner.name}`;
+    const subject = `Contacto con ${composingTo.partner.name}`;
     const mailto = `mailto:${composingTo.contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(messagePreview.body)}`;
     window.open(mailto, '_blank');
     closeComposer();
