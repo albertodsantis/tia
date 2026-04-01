@@ -133,7 +133,10 @@ export default function Landing({
   const isLogin = mode === 'login';
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--surface-app)] font-sans text-[var(--text-primary)]">
+    <div
+      className="min-h-[100dvh] bg-[var(--surface-app)] font-sans text-[var(--text-primary)]"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
       {/* Background accents — brand gradient glows */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
