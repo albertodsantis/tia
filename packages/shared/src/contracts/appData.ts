@@ -42,6 +42,13 @@ export interface CreatePartnerRequest {
   status: PartnerStatus;
   logo?: string;
   source?: string;
+  partnershipType?: string;
+  keyTerms?: string;
+  startDate?: string;
+  endDate?: string;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  mainChannel?: string;
 }
 
 export type UpdatePartnerRequest = Partial<CreatePartnerRequest>;

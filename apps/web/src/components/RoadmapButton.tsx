@@ -54,7 +54,7 @@ export default function RoadmapButton({ compact }: { compact?: boolean }) {
       >
         <span className="pointer-events-none absolute inset-0 bg-white/0 transition-colors group-hover:bg-white/10" />
         <Rocket size={compact ? 12 : 13} />
-        Lo que viene
+        Próximamente
       </button>
 
       {open && (

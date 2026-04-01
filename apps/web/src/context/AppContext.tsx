@@ -193,10 +193,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     name,
     status,
     logo,
+    partnershipType,
+    keyTerms,
+    startDate,
+    endDate,
+    monthlyRevenue,
+    annualRevenue,
+    mainChannel,
   }: {
     name: string;
     status: Partner['status'];
     logo?: string;
+    partnershipType?: string;
+    keyTerms?: string;
+    startDate?: string;
+    endDate?: string;
+    monthlyRevenue?: number;
+    annualRevenue?: number;
+    mainChannel?: string;
   }) => {
     const normalizedName = name.trim().replace(/\s+/g, ' ');
     const existingPartner = findPartnerByName(normalizedName);
@@ -209,6 +223,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
       name: normalizedName,
       status,
       logo,
+      partnershipType,
+      keyTerms,
+      startDate,
+      endDate,
+      monthlyRevenue,
+      annualRevenue,
+      mainChannel,
     });
 
     setState((current) => ({
@@ -301,6 +322,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         name: partner.name,
         status: partner.status,
         logo: partner.logo,
+        partnershipType: partner.partnershipType,
+        keyTerms: partner.keyTerms,
+        startDate: partner.startDate,
+        endDate: partner.endDate,
+        monthlyRevenue: partner.monthlyRevenue,
+        annualRevenue: partner.annualRevenue,
+        mainChannel: partner.mainChannel,
       });
 
       return resolvedPartner.id;
@@ -327,6 +355,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         name: updates.name,
         status: updates.status,
         logo: updates.logo,
+        partnershipType: updates.partnershipType,
+        keyTerms: updates.keyTerms,
+        startDate: updates.startDate,
+        endDate: updates.endDate,
+        monthlyRevenue: updates.monthlyRevenue,
+        annualRevenue: updates.annualRevenue,
+        mainChannel: updates.mainChannel,
       });
 
       setState((current) => ({
