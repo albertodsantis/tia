@@ -118,7 +118,9 @@ const initialState: AppState = {
         generalGoal: 'Aumentar y fidelizar la audiencia en plataformas clave',
         successMetric: 'Número de Seguidores',
         specificTarget: '300K',
-        timeframe: 'Anual',
+        timeframe: 12,
+        targetDate: '2027-04-01',
+        createdAt: '2026-04-01T00:00:00.000Z',
         status: 'En Curso',
         priority: 'Alta',
         revenueEstimation: 14400,
@@ -129,7 +131,9 @@ const initialState: AppState = {
         generalGoal: 'Consolidar el programa y asegurar patrocinio de valor',
         successMetric: 'Puntos de Rating (Share)',
         specificTarget: '+1.5 puntos',
-        timeframe: 'T3 2026',
+        timeframe: 6,
+        targetDate: '2026-10-01',
+        createdAt: '2026-04-01T00:00:00.000Z',
         status: 'Pendiente',
         priority: 'Alta',
         revenueEstimation: 2400,
@@ -140,7 +144,9 @@ const initialState: AppState = {
         generalGoal: 'Alcanzar seniority y aumentar los ingresos freelance',
         successMetric: 'Cuentas Lideradas / Ingresos',
         specificTarget: '1 Cuenta Senior',
-        timeframe: 'Anual',
+        timeframe: 12,
+        targetDate: '2027-04-01',
+        createdAt: '2026-04-01T00:00:00.000Z',
         status: 'En Curso',
         priority: 'Alta',
         revenueEstimation: 5400,
@@ -151,7 +157,9 @@ const initialState: AppState = {
         generalGoal: 'Expandir la presencia a eventos de alto perfil',
         successMetric: 'Tarifa Mínima de Contratación',
         specificTarget: '3,000 USD',
-        timeframe: 'Anual',
+        timeframe: 12,
+        targetDate: '2027-04-01',
+        createdAt: '2026-04-01T00:00:00.000Z',
         status: 'Pendiente',
         priority: 'Media',
         revenueEstimation: 30000,
@@ -162,7 +170,9 @@ const initialState: AppState = {
         generalGoal: 'Establecer ingresos pasivos mediante códigos de afiliados',
         successMetric: 'Ventas generadas',
         specificTarget: '50 ventas/mes',
-        timeframe: 'Anual',
+        timeframe: 12,
+        targetDate: '2027-04-01',
+        createdAt: '2026-04-01T00:00:00.000Z',
         status: 'En Curso',
         priority: 'Baja',
         revenueEstimation: 6000,
@@ -744,17 +754,30 @@ class InMemoryAppStore {
         throw new Error('Los objetivos deben ser un array.');
       }
 
-      normalizedUpdates.goals = updates.goals.map((goal: any) => ({
-        id: normalizeText(goal.id) || randomUUID(),
-        area: normalizeText(goal.area),
-        generalGoal: normalizeText(goal.generalGoal),
-        successMetric: normalizeText(goal.successMetric),
-        specificTarget: normalizeText(goal.specificTarget),
-        timeframe: normalizeText(goal.timeframe),
-        status: (normalizeText(goal.status) as GoalStatus) || 'Pendiente',
-        priority: (normalizeText(goal.priority) as GoalPriority) || 'Media',
-        revenueEstimation: Number(goal.revenueEstimation) || 0,
-      }));
+      normalizedUpdates.goals = updates.goals.map((goal: any) => {
+        const timeframeMonths = Math.min(36, Math.max(1, Number(goal.timeframe) || 12));
+        const createdAt = goal.createdAt ? new Date(goal.createdAt).toISOString() : new Date().toISOString();
+        const targetDate = goal.targetDate
+          ? new Date(goal.targetDate).toISOString().split('T')[0]
+          : (() => {
+              const d = new Date(createdAt);
+              d.setMonth(d.getMonth() + timeframeMonths);
+              return d.toISOString().split('T')[0];
+            })();
+        return {
+          id: normalizeText(goal.id) || randomUUID(),
+          area: normalizeText(goal.area),
+          generalGoal: normalizeText(goal.generalGoal),
+          successMetric: normalizeText(goal.successMetric),
+          specificTarget: normalizeText(goal.specificTarget),
+          timeframe: timeframeMonths,
+          targetDate,
+          createdAt,
+          status: (normalizeText(goal.status) as GoalStatus) || 'Pendiente',
+          priority: (normalizeText(goal.priority) as GoalPriority) || 'Media',
+          revenueEstimation: Number(goal.revenueEstimation) || 0,
+        };
+      });
     }
 
     if (updates.notificationsEnabled !== undefined) {

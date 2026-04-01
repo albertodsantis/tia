@@ -237,7 +237,9 @@ function mapRowToGoal(row: any): Goal {
     generalGoal: row.general_goal,
     successMetric: row.success_metric,
     specificTarget: row.specific_target,
-    timeframe: row.timeframe,
+    timeframe: Number(row.timeframe) || 12,
+    targetDate: row.target_date ? new Date(row.target_date).toISOString().split('T')[0] : '',
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
     status: row.status,
     priority: row.priority,
     revenueEstimation: Number(row.revenue_estimation),
@@ -940,13 +942,25 @@ export class PostgresAppStore {
           // If id is not a valid UUID, generate a new one
           const id = (rawId && isValidUUID(rawId)) ? rawId : randomUUID();
           
+          const timeframeMonths = Math.min(36, Math.max(1, Number(goal.timeframe) || 12));
+          const createdAt = goal.createdAt ? new Date(goal.createdAt).toISOString() : new Date().toISOString();
+          const targetDate = goal.targetDate
+            ? new Date(goal.targetDate).toISOString().split('T')[0]
+            : (() => {
+                const d = new Date(createdAt);
+                d.setMonth(d.getMonth() + timeframeMonths);
+                return d.toISOString().split('T')[0];
+              })();
+
           const normalized = {
             id,
             area: normalizeText(goal.area),
             generalGoal: normalizeText(goal.generalGoal),
             successMetric: normalizeText(goal.successMetric),
             specificTarget: normalizeText(goal.specificTarget),
-            timeframe: normalizeText(goal.timeframe),
+            timeframe: timeframeMonths,
+            targetDate,
+            createdAt,
             status: (normalizeText(goal.status) as GoalStatus) || 'Pendiente',
             priority: (normalizeText(goal.priority) as GoalPriority) || 'Media',
             revenueEstimation: Number(goal.revenueEstimation) || 0,
@@ -974,10 +988,10 @@ export class PostgresAppStore {
           try {
             await client.query(
               `INSERT INTO goals (id, user_id, area, general_goal, success_metric, specific_target,
-                 timeframe, status, priority, revenue_estimation, sort_order)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+                 timeframe, target_date, created_at, status, priority, revenue_estimation, sort_order)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
               [g.id, userId, g.area, g.generalGoal, g.successMetric, g.specificTarget,
-               g.timeframe, g.status, g.priority, g.revenueEstimation, g.sortOrder],
+               g.timeframe, g.targetDate, g.createdAt, g.status, g.priority, g.revenueEstimation, g.sortOrder],
             );
             console.log(`[DEBUG] Successfully inserted goal ${g.id}`);
           } catch (insertErr) {

@@ -29,6 +29,23 @@ import type { Goal, GoalAggregation, GoalPriority, GoalStatus, StrategicViewResp
 
 const formatCurrency = (v: number) => `$${v.toLocaleString('es-ES')}`;
 
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+function formatTargetDate(isoDate: string): string {
+  if (!isoDate) return '';
+  const d = new Date(isoDate + 'T00:00:00');
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function computeTargetDate(createdAtIso: string, months: number): string {
+  const base = createdAtIso ? new Date(createdAtIso) : new Date();
+  return addMonths(base, months).toISOString().split('T')[0];
+}
+
 const GOAL_STATUSES: GoalStatus[] = ['Pendiente', 'En Curso', 'Alcanzado', 'Cancelado'];
 const GOAL_PRIORITIES: GoalPriority[] = ['Baja', 'Media', 'Alta'];
 
@@ -58,7 +75,9 @@ function emptyGoalForm(): Omit<Goal, 'id'> & { id: string } {
     generalGoal: '',
     successMetric: '',
     specificTarget: '',
-    timeframe: '1 año',
+    timeframe: 12,
+    targetDate: computeTargetDate(new Date().toISOString(), 12),
+    createdAt: '',
     status: 'Pendiente',
     priority: 'Media',
     revenueEstimation: 0,
@@ -201,9 +220,15 @@ function GoalDetail({
                 <span className="font-bold text-(--text-primary)">Meta específica:</span> {goal.specificTarget}
               </p>
             )}
-            {goal.timeframe && (
+            {goal.timeframe > 0 && (
               <p className="text-[12px] text-(--text-secondary)">
-                <span className="font-bold text-(--text-primary)">Plazo:</span> {goal.timeframe}
+                <span className="font-bold text-(--text-primary)">Plazo:</span>{' '}
+                {goal.timeframe} {goal.timeframe === 1 ? 'mes' : 'meses'}
+                {goal.targetDate && (
+                  <span className="ml-1.5 font-semibold text-(--text-primary)">
+                    · {formatTargetDate(goal.targetDate)}
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -348,19 +373,40 @@ function GoalFormModal({
               style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
             />
           </div>
-          <div className="sm:col-span-1">
-            <label className={labelClass}>Plazo</label>
-            <CustomSelect
-              value={form.timeframe || '1 año'}
-              onChange={(val) => setField('timeframe', val)}
-              options={[
-                { value: '1 año', label: '1 año' },
-                { value: '2 años', label: '2 años' },
-                { value: '3 años', label: '3 años' },
-              ]}
-              buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-              buttonClassName="font-medium bg-(--surface-muted)"
-            />
+          <div className="sm:col-span-3">
+            <label className={labelClass}>
+              Plazo &mdash;{' '}
+              <span className="normal-case font-semibold tracking-normal text-(--text-primary)">
+                {form.timeframe} {form.timeframe === 1 ? 'mes' : 'meses'}
+              </span>
+              {form.targetDate && (
+                <span className="ml-2 normal-case font-normal tracking-normal text-(--text-secondary)/80">
+                  · Objetivo al {formatTargetDate(form.targetDate)}
+                </span>
+              )}
+            </label>
+            <div className="relative flex items-center gap-3 pt-1">
+              <span className="shrink-0 text-[11px] font-bold text-(--text-secondary)">1m</span>
+              <input
+                type="range"
+                min={1}
+                max={36}
+                step={1}
+                value={form.timeframe}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const months = Number(e.target.value);
+                  const base = form.createdAt || new Date().toISOString();
+                  setForm((prev: ReturnType<typeof emptyGoalForm>) => ({
+                    ...prev,
+                    timeframe: months,
+                    targetDate: computeTargetDate(base, months),
+                  }));
+                }}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-(--surface-inset) accent-(--accent-primary) focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': accentHex, accentColor: accentHex } as React.CSSProperties}
+              />
+              <span className="shrink-0 text-[11px] font-bold text-(--text-secondary)">36m</span>
+            </div>
           </div>
 
           <div className="sm:col-span-1">
@@ -473,7 +519,11 @@ export default function StrategicView() {
 
   const handleEditGoal = () => {
     if (!activeGoal) return;
-    setModalGoal({ ...activeGoal.goal });
+    const g = activeGoal.goal;
+    setModalGoal({
+      ...g,
+      timeframe: Number(g.timeframe) || 12,
+    });
   };
 
   const handleDeleteGoal = async () => {
@@ -490,15 +540,25 @@ export default function StrategicView() {
     const isNew = !form.id;
 
     if (isNew) {
+      const createdAt = new Date().toISOString();
       const newGoal: Goal = {
         ...form,
         id: Math.random().toString(36).substring(2, 10),
+        createdAt,
+        targetDate: computeTargetDate(createdAt, form.timeframe),
       };
       currentGoals.push(newGoal);
     } else {
       const idx = currentGoals.findIndex((g) => g.id === form.id);
       if (idx >= 0) {
-        currentGoals[idx] = form as Goal;
+        // Preserve original createdAt; recompute targetDate if timeframe changed
+        const original = currentGoals[idx];
+        const base = original.createdAt || form.createdAt || new Date().toISOString();
+        currentGoals[idx] = {
+          ...form,
+          createdAt: base,
+          targetDate: computeTargetDate(base, form.timeframe),
+        } as Goal;
       }
     }
 
