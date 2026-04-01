@@ -113,6 +113,7 @@ All domain types are defined in `packages/shared/src/domain.ts`.
 | title | string | required, trimmed |
 | description | string | required, trimmed |
 | partnerId | string | required, must reference existing partner |
+| goalId | string? | optional, references a goal (FK with ON DELETE SET NULL) |
 | status | TaskStatus | required |
 | dueDate | string | required, valid date |
 | value | number | required, >= 0 |
@@ -125,6 +126,7 @@ All domain types are defined in `packages/shared/src/domain.ts`.
 | id | string | generated UUID |
 | name | string | required, trimmed, collapsed whitespace, unique (case-insensitive) |
 | status | PartnerStatus | required |
+| goalId | string? | optional, references a goal (FK with ON DELETE SET NULL) |
 | logo | string? | optional |
 | contacts | Contact[] | nested array |
 | keyTerms | string? | optional |
@@ -238,12 +240,17 @@ A rich profile document with the following sections:
 
 ```text
 AppState contains:
-  tasks[]         (each task references a partner by partnerId)
-  partners[]      (each partner contains contacts[])
+  tasks[]         (each task references a partner by partnerId, optionally a goal by goalId)
+  partners[]      (each partner contains contacts[], optionally references a goal by goalId)
   profile         (contains socialProfiles, mediaKit, goals[])
   templates[]
   accentColor
   theme
+
+Goal relationships:
+  goals[] are stored in profile
+  tasks.goal_id   -> goals.id (FK, ON DELETE SET NULL)
+  partners.goal_id -> goals.id (FK, ON DELETE SET NULL)
 ```
 
 ## 6. Validation Layer
@@ -356,6 +363,7 @@ Note: `activePipelineValue` sums the `value` field of all tasks where status is 
   "title": "Reel de lanzamiento",
   "description": "Video 60s",
   "partnerId": "uuid",
+  "goalId": "optional-goal-uuid",
   "status": "Pendiente",
   "dueDate": "2026-04-01",
   "value": 1500,
@@ -491,7 +499,40 @@ Note: `activePipelineValue` sums the `value` field of all tasks where status is 
 - response 200: updated `UserProfile`
 - response 400: `{ "error": "message" }` on validation failure
 
-### 7.9 Settings
+### 7.9 Strategic View
+
+#### `GET /api/v1/strategic-view`
+
+Returns aggregated metrics per goal, plus unassigned totals for tasks and partners not linked to any goal.
+
+- auth: session required
+- response 200:
+
+```json
+{
+  "goals": [
+    {
+      "goal": { "id": "uuid", "area": "Contenido", "generalGoal": "Aumentar audiencia", "..." : "..." },
+      "taskCount": 5,
+      "totalValue": 12000,
+      "completedTaskCount": 2,
+      "partnerCount": 3,
+      "partners": [
+        { "id": "uuid", "name": "TechBrand" }
+      ]
+    }
+  ],
+  "unassigned": {
+    "taskCount": 8,
+    "totalValue": 5000,
+    "partnerCount": 4
+  }
+}
+```
+
+The endpoint runs 5 parallel SQL queries grouped by `goal_id` to aggregate task counts, values, completed counts, and partner counts per goal.
+
+### 7.10 Settings
 
 #### `GET /api/v1/settings`
 
@@ -518,7 +559,7 @@ Note: `activePipelineValue` sums the `value` field of all tasks where status is 
 - response 200: updated settings object
 - response 400: `{ "error": "message" }` on validation failure (invalid hex color or invalid theme)
 
-### 7.10 Templates
+### 7.11 Templates
 
 #### `GET /api/v1/templates`
 
@@ -544,7 +585,7 @@ Note: `activePipelineValue` sums the `value` field of all tasks where status is 
 - response 200: `{ "success": true }`
 - response 404: `{ "error": "Template not found" }`
 
-### 7.11 Auth (Google OAuth)
+### 7.12 Auth (Google OAuth)
 
 Auth routes are mounted at `/api/auth` (not `/api/v1`).
 
@@ -586,7 +627,7 @@ Clears the session tokens.
 { "success": true }
 ```
 
-### 7.12 Calendar Integration
+### 7.13 Calendar Integration
 
 Calendar routes are mounted at `/api/calendar` (not `/api/v1`).
 

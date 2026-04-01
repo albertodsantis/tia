@@ -184,10 +184,24 @@ Full media kit builder and generator with the following sections:
 
 #### 7.6.4 Goals Management
 
-- create, edit, and delete professional goals
-- goal fields: area, goal description, success metric, target, timeframe, status, priority, revenue estimation
-- goal statuses: Pendiente, En Progreso, Lograda, Cancelada
+Goals are managed in the dedicated Strategic View (Estrategia) tab, not in the Profile view. See section 7.11 for the full Strategic View feature spec.
+
+### 7.11 Strategic View (Estrategia)
+
+- dedicated view for managing goals and mapping operational effort to strategic objectives
+- master-detail layout: goal list on the left, goal detail with aggregated metrics on the right
+- create, edit, and delete professional goals (delete is inside the edit modal)
+- goal fields: area, general goal, success metric, specific target, timeframe, status, priority, revenue estimation
+- goal statuses: Pendiente, En Curso, Alcanzado, Cancelado
 - goal priorities: Baja, Media, Alta
+- timeframe options: 1 año, 2 años, 3 años
+- tasks and partners can be linked to goals via optional `goalId` foreign key (ON DELETE SET NULL)
+- tasks are linked to goals via the goal selector dropdown in the Pipeline task creation/edit form
+- aggregated metrics per goal: task count, total value, completed task count, partner count, linked partner names
+- progress bar showing task completion percentage per goal
+- unassigned effort card: tasks, value, and partners not linked to any goal
+- summary KPI row: total objectives, tasks, value, partners across all goals
+- goal effort distribution widget on the Dashboard showing task/value breakdown by goal
 - goals are displayed in the Dashboard GoalsMarquee
 
 ### 7.7 Settings (Ajustes)
@@ -285,12 +299,15 @@ Full media kit builder and generator with the following sections:
 - As a creator, I want to generate and preview an HTML media kit so I can share a polished document externally.
 - As a creator, I want my profile changes to auto-save so I never lose edits.
 
-### 8.7 Goals
+### 8.7 Goals and Strategic View
 
 - As a creator, I want to create professional goals with area, description, success metric, target, timeframe, status, priority, and revenue estimation so I can structure my growth.
 - As a creator, I want to see my goals on the dashboard marquee so they stay top of mind.
-- As a creator, I want to update goal status (Pendiente, En Progreso, Lograda, Cancelada) so I can track progress.
+- As a creator, I want to update goal status (Pendiente, En Curso, Alcanzado, Cancelado) so I can track progress.
 - As a creator, I want to set goal priority (Baja, Media, Alta) so I can focus on what matters most.
+- As a creator, I want to link tasks to goals so I can see how my operational effort maps to my strategic objectives.
+- As a creator, I want to see aggregated metrics per goal (task count, value, completion %) in the Strategic View so I understand progress at a glance.
+- As a creator, I want to see which tasks and partners are unassigned to any goal so I can identify effort that lacks strategic direction.
 
 ### 8.8 Calendar and Reminders
 
@@ -322,10 +339,10 @@ Full media kit builder and generator with the following sections:
 ### 9.1 Core Entities
 
 **Task**
-- id, title, description, partnerId, status (TaskStatus), dueDate, value, googleCalendarEventId
+- id, title, description, partnerId, goalId (optional), status (TaskStatus), dueDate, value, googleCalendarEventId
 
 **Partner**
-- name, status (PartnerStatus), logo, contacts[], monthlyRevenue, annualRevenue, keywords, partnershipType (PartnershipType), startDate, endDate
+- name, status (PartnerStatus), goalId (optional), logo, contacts[], monthlyRevenue, annualRevenue, keywords, partnershipType (PartnershipType), startDate, endDate
 
 **Contact**
 - id, name, role, email, instagram, phone
@@ -415,7 +432,7 @@ The product is ready when:
 - core entities persist in a database
 - the frontend no longer depends on demo in-memory state
 - Google Calendar works through a secure OAuth flow
-- the user can operate Dashboard, Pipeline, Directory, Profile, and Settings against real data
+- the user can operate Dashboard, Pipeline, Directory, Strategic View, Profile, and Settings against real data
 - desktop web and mobile web are both viable for normal daily usage
 - the Media Kit can be generated and previewed as HTML
 - goals can be created, edited, and tracked through their lifecycle

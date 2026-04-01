@@ -58,7 +58,7 @@ function emptyGoalForm(): Omit<Goal, 'id'> & { id: string } {
     generalGoal: '',
     successMetric: '',
     specificTarget: '',
-    timeframe: '1 a\u00f1o',
+    timeframe: '1 año',
     status: 'Pendiente',
     priority: 'Media',
     revenueEstimation: 0,
@@ -113,13 +113,11 @@ function GoalDetail({
   accentHex,
   accentGradient,
   onEdit,
-  onDelete,
 }: {
   item: GoalAggregation;
   accentHex: string;
   accentGradient: string;
   onEdit: () => void;
-  onDelete: () => void;
 }) {
   const { goal, taskCount, totalValue, completedTaskCount, partnerCount, partners } = item;
   const completionPct = taskCount > 0 ? Math.round((completedTaskCount / taskCount) * 100) : 0;
@@ -195,12 +193,12 @@ function GoalDetail({
           <div className="mt-5 space-y-2 rounded-[0.7rem] bg-[var(--surface-muted)]/40 px-4 py-3.5">
             {goal.successMetric && (
               <p className="text-[12px] text-[var(--text-secondary)]">
-                <span className="font-bold text-[var(--text-primary)]">M\u00e9trica de \u00e9xito:</span> {goal.successMetric}
+                <span className="font-bold text-[var(--text-primary)]">Métrica de éxito:</span> {goal.successMetric}
               </p>
             )}
             {goal.specificTarget && (
               <p className="text-[12px] text-[var(--text-secondary)]">
-                <span className="font-bold text-[var(--text-primary)]">Meta espec\u00edfica:</span> {goal.specificTarget}
+                <span className="font-bold text-[var(--text-primary)]">Meta específica:</span> {goal.specificTarget}
               </p>
             )}
             {goal.timeframe && (
@@ -242,17 +240,6 @@ function GoalDetail({
           </div>
         )}
 
-        {/* Delete button */}
-        <div className="mt-6 border-t border-[var(--line-soft)] pt-4">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="flex items-center gap-2 rounded-[0.8rem] px-3 py-2 text-[12px] font-bold text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10"
-          >
-            <Trash size={14} />
-            Eliminar objetivo
-          </button>
-        </div>
       </div>
     </SurfaceCard>
   );
@@ -266,12 +253,14 @@ function GoalFormModal({
   accentGradient,
   onClose,
   onSave,
+  onDelete,
 }: {
   initial: ReturnType<typeof emptyGoalForm>;
   accentHex: string;
   accentGradient: string;
   onClose: () => void;
   onSave: (goal: ReturnType<typeof emptyGoalForm>) => void;
+  onDelete?: () => void;
 }) {
   const [form, setForm] = useState(initial);
   const isNew = !initial.id;
@@ -292,11 +281,21 @@ function GoalFormModal({
     <OverlayModal onClose={onClose}>
       <ModalPanel
         title={isNew ? 'Nuevo objetivo' : 'Editar objetivo'}
-        description="Define tu meta clave, proyecci\u00f3n de ingresos y estado."
+        description="Define tu meta clave, proyección de ingresos y estado."
         onClose={onClose}
         size="lg"
         footer={
           <div className="flex gap-3">
+            {!isNew && onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="flex items-center gap-2 rounded-[1rem] border border-rose-200 bg-transparent px-4 py-3 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-50 dark:border-rose-500/20 dark:hover:bg-rose-500/10"
+              >
+                <Trash size={14} />
+                Eliminar
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -313,7 +312,7 @@ function GoalFormModal({
       >
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-1">
-            <label className={labelClass}>\u00c1rea / Vertical</label>
+            <label className={labelClass}>Área / Vertical</label>
             <input
               value={form.area}
               onChange={(e) => setField('area', e.target.value)}
@@ -332,7 +331,7 @@ function GoalFormModal({
           </div>
 
           <div className="sm:col-span-1">
-            <label className={labelClass}>M\u00e9trica de \u00e9xito</label>
+            <label className={labelClass}>Métrica de éxito</label>
             <input
               value={form.successMetric}
               onChange={(e) => setField('successMetric', e.target.value)}
@@ -341,7 +340,7 @@ function GoalFormModal({
             />
           </div>
           <div className="sm:col-span-1">
-            <label className={labelClass}>Meta espec\u00edfica</label>
+            <label className={labelClass}>Meta específica</label>
             <input
               value={form.specificTarget}
               onChange={(e) => setField('specificTarget', e.target.value)}
@@ -352,12 +351,12 @@ function GoalFormModal({
           <div className="sm:col-span-1">
             <label className={labelClass}>Plazo</label>
             <CustomSelect
-              value={form.timeframe || '1 a\u00f1o'}
+              value={form.timeframe || '1 año'}
               onChange={(val) => setField('timeframe', val)}
               options={[
-                { value: '1 a\u00f1o', label: '1 a\u00f1o' },
-                { value: '2 a\u00f1os', label: '2 a\u00f1os' },
-                { value: '3 a\u00f1os', label: '3 a\u00f1os' },
+                { value: '1 año', label: '1 año' },
+                { value: '2 años', label: '2 años' },
+                { value: '3 años', label: '3 años' },
               ]}
               buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
               buttonClassName="font-medium bg-[var(--surface-muted)]"
@@ -422,7 +421,7 @@ export default function StrategicView() {
           setSelectedGoalId(res.goals[0].goal.id);
         }
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar vista estrat\u00e9gica'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar vista estratégica'))
       .finally(() => setLoading(false));
   }, [selectedGoalId]);
 
@@ -596,7 +595,7 @@ export default function StrategicView() {
                 <EmptyState
                   icon={Target}
                   title="Sin objetivos"
-                  description="Crea tu primer objetivo para empezar a mapear el esfuerzo estrat\u00e9gico."
+                  description="Crea tu primer objetivo para empezar a mapear el esfuerzo estratégico."
                   className="border-dashed"
                   action={
                     <Button accentColor={accentGradient} onClick={handleCreateGoal}>
@@ -641,7 +640,6 @@ export default function StrategicView() {
               accentHex={accentHex}
               accentGradient={accentGradient}
               onEdit={handleEditGoal}
-              onDelete={handleDeleteGoal}
             />
           ) : (
             <SurfaceCard className="p-8">
@@ -664,6 +662,7 @@ export default function StrategicView() {
           accentGradient={accentGradient}
           onClose={() => setModalGoal(null)}
           onSave={handleSaveModal}
+          onDelete={modalGoal.id ? () => { setModalGoal(null); handleDeleteGoal(); } : undefined}
         />
       )}
     </div>

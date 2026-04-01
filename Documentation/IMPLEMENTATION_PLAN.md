@@ -55,11 +55,12 @@ Note: data is stored in-memory. PostgreSQL persistence is not yet implemented.
 
 ### Milestone 4 - Frontend Views [DONE]
 
-All 5 views implemented with full features:
+All 6 views implemented with full features:
 
-- Dashboard (493 lines) - summary metrics and overview
-- Pipeline (1373 lines) - task management with full CRUD
+- Dashboard (493 lines) - summary metrics and overview with goal effort widget
+- Pipeline (1373 lines) - task management with full CRUD and goal selector
 - Directory - partner/contact directory with full CRUD
+- StrategicView - goal management with master-detail layout and aggregated metrics
 - Profile - user profile with auto-save and debounce
 - Settings (516 lines) - app configuration and integrations
 
@@ -102,6 +103,16 @@ Remaining:
 - Keyboard-accessible custom select
 - Portal-based modals
 - Event-based toast system
+
+### Milestone 8 - Strategic View [DONE]
+
+- Database migration adding `goal_id` FK to `tasks` and `partners` tables (ON DELETE SET NULL)
+- Backend `GET /api/v1/strategic-view` endpoint with aggregated metrics per goal
+- `StrategicView` component with master-detail layout for goal management (CRUD)
+- Goal selector dropdown in Pipeline task creation/edit form for bidirectional linking
+- Dashboard goal effort distribution widget
+- Goals management moved from Profile to Strategic View
+- Partial indexes on `goal_id` columns for query performance
 
 ## 4. Remaining Work
 

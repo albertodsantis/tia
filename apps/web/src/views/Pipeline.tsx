@@ -31,6 +31,7 @@ import {
   useDroppable,
 } from '@dnd-kit/core';
 import { getPartnerLookupKey, type Task, type TaskStatus } from '@shared';
+import { Target } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import OverlayModal from '../components/OverlayModal';
 import {
@@ -57,6 +58,7 @@ const EMPTY_FORM = {
   value: '',
   dueDate: '',
   status: 'Pendiente' as TaskStatus,
+  goalId: '',
 };
 
 const fieldClass =
@@ -374,6 +376,7 @@ export default function Pipeline() {
     updateTaskStatus,
     deleteTask,
     reportActionError,
+    profile,
   } = useAppContext();
   const [view, setView] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [currentStatusIdx, setCurrentStatusIdx] = useState(0);
@@ -526,6 +529,7 @@ export default function Pipeline() {
       value: String(task.value),
       dueDate: task.dueDate,
       status: task.status,
+      goalId: task.goalId || '',
     });
     setIsPartnerPickerOpen(false);
     setModalMode('edit');
@@ -557,6 +561,7 @@ export default function Pipeline() {
         status: form.status,
         dueDate: form.dueDate,
         value: Number(form.value) || 0,
+        goalId: form.goalId || undefined,
       };
 
       if (modalMode === 'edit' && editingTaskId) {
@@ -1506,6 +1511,25 @@ export default function Pipeline() {
                   buttonClassName="py-3.5 font-medium bg-[var(--surface-card)] border-[var(--line-soft)] focus:border-transparent"
                 />
               </div>
+
+              {profile?.goals && profile.goals.length > 0 && (
+                <div className="sm:col-span-2 mt-1">
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                    <Target size={14} />
+                    Objetivo estratégico
+                  </label>
+                  <CustomSelect
+                    value={form.goalId}
+                    onChange={(val) => setForm({ ...form, goalId: val })}
+                    options={[
+                      { value: '', label: 'Sin objetivo' },
+                      ...profile.goals.map(g => ({ value: g.id, label: g.generalGoal || g.area || 'Sin nombre' })),
+                    ]}
+                    buttonStyle={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                    buttonClassName="py-3.5 font-medium bg-[var(--surface-card)] border-[var(--line-soft)] focus:border-transparent"
+                  />
+                </div>
+              )}
             </div>
           </div>
             </form>

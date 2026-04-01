@@ -29,23 +29,26 @@ Rules:
 1. `Dashboard (Inicio)`
 2. `Pipeline`
 3. `Directory (Directorio)`
-4. `Profile (Perfil)`
-5. `Settings (Ajustes)`
-6. `AI Assistant` (conditional — only available when GEMINI_API_KEY is configured)
+4. `Strategic View (Estrategia)`
+5. `Profile (Perfil)`
+6. `Settings (Ajustes)`
+7. `AI Assistant` (conditional — only available when GEMINI_API_KEY is configured)
 
 ### 3.3 Substates and Modals
 
-1. `Pipeline > Add/Edit Task Modal`
+1. `Pipeline > Add/Edit Task Modal` (includes goal selector)
 2. `Pipeline > Calendar Day Detail Modal`
 3. `Directory > Partner Expanded`
 4. `Directory > Add/Edit Contact Modal`
 5. `Directory > Compose Message Modal`
-6. `Profile > Media Kit Preview`
-7. `Settings > Add/Edit Template Modal`
-8. `Google OAuth Popup / Callback`
-9. `AI Assistant > Chat Interface`
-10. `Onboarding Tour Overlay`
-11. `Global Error Toast / Inline Error`
+6. `Strategic View > Goal Detail`
+7. `Strategic View > Add/Edit Goal Modal`
+8. `Profile > Media Kit Preview`
+9. `Settings > Add/Edit Template Modal`
+10. `Google OAuth Popup / Callback`
+11. `AI Assistant > Chat Interface`
+12. `Onboarding Tour Overlay`
+13. `Global Error Toast / Inline Error`
 
 ## 4. Primary Navigation Flow
 
@@ -57,6 +60,7 @@ Logged Out
   -> Dashboard
        -> Pipeline
        -> Directory
+       -> Strategic View (Estrategia)
        -> Profile
        -> Settings
        -> AI Assistant (conditional)
@@ -72,6 +76,7 @@ Primary sections:
 - Inicio (Dashboard)
 - Pipeline
 - Directorio (Directory)
+- Estrategia (Strategic View)
 - Perfil (Profile)
 - Ajustes (Settings)
 - AI Assistant (conditional, separate access point)
@@ -84,7 +89,7 @@ User without session
   -> Account created or restored
   -> Empty workspace or optional development seed data loaded
   -> Onboarding tour shown (React Joyride, 700ms delay)
-  -> Tour covers: Inicio, Pipeline, Directorio, Perfil, Ajustes, AI Assistant
+  -> Tour covers: Inicio, Pipeline, Directorio, Estrategia, Perfil, Ajustes, AI Assistant
   -> Tour uses responsive step targeting (mobile bottom nav vs desktop sidebar)
   -> Tour tooltips match current theme and accent color
   -> Dashboard
@@ -155,6 +160,7 @@ Pipeline
   -> Fill title, partner (autocomplete), value, date, description
   -> Partner field: type to search existing partners, select from dropdown
   -> If partner name doesn't match any existing partner: auto-create option
+  -> Optionally select a strategic goal from the goal selector dropdown
   -> Save
   -> Task persists to backend
   -> Pipeline view refreshes
@@ -166,6 +172,7 @@ Rules:
 - every task must be associated with a partner
 - partner autocomplete searches existing partners by name
 - if the partner does not exist, the flow auto-creates it as a new partner
+- tasks can optionally be linked to a strategic goal via the goal selector
 - after save, the modal closes and the user returns to the previous context
 
 ### 7.4 Edit Task Flow
@@ -369,20 +376,65 @@ Profile > Media Kit section
   -> Close preview to return to editing
 ```
 
-### 9.5 Goals Management Flow
+### 9.5 Goals Management
+
+Goals are managed exclusively in the Strategic View (Estrategia) tab, not in the Profile view.
+
+See section 9.6 for the full Strategic View flow.
+
+### 9.6 Strategic View (Estrategia)
+
+#### 9.6.1 Goal
+
+Map operational effort (tasks and partners) to strategic objectives. Provides aggregated metrics per goal showing task counts, total value, completion progress, and linked partners.
+
+#### 9.6.2 Layout
+
+Master-detail layout following the same pattern as the Directory view:
+
+- Left pane: goal list with summary metrics and status badges, plus "Nuevo objetivo" button
+- Right pane: selected goal detail card with progress bar, metrics grid, linked partners, and revenue estimation
+- Below goal list: unassigned effort card showing tasks/value/partners not linked to any goal
+
+#### 9.6.3 Summary KPIs
+
+Top-level KPI row showing total objectives, tasks, value, and partners across all goals.
+
+#### 9.6.4 Goal CRUD Flow
 
 ```text
-Profile > Goals section
-  -> View existing goals list
-  -> Tap "Add Goal"
-  -> Fill: area, goal description, success metric, target, timeframe, status, priority, revenue estimation
-  -> Status options: Pendiente, En Progreso, Lograda, Cancelada
+Strategic View
+  -> View goal list in left pane
+  -> Tap "Nuevo objetivo"
+  -> Goal form modal opens
+  -> Fill: area, general goal, success metric, specific target, timeframe, status, priority, revenue estimation
+  -> Status options: Pendiente, En Curso, Alcanzado, Cancelado
   -> Priority options: Baja, Media, Alta
-  -> Save goal
-  -> Goal appears in the list and in the Dashboard GoalsMarquee
-  -> Edit or delete existing goals
-  -> Changes auto-save
+  -> Timeframe options: 1 año, 2 años, 3 años
+  -> Save
+  -> Goal appears in the list and aggregation data refreshes
+  -> Select a goal to see its detail in the right pane
+  -> Tap edit icon on goal detail to open edit modal
+  -> Delete option is inside the edit modal (not on the detail card)
 ```
+
+#### 9.6.5 Goal-Task Relationship
+
+Tasks and partners can be linked to goals via optional `goalId` foreign keys:
+
+- Tasks: linked via the goal selector in the Pipeline task creation/edit form
+- Partners: linked via the `goalId` field on the partner entity
+- Relationships use `ON DELETE SET NULL` — deleting a goal unlinks but does not delete associated tasks/partners
+- The Strategic View aggregates linked tasks and partners per goal for metrics
+
+#### 9.6.6 Data Source
+
+The Strategic View fetches aggregated data from `GET /api/v1/strategic-view`, which returns:
+
+- Per-goal aggregation: task count, total value, completed task count, partner count, partner names
+- Unassigned totals: tasks, value, and partners not linked to any goal
+
+Goal CRUD operations use `PATCH /api/v1/profile` with the `goals` array (DELETE all + INSERT pattern).
 
 ## 10. Settings (Ajustes)
 

@@ -169,11 +169,12 @@ Additional components outside `ui.tsx`:
 
 ### 8.3. Views
 
-All 5 views are implemented:
+All 6 views are implemented:
 
-- `Dashboard` (493 lines) - summary metrics and overview
-- `Pipeline` (1373 lines) - task management pipeline
+- `Dashboard` (493 lines) - summary metrics and overview with goal effort distribution widget
+- `Pipeline` (1373 lines) - task management pipeline with goal selector in task form
 - `Directory` - partner/contact directory
+- `StrategicView` - goal management with master-detail layout and aggregated metrics per goal
 - `Profile` - user profile with auto-save
 - `Settings` (516 lines) - app configuration and integrations
 
