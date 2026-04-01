@@ -164,13 +164,15 @@ export default function Directory() {
       partners.reduce(
         (accumulator, partner) => {
           const partnerTasks = tasks.filter((task) => task.partnerId === partner.id);
+          const openPartnerTasks = partnerTasks.filter((task) => task.status !== 'Cobrado');
           accumulator[partner.id] = {
             total: partnerTasks.length,
-            open: partnerTasks.filter((task) => task.status !== 'Cobrado').length,
+            open: openPartnerTasks.length,
+            openValue: openPartnerTasks.reduce((sum, task) => sum + task.value, 0),
           };
           return accumulator;
         },
-        {} as Record<string, { total: number; open: number }>,
+        {} as Record<string, { total: number; open: number; openValue: number }>,
       ),
     [partners, tasks],
   );
@@ -403,7 +405,7 @@ export default function Directory() {
             <div className="space-y-2">
               {filteredPartners.map((partner) => {
                 const isActive = activePartner?.id === partner.id;
-                const meta = partnerTaskMeta[partner.id] ?? { total: 0, open: 0 };
+                const meta = partnerTaskMeta[partner.id] ?? { total: 0, open: 0, openValue: 0 };
                 return (
                   <button
                     key={partner.id}
@@ -426,7 +428,7 @@ export default function Directory() {
                           <div className="min-w-0">
                             <h3 className="truncate text-base font-bold leading-tight text-[var(--text-primary)]">{partner.name}</h3>
                             <p className={cx('mt-1 text-xs font-medium', isActive ? 'text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]')}>
-                              {partner.contacts.length} contactos · {meta.open} abiertas
+                              {partner.contacts.length} contactos · {meta.open} abiertas · {formatCurrency(meta.openValue)}
                             </p>
                           </div>
                         </div>
@@ -492,7 +494,7 @@ export default function Directory() {
                   />
                 </div>
 
-                <div className="mt-6 rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/40 p-5">
+                <div className="mt-8">
                   <h4 className="mb-4 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-primary)] uppercase">
                     Acuerdo Comercial
                   </h4>
@@ -531,21 +533,6 @@ export default function Directory() {
                       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-secondary)]/80">Condiciones del acuerdo</p>
                       <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">{activePartner.keyTerms || 'Aún no se han definido condiciones.'}</p>
                     </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <div className="min-w-[140px] flex-1 rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/65 px-4 py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]/70">Contactos</p>
-                    <p className="mt-2 text-[1.25rem] font-bold text-[var(--text-primary)]">{activePartner.contacts.length}</p>
-                  </div>
-                  <div className="min-w-[140px] flex-1 rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/65 px-4 py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]/70">Tareas abiertas</p>
-                    <p className="mt-2 text-[1.25rem] font-bold text-[var(--text-primary)]">{openTasks.length}</p>
-                  </div>
-                  <div className="min-w-[140px] flex-1 rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/65 px-4 py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]/70">Valor abierto</p>
-                    <p className="mt-2 text-[1.25rem] font-bold text-[var(--text-primary)]">{formatCurrency(activePartnerOpenValue)}</p>
                   </div>
                 </div>
 
