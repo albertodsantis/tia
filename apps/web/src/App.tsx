@@ -630,9 +630,12 @@ const MainLayout = () => {
 
 const DEFAULT_ACCENT = '#C96F5B';
 
+const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
+
 const AppShell = () => {
   const { isBootstrapping, bootstrapError, profile, accentColor, setAccentColor } = useAppContext();
   const [colorPicked, setColorPicked] = useState(false);
+  const [forceOnboarding, setForceOnboarding] = useState(false);
 
   const needsColorPicker = !isBootstrapping && !bootstrapError && !colorPicked && accentColor === DEFAULT_ACCENT;
 
@@ -641,6 +644,9 @@ const AppShell = () => {
       await setAccentColor(color);
     } catch {
       // Let the user proceed even if the API call fails
+    }
+    if (!localStorage.getItem(ONBOARDING_STORAGE_KEY)) {
+      setForceOnboarding(true);
     }
     setColorPicked(true);
   };
@@ -656,7 +662,7 @@ const AppShell = () => {
 
   return (
     <>
-      {!isBootstrapping && !bootstrapError ? <OnboardingTour forceRun={colorPicked} /> : null}
+      {!isBootstrapping && !bootstrapError ? <OnboardingTour forceRun={forceOnboarding} /> : null}
       <MainLayout />
       <Toaster />
     </>

@@ -152,7 +152,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
     }
 
     return baseSteps;
-  }, [isDesktop, run]);
+  }, [isDesktop]);
 
   if (!run) {
     return null;

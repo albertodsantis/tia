@@ -532,7 +532,14 @@ export default function Pipeline() {
   };
 
   const selectPartnerSuggestion = (partnerName: string) => {
-    setForm((current) => ({ ...current, partnerName }));
+    const partner = findPartnerByName(partnerName);
+    setForm((current) => ({
+      ...current,
+      partnerName,
+      ...(!current.value && partner?.monthlyRevenue
+        ? { value: String(partner.monthlyRevenue) }
+        : {}),
+    }));
     setIsPartnerPickerOpen(false);
   };
 
