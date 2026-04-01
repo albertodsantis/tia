@@ -1478,7 +1478,7 @@ export default function Pipeline() {
                 />
               </div>
 
-              <div className="min-w-0 overflow-hidden">
+              <div className="min-w-0">
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <CalendarDots size={14} />
                   Fecha límite

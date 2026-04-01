@@ -733,7 +733,7 @@ export default function Directory() {
                     </div>
                     {(editingPartner.partnershipType || 'Por definir') !== 'Por definir' && (
                       <div className={cx('grid min-w-0 gap-4', ((editingPartner.partnershipType || 'Por definir') === 'Permanente' || (editingPartner.partnershipType || 'Por definir') === 'One Time') ? 'grid-cols-1' : 'grid-cols-2')}>
-                        <div className="min-w-0 overflow-hidden">
+                        <div className="min-w-0">
                           <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                             <CalendarDots size={14} />
                             {(editingPartner.partnershipType || 'Por definir') === 'One Time' ? 'Fecha' : 'Inicio'}
@@ -741,7 +741,7 @@ export default function Directory() {
                           <input type="date" value={editingPartner.startDate || ''} onChange={(event) => setEditingPartner({ ...editingPartner, startDate: event.target.value })} className={cx(fieldClass, 'min-w-0 bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                         </div>
                         {(editingPartner.partnershipType || 'Por definir') === 'Plazo Fijo' && (
-                          <div className="min-w-0 overflow-hidden">
+                          <div className="min-w-0">
                             <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                               <CalendarDots size={14} />
                               Fin
@@ -830,7 +830,7 @@ export default function Directory() {
                     </div>
                     {newPartner.partnershipType !== 'Por definir' && (
                       <div className={cx('grid min-w-0 gap-4', (newPartner.partnershipType === 'Permanente' || newPartner.partnershipType === 'One Time') ? 'grid-cols-1' : 'grid-cols-2')}>
-                        <div className="min-w-0 overflow-hidden">
+                        <div className="min-w-0">
                           <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                             <CalendarDots size={14} />
                             {newPartner.partnershipType === 'One Time' ? 'Fecha' : 'Inicio'}
@@ -838,7 +838,7 @@ export default function Directory() {
                           <input type="date" value={newPartner.startDate} onChange={(event) => setNewPartner({ ...newPartner, startDate: event.target.value })} className={cx(fieldClass, 'min-w-0 bg-[var(--surface-card)] px-3')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} />
                         </div>
                         {newPartner.partnershipType === 'Plazo Fijo' && (
-                          <div className="min-w-0 overflow-hidden">
+                          <div className="min-w-0">
                             <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
                               <CalendarDots size={14} />
                               Fin
