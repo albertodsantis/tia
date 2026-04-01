@@ -114,7 +114,8 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const pulling = useRef(false);
-  const THRESHOLD = 80;
+  const THRESHOLD = 120;
+  const DEAD_ZONE = 12;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (window.scrollY === 0 && !refreshing) {
@@ -126,8 +127,8 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!pulling.current || refreshing) return;
     const delta = e.touches[0].clientY - startY.current;
-    if (delta > 0) {
-      setPullDistance(Math.min(delta * 0.5, THRESHOLD * 1.5));
+    if (delta > DEAD_ZONE) {
+      setPullDistance(Math.min((delta - DEAD_ZONE) * 0.5, THRESHOLD * 1.5));
     }
   }, [refreshing]);
 
