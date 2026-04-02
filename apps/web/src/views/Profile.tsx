@@ -670,51 +670,19 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
-                Insights
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                {configuredStats}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
-                Metricas cargadas.
-              </p>
-            </div>
-            <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
-                Portfolio
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                {configuredPortfolio}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
-                Imagenes cargadas para la galeria.
-              </p>
-            </div>
-            <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
-                Marcas
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                {configuredBrands}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
-                Nombres de marcas cargados.
-              </p>
-            </div>
-            <div className="rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-4">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
-                Ofertas de Servicios
-              </p>
-              <p className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-                {configuredOffers}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
-                Tarifas y servicios cargados.
-              </p>
-            </div>
+          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 border-t border-(--line-soft) pt-5">
+            {[
+              { label: 'Insights', value: configuredStats, sub: 'métricas' },
+              { label: 'Portfolio', value: configuredPortfolio, sub: 'imágenes' },
+              { label: 'Marcas', value: configuredBrands, sub: 'marcas' },
+              { label: 'Servicios', value: configuredOffers, sub: 'tarifas' },
+            ].map(({ label, value, sub }) => (
+              <div key={label}>
+                <p className="text-[10px] font-bold tracking-[0.16em] text-(--text-secondary)/80 uppercase">{label}</p>
+                <p className="mt-0.5 text-xl font-extrabold tracking-tight text-(--text-primary)">{value}</p>
+                <p className="text-xs text-(--text-secondary)">{sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </SurfaceCard>
