@@ -90,7 +90,7 @@ function normalizeEmail(email: string | undefined) {
   return normalized.toLowerCase();
 }
 
-const ALLOWED_GRADIENTS = new Set(['instagram']);
+const ALLOWED_GRADIENTS = new Set(['instagram', 'google', 'tiktok']);
 
 function normalizeAccentColor(color: string | undefined) {
   const normalized = normalizeRequiredText(color, 'El color');
