@@ -62,6 +62,7 @@ export default function Settings() {
     accentHex,
     accentGradient,
     setAccentColor,
+    email,
     profile,
     updateProfile,
     templates,
@@ -78,7 +79,19 @@ export default function Settings() {
   const [newTemplate, setNewTemplate] = useState({ name: '', body: '' });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [accountName, setAccountName] = useState(profile.name);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setAccountName(profile.name);
+  }, [profile.name]);
+
+  const handleAccountNameBlur = async () => {
+    const trimmed = accountName.trim();
+    if (trimmed && trimmed !== profile.name) {
+      await updateProfile({ name: trimmed });
+    }
+  };
 
   const insertVariable = useCallback(
     (varKey: string) => {
@@ -407,6 +420,30 @@ export default function Settings() {
           <h2 className="mb-5 text-xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
             Cuenta
           </h2>
+          <div className="mb-5 space-y-3">
+            <div>
+              <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                Nombre completo
+              </label>
+              <input
+                value={accountName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccountName(e.target.value)}
+                onBlur={() => void handleAccountNameBlur()}
+                className={fieldClass}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                placeholder="Tu nombre"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                Correo electronico
+              </label>
+              <p className="rounded-[1rem] border border-[color:var(--line-soft)] bg-[var(--surface-muted)]/60 px-4 py-3.5 text-base sm:text-sm font-medium text-[var(--text-secondary)]">
+                {email || '—'}
+              </p>
+            </div>
+          </div>
+          <div className="border-t border-slate-200/70 pt-4 dark:border-slate-700/60" />
           <div className="space-y-1">
             <SettingRow
               icon={(props: any) => <SignOut {...props} weight="regular" />}

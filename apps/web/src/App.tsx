@@ -692,7 +692,7 @@ type AuthPhase = 'checking' | 'unauthenticated' | 'authenticated';
 
 export default function App() {
   const [authPhase, setAuthPhase] = useState<AuthPhase>('checking');
-  const [, setSessionUser] = useState<SessionUser | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -775,7 +775,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <AppProvider onLogout={handleLogout}>
+      <AppProvider onLogout={handleLogout} email={sessionUser?.email ?? ''}>
         <AppShell />
       </AppProvider>
     </ErrorBoundary>

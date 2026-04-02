@@ -19,6 +19,7 @@ import { getAccentCssVariables, getGradientCss, getRepresentativeHex, isGradient
 import { addLocalDays, formatLocalDateISO } from '../lib/date';
 
 interface AppContextType extends AppState {
+  email: string;
   accentHex: string;
   accentGradient: string;
   isBootstrapping: boolean;
@@ -96,7 +97,7 @@ function upsertPartnerInState(partners: Partner[], incomingPartner: Partner) {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({ children, onLogout }) => {
+export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => void; email: string }> = ({ children, onLogout, email }) => {
   const [state, setState] = useState<AppState>(emptyState);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -524,6 +525,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     <AppContext.Provider
       value={{
         ...state,
+        email,
         accentHex,
         accentGradient,
         isBootstrapping,
