@@ -245,7 +245,7 @@ const DesktopSidebar = ({
 }) => (
   <aside
     onWheelCapture={onWheelCapture}
-    className="hide-scrollbar hidden lg:sticky lg:top-4 lg:flex lg:max-h-[calc(100dvh-2rem)] lg:min-w-0 lg:self-start lg:flex-col lg:gap-4 lg:overflow-y-auto lg:bg-[color:var(--surface-overlay)] lg:px-5 lg:py-6"
+    className="hide-scrollbar hidden lg:sticky lg:top-4 lg:flex lg:max-h-[calc(100dvh-2rem)] lg:min-w-0 lg:self-start lg:flex-col lg:gap-4 lg:overflow-y-auto lg:bg-(--surface-overlay) lg:px-5 lg:py-6"
   >
     <div className="px-1">
       <div className="flex items-center gap-3 px-3">
@@ -328,10 +328,11 @@ const MobileBottomNav = ({
   accentGradient: string;
 }) => (
   <div
-    className="fixed inset-x-0 bottom-0 z-[90] flex justify-between border-t bg-[var(--surface-card-strong)] px-3 backdrop-blur-2xl transition-colors duration-300 [border-color:var(--line-soft)] lg:hidden"
+    className="fixed inset-x-0 bottom-0 z-[90] flex justify-between bg-(--surface-card-strong) px-3 backdrop-blur-2xl transition-colors duration-300 lg:hidden"
     style={{
       paddingTop: '0.7rem',
       paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.7rem)',
+      borderTop: '4px solid var(--accent-secondary, var(--line-soft))',
     }}
   >
     {tabs.map((tab) => {
@@ -533,18 +534,20 @@ const MainLayout = () => {
 
       <div className="relative min-h-[100dvh] w-full lg:h-[100dvh] lg:p-4">
         <div className="min-h-[100dvh] w-full lg:h-[calc(100dvh-2rem)] lg:min-h-0 lg:overflow-hidden lg:rounded-[2rem] lg:border lg:bg-[var(--surface-shell)] lg:shadow-[var(--shadow-medium)] [border-color:var(--line-soft)]">
-          <div className="min-h-[100dvh] w-full lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[clamp(250px,18vw,300px)_minmax(0,1fr)] lg:items-start">
+          <div className="min-h-[100dvh] w-full lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[clamp(250px,18vw,300px)_minmax(0,1fr)]">
             {isDesktop ? (
-              <DesktopSidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                onWheelCapture={handleDesktopSidebarWheelCapture}
-                onLogout={onLogout}
-                accentColor={accentHex}
-                accentGradient={accentGradient}
-                profileAvatar={profile.avatar}
-                profileName={profile.name}
-              />
+              <div className="hidden lg:block lg:h-full" style={{ borderRight: '2px solid var(--accent-secondary, transparent)' }}>
+                <DesktopSidebar
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  onWheelCapture={handleDesktopSidebarWheelCapture}
+                  onLogout={onLogout}
+                  accentColor={accentHex}
+                  accentGradient={accentGradient}
+                  profileAvatar={profile.avatar}
+                  profileName={profile.name}
+                />
+              </div>
             ) : null}
 
             <main
