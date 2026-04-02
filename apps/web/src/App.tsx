@@ -27,7 +27,6 @@ import Landing from './views/Landing';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import WelcomeColorPicker from './views/WelcomeColorPicker';
-import RoadmapButton from './components/RoadmapButton';
 import Toaster from './components/Toaster';
 import { Avatar, SurfaceCard, cx } from './components/ui';
 import { authApi } from './lib/api';
@@ -601,9 +600,6 @@ const MainLayout = () => {
                   <p className={cx('text-[var(--text-secondary)] flex-1 min-w-0 hidden lg:block', isDesktop ? 'text-sm leading-6' : 'text-xs leading-5')}>
                     {activeTabConfig.description}
                   </p>
-                  <div className="ml-auto shrink-0">
-                    <RoadmapButton compact />
-                  </div>
                 </div>
 
                 <div
