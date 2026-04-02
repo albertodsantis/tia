@@ -130,7 +130,7 @@ export default function Profile() {
   const [profileForm, setProfileForm] = useState<UserProfile>(() => {
     const safeGoals = safeArr(profile?.goals).map((g: any, i) =>
           typeof g === 'string'
-            ? { id: `legacy-${i}`, area: '', generalGoal: g, successMetric: '', specificTarget: '', timeframe: '', status: 'Pendiente' as const, priority: 'Media' as const, revenueEstimation: 0 }
+            ? { id: `legacy-${i}`, area: '', generalGoal: g, successMetric: '', timeframe: '', status: 'Pendiente' as const, priority: 'Media' as const, revenueEstimation: 0 }
             : g,
         )
     return { ...(profile || {}), goals: safeGoals } as UserProfile;
@@ -155,7 +155,7 @@ export default function Profile() {
 
     const safeGoals = safeArr(profile.goals).map((g: any, i) =>
       typeof g === 'string'
-        ? { id: `legacy-${i}`, area: '', generalGoal: g, successMetric: '', specificTarget: '', timeframe: '', status: 'Pendiente' as const, priority: 'Media' as const, revenueEstimation: 0 }
+        ? { id: `legacy-${i}`, area: '', generalGoal: g, successMetric: '', timeframe: '', status: 'Pendiente' as const, priority: 'Media' as const, revenueEstimation: 0 }
         : g,
     );
     const incomingProfile = { ...profile, goals: safeGoals } as UserProfile;

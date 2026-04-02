@@ -132,7 +132,6 @@ export interface Goal {
   area: string;
   generalGoal: string;
   successMetric: string;
-  specificTarget: string;
   timeframe: number; // months (1–36)
   targetDate: string; // ISO date (createdAt + timeframe months)
   createdAt: string; // ISO timestamp, set on first save

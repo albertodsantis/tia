@@ -74,7 +74,6 @@ function emptyGoalForm(): Omit<Goal, 'id'> & { id: string } {
     area: '',
     generalGoal: '',
     successMetric: '',
-    specificTarget: '',
     timeframe: 12,
     targetDate: computeTargetDate(new Date().toISOString(), 12),
     createdAt: '',
@@ -208,16 +207,11 @@ function GoalDetail({
         </div>
 
         {/* Goal details */}
-        {(goal.successMetric || goal.specificTarget || goal.timeframe) && (
+        {(goal.successMetric || goal.timeframe) && (
           <div className="mt-5 space-y-2 rounded-[0.7rem] bg-(--surface-muted)/40 px-4 py-3.5">
             {goal.successMetric && (
               <p className="wrap-break-word text-[12px] text-(--text-secondary)">
                 <span className="font-bold text-(--text-primary)">Métrica de éxito:</span> {goal.successMetric}
-              </p>
-            )}
-            {goal.specificTarget && (
-              <p className="wrap-break-word text-[12px] text-(--text-secondary)">
-                <span className="font-bold text-(--text-primary)">Meta específica:</span> {goal.specificTarget}
               </p>
             )}
             {goal.timeframe > 0 && (
@@ -355,20 +349,11 @@ function GoalFormModal({
             />
           </div>
 
-          <div className="sm:col-span-1">
+          <div className="sm:col-span-2">
             <label className={labelClass}>Métrica de éxito</label>
             <input
               value={form.successMetric}
               onChange={(e) => setField('successMetric', e.target.value)}
-              className={cx(fieldClass, 'bg-(--surface-muted)')}
-              style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-            />
-          </div>
-          <div className="sm:col-span-1">
-            <label className={labelClass}>Meta específica</label>
-            <input
-              value={form.specificTarget}
-              onChange={(e) => setField('specificTarget', e.target.value)}
               className={cx(fieldClass, 'bg-(--surface-muted)')}
               style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
             />
