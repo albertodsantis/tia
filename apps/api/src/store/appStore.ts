@@ -253,7 +253,8 @@ function normalizeEmail(email: string | undefined) {
   return normalized.toLowerCase();
 }
 
-const ALLOWED_GRADIENTS = new Set(['instagram', 'google', 'tiktok']);
+const ALLOWED_GRADIENTS = new Set(['instagram']);
+const ALLOWED_CONICS = new Set(['google', 'tiktok']);
 
 function normalizeAccentColor(color: string | undefined) {
   const normalized = normalizeRequiredText(color, 'El color');
@@ -261,6 +262,13 @@ function normalizeAccentColor(color: string | undefined) {
     const key = normalized.slice('gradient:'.length);
     if (!ALLOWED_GRADIENTS.has(key)) {
       throw new Error('El gradiente no es valido.');
+    }
+    return normalized;
+  }
+  if (normalized.startsWith('conic:')) {
+    const key = normalized.slice('conic:'.length);
+    if (!ALLOWED_CONICS.has(key)) {
+      throw new Error('El tema no es valido.');
     }
     return normalized;
   }

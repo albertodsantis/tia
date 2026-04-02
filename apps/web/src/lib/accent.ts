@@ -4,12 +4,16 @@ const GRADIENT_PRESETS: Record<string, { gradient: string; representative: strin
     gradient: 'linear-gradient(135deg, #FCAF45, #F56040, #E1306C, #833AB4)',
     representative: '#E1306C',
   },
+};
+
+// Conic presets — swatch shows brand colors as pie sections, accent uses representative hex
+const CONIC_PRESETS: Record<string, { conic: string; representative: string }> = {
   google: {
-    gradient: 'linear-gradient(135deg, #4285F4, #EA4335, #FBBC05, #34A853)',
+    conic: 'conic-gradient(#4285F4 0deg 90deg, #EA4335 90deg 180deg, #FBBC05 180deg 270deg, #34A853 270deg 360deg)',
     representative: '#4285F4',
   },
   tiktok: {
-    gradient: 'linear-gradient(135deg, #25F4EE 0%, #010101 42%, #010101 58%, #FE2C55 100%)',
+    conic: 'conic-gradient(#25F4EE 0deg 180deg, #FE2C55 180deg 360deg)',
     representative: '#FE2C55',
   },
 };
@@ -18,15 +22,36 @@ export function isGradientAccent(value: string): boolean {
   return value.startsWith('gradient:');
 }
 
+export function isConicAccent(value: string): boolean {
+  return value.startsWith('conic:');
+}
+
 export function getGradientCss(value: string): string | null {
   const key = value.replace('gradient:', '');
   return GRADIENT_PRESETS[key]?.gradient ?? null;
 }
 
+export function getConicCss(value: string): string | null {
+  const key = value.replace('conic:', '');
+  return CONIC_PRESETS[key]?.conic ?? null;
+}
+
+export function getSwatchCss(value: string): string {
+  if (isGradientAccent(value)) return getGradientCss(value) || value;
+  if (isConicAccent(value)) return getConicCss(value) || value;
+  return value;
+}
+
 export function getRepresentativeHex(value: string): string {
-  if (!isGradientAccent(value)) return value;
-  const key = value.replace('gradient:', '');
-  return GRADIENT_PRESETS[key]?.representative ?? '#C96F5B';
+  if (isGradientAccent(value)) {
+    const key = value.replace('gradient:', '');
+    return GRADIENT_PRESETS[key]?.representative ?? '#C96F5B';
+  }
+  if (isConicAccent(value)) {
+    const key = value.replace('conic:', '');
+    return CONIC_PRESETS[key]?.representative ?? '#C96F5B';
+  }
+  return value;
 }
 
 function hexToRgb(hex: string) {

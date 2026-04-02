@@ -31,12 +31,12 @@ import {
 } from '../components/ui';
 import { authApi } from '../lib/api';
 import { toast } from '../lib/toast';
-import { getGradientCss, isGradientAccent } from '../lib/accent';
+import { getSwatchCss } from '../lib/accent';
 
 const ACCENT_OPTIONS = [
   { name: 'IG', value: 'gradient:instagram' },
-  { name: 'Google', value: 'gradient:google' },
-  { name: 'TikTok', value: 'gradient:tiktok' },
+  { name: 'Google', value: 'conic:google' },
+  { name: 'TikTok', value: 'conic:tiktok' },
   { name: 'Matcha', value: '#74A12E' },
   { name: 'Terracota', value: '#C65D4B' },
   { name: 'Cobre', value: '#B86A45' },
@@ -343,7 +343,7 @@ export default function Settings() {
             <div className="flex items-center gap-3">
               <span
                 className="block h-11 w-11 rounded-[0.9rem] border-4 border-white shadow-sm dark:border-slate-700"
-                style={{ background: isGradientAccent(activeAccent.value) ? (getGradientCss(activeAccent.value) || activeAccent.value) : activeAccent.value }}
+                style={{ background: getSwatchCss(activeAccent.value) }}
               />
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -391,7 +391,7 @@ export default function Settings() {
                         'block h-11 w-11 rounded-[0.9rem] border-4 border-white shadow-sm transition-all dark:border-slate-700',
                         isSelected ? 'scale-110 ring-2 ring-slate-900/20 dark:ring-white/20' : 'hover:scale-105',
                       )}
-                      style={{ background: isGradientAccent(option.value) ? (getGradientCss(option.value) || option.value) : option.value }}
+                      style={{ background: getSwatchCss(option.value) }}
                     />
                   </button>
                 );
