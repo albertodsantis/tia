@@ -324,7 +324,7 @@ function RevenueChart({ tasks, accentHex, accentGradient }: { tasks: Task[]; acc
   const yearCollected = monthlyData.reduce((s, m) => s + m.collected, 0);
 
   return (
-    <SurfaceCard className="p-5 lg:p-7">
+    <SurfaceCard className="-mx-4 !rounded-none !border-x-0 px-5 py-5 lg:-mx-8 lg:px-8 lg:py-7">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
