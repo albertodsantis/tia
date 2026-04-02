@@ -31,11 +31,11 @@ interface AppContextType extends AppState {
   refreshAppData: () => Promise<void>;
   dismissActionError: () => void;
   reportActionError: (message: string) => void;
-  addTask: (task: Omit<Task, 'id'>) => Promise<Task>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<Task>;
   updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<Task>;
   deleteTask: (taskId: string) => Promise<void>;
-  addPartner: (partner: Omit<Partner, 'id'>) => Promise<string>;
+  addPartner: (partner: Omit<Partner, 'id' | 'createdAt'>) => Promise<string>;
   findPartnerByName: (name: string) => Partner | undefined;
   ensurePartnerByName: (name: string, status?: Partner['status']) => Promise<Partner>;
   updatePartner: (partnerId: string, updates: Partial<Partner>) => Promise<void>;
@@ -243,7 +243,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     return createdPartner;
   };
 
-  const addTask = async (task: Omit<Task, 'id'>) => {
+  const addTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
     setActionError(null);
 
     try {
@@ -317,7 +317,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     }
   };
 
-  const addPartner = async (partner: Omit<Partner, 'id'>) => {
+  const addPartner = async (partner: Omit<Partner, 'id' | 'createdAt'>) => {
     setActionError(null);
 
     try {
