@@ -1,12 +1,12 @@
-# Tia - Product Requirements Document
+# Efi - Product Requirements Document
 
 ## 1. Purpose
 
-This document defines the target product for the current production version of Tia. Any functional change that conflicts with this document requires an explicit update to the canon.
+This document defines the target product for the current production version of Efi. Any functional change that conflicts with this document requires an explicit update to the canon.
 
 ## 2. Product Vision
 
-Tia is a micro SaaS CRM personalized for content creators, influencers, and creative freelancers who need to manage deliverables, brand relationships, contacts, finances, templates, media kits, professional goals, and follow-up work without relying on scattered spreadsheets, notes, reminders, and inbox threads.
+Efi is a micro SaaS CRM personalized for content creators, influencers, and creative freelancers who need to manage deliverables, brand relationships, contacts, finances, templates, media kits, professional goals, and follow-up work without relying on scattered spreadsheets, notes, reminders, and inbox threads.
 
 The delivery sequence is:
 
@@ -27,7 +27,7 @@ The product goal is to serve as a centralized operational hub for creators:
 
 ## 3. Language and Audience
 
-Tia is built for Spanish-speaking users.
+Efi is built for Spanish-speaking users.
 
 Rules:
 
@@ -72,7 +72,7 @@ Shared multi-user collaboration is not part of the current scope, but the system
 
 ## 6. Release Goal
 
-Release target: `Tia MVP v1`
+Release target: `Efi MVP v1`
 
 The v1 release is an authenticated, persistent, commercially credible web application that is ready for daily use and works correctly across desktop and mobile browsers.
 
@@ -312,7 +312,7 @@ Goals are managed in the dedicated Strategic View (Estrategia) tab, not in the P
 ### 8.8 Calendar and Reminders
 
 - As a creator, I want to sync a task with Google Calendar so I do not miss deadlines.
-- As a creator, I want to pull date changes from Calendar so Tia stays aligned.
+- As a creator, I want to pull date changes from Calendar so Efi stays aligned.
 - As a creator, I want to enable browser push notifications so I receive reminders for today's and tomorrow's tasks.
 
 ### 8.9 Settings and Personalization
@@ -331,7 +331,7 @@ Goals are managed in the dedicated Strategic View (Estrategia) tab, not in the P
 
 ### 8.11 Cross-Device Use
 
-- As a creator, I want the same account to work well on desktop and mobile web so I can use Tia from wherever I am.
+- As a creator, I want the same account to work well on desktop and mobile web so I can use Efi from wherever I am.
 - As a creator, I want the backend to preserve my data consistently so switching devices does not change my operational context.
 
 ## 9. Data Model
@@ -371,7 +371,7 @@ Everything below is explicitly out of scope for v1:
 - real-time multi-user collaboration
 - shared workspaces with granular permissions
 - invoicing, collections, or advanced accounting
-- sending email from Tia-owned servers
+- sending email from Efi-owned servers
 - internal messaging between users
 - native iOS or Android apps
 - automatically imported social media analytics

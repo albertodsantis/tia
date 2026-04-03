@@ -2,9 +2,9 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Tia
+# Efi
 
-Tia is a micro SaaS CRM built for content creators, influencers, and creative freelancers. It provides a compact operational workspace to manage partnerships, track deliverables, and maintain a professional profile — all from a single responsive web app.
+Efi is a micro SaaS CRM built for content creators, influencers, and creative freelancers. It provides a compact operational workspace to manage partnerships, track deliverables, and maintain a professional profile — all from a single responsive web app.
 
 The product UI is Spanish-first. All technical documentation and code comments are in English.
 
@@ -37,7 +37,7 @@ Desktop uses a sidebar layout; mobile uses bottom navigation.
 ## Repository Structure
 
 ```text
-tia/
+efi/
 ├── Documentation/              # project documentation
 │   ├── PRD.md
 │   ├── APP_FLOW.md

@@ -217,7 +217,7 @@ export default function Directory() {
     const partnerTasks = tasks.filter((task) => task.partnerId === composingTo.partner.id && task.status !== 'Cobrado');
     const relevantTask = partnerTasks.length > 0 ? partnerTasks[0] : null;
     const deliverable = relevantTask ? `${relevantTask.title} (${relevantTask.description})` : '[Entregable no especificado]';
-    const mediaKitLink = `https://tia.app/${profile.handle.replace('@', '')}`;
+    const mediaKitLink = `https://efi.app/${profile.handle.replace('@', '')}`;
     const replaceVars = (text: string) =>
       text
         .replace(/{{brandName}}/g, composingTo.partner.name)

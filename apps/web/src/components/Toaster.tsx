@@ -20,8 +20,8 @@ export default function Toaster() {
       }, 4000);
     };
 
-    window.addEventListener('tia-toast', handleToast);
-    return () => window.removeEventListener('tia-toast', handleToast);
+    window.addEventListener('efi-toast', handleToast);
+    return () => window.removeEventListener('efi-toast', handleToast);
   }, []);
 
   if (toasts.length === 0) return null;

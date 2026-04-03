@@ -133,7 +133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     });
 
     // Guardamos en caché para que la Landing page pueda leerlo antes de iniciar sesión
-    localStorage.setItem('tia_accent_color', state.accentColor);
+    localStorage.setItem('efi_accent_color', state.accentColor);
   }, [state.accentColor]);
 
   useEffect(() => {

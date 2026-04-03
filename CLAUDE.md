@@ -9,7 +9,7 @@
 
 ## Project
 
-Tia is a multi-user personal CRM for content creators/influencers. Each user has their own isolated data (tasks, partners, profile, settings, templates). No collaborative workspaces — each account is a personal workspace. Monorepo structure:
+Efi is a multi-user personal CRM for content creators/influencers. Each user has their own isolated data (tasks, partners, profile, settings, templates). No collaborative workspaces — each account is a personal workspace. Monorepo structure:
 
 - `apps/web/src/` — React 19 SPA (Vite, Tailwind CSS 4, TypeScript)
 - `apps/api/src/` — Express backend (auth, business logic, integrations)

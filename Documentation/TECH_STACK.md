@@ -1,8 +1,8 @@
-# Tia - Technology Stack Definition
+# Efi - Technology Stack Definition
 
 ## 1. Purpose
 
-This document defines the approved technical stack for Tia, a micro SaaS CRM for content creators and influencers. It reflects the current state of the codebase and serves as the canonical reference for all technology decisions.
+This document defines the approved technical stack for Efi, a micro SaaS CRM for content creators and influencers. It reflects the current state of the codebase and serves as the canonical reference for all technology decisions.
 
 ## 2. Language and Product Context
 
@@ -10,7 +10,7 @@ This document is written in English for technical consistency across AI-driven w
 
 Product context still matters:
 
-- Tia is a Spanish-first product
+- Efi is a Spanish-first product
 - visible UI copy remains in Spanish
 - brand tone remains in Spanish
 - engineering documentation remains in English

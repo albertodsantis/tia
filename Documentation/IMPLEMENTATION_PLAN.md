@@ -1,8 +1,8 @@
-# Tia - Implementation Plan
+# Efi - Implementation Plan
 
 ## 1. Purpose
 
-This plan tracks the implementation progress of the Tia web app and defines the remaining work needed to reach production readiness. It reflects the actual state of the codebase as of March 2026.
+This plan tracks the implementation progress of the Efi web app and defines the remaining work needed to reach production readiness. It reflects the actual state of the codebase as of March 2026.
 
 ## 2. Execution Language Policy
 
@@ -10,7 +10,7 @@ This document is written in English for implementation clarity.
 
 Product constraints still apply:
 
-- Tia is a Spanish-first product
+- Efi is a Spanish-first product
 - visible UI text should remain in Spanish
 - internal planning and engineering docs remain in English
 
@@ -30,7 +30,7 @@ The following milestones have been fully or substantially completed.
 - shared domain types and contracts extracted into `packages/shared`
 - build scripts normalized; repository builds and runs from root
 
-### Milestone 2 - Foundation Hardening [PARTIALLY DONE]
+### Milestone 2 - Foundation Hardening [PAREFILLY DONE]
 
 Completed:
 

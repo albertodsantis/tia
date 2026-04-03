@@ -755,8 +755,8 @@ export default function App() {
       setSessionUser(null);
       setAuthPhase('unauthenticated');
     };
-    window.addEventListener('tia:unauthorized', handler);
-    return () => window.removeEventListener('tia:unauthorized', handler);
+    window.addEventListener('efi:unauthorized', handler);
+    return () => window.removeEventListener('efi:unauthorized', handler);
   }, [authPhase]);
 
   if (authPhase === 'checking') {
@@ -764,7 +764,7 @@ export default function App() {
       <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--surface-app)]">
         <div className="text-center">
           <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            Tia
+            Efi
           </p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">Cargando…</p>
         </div>

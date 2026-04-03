@@ -3,7 +3,7 @@ import { ArrowRight, Check } from '@phosphor-icons/react';
 import { getAccentCssVariables, getAccessibleAccentForeground, getGradientCss, getRepresentativeHex, isGradientAccent } from '../lib/accent';
 
 const ACCENT_OPTIONS = [
-  { name: 'Tia', value: 'gradient:instagram' },
+  { name: 'Efi', value: 'gradient:instagram' },
   { name: 'Arcilla', value: '#C96F5B' },
   { name: 'Terracota', value: '#C65D4B' },
   { name: 'Cobre', value: '#B86A45' },

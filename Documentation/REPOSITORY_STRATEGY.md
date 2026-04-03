@@ -1,14 +1,14 @@
-# Tia - Repository Strategy
+# Efi - Repository Strategy
 
 ## 1. Purpose
 
-This document defines how the repository is structured to support Tia as a micro SaaS and how it should evolve as the product matures.
+This document defines how the repository is structured to support Efi as a micro SaaS and how it should evolve as the product matures.
 
 It is not a product roadmap. It is the engineering and repository strategy that keeps product delivery aligned with the intended distribution model.
 
 ## 2. Product Delivery Strategy
 
-Tia is delivered in this order:
+Efi is delivered in this order:
 
 1. Web application as the primary product surface
 2. Mobile web experience from the same responsive web application
@@ -30,7 +30,7 @@ The repository is optimized for `web-first`, `API-first`, and `shared-domain-fir
 The monorepo is organized into three workspaces:
 
 ```text
-tia/
+efi/
 ├── Documentation/          # all project documentation
 │   ├── PRD.md
 │   ├── APP_FLOW.md

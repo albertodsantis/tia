@@ -1,7 +1,7 @@
 export type ToastType = 'success' | 'error' | 'info';
 
 export const toast = (message: string, type: ToastType = 'success') => {
-  const event = new CustomEvent('tia-toast', {
+  const event = new CustomEvent('efi-toast', {
     detail: { id: Math.random().toString(36).substring(2, 9), message, type },
   });
   if (typeof window !== 'undefined') {

@@ -46,7 +46,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     if (response.status === 401) {
-      window.dispatchEvent(new CustomEvent('tia:unauthorized'));
+      window.dispatchEvent(new CustomEvent('efi:unauthorized'));
     }
 
     let message = 'Request failed';

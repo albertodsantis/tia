@@ -32,7 +32,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       role: 'model',
-      text: 'Hola. Soy Tia, tu asistente integrada. Puedo ayudarte a mover tareas, marcas, contactos y plantillas sin salir del workspace.',
+      text: 'Hola. Soy Efi, tu asistente integrada. Puedo ayudarte a mover tareas, marcas, contactos y plantillas sin salir del workspace.',
     },
   ]);
   const [input, setInput] = useState('');
@@ -165,7 +165,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
         model: 'gemini-3.1-pro-preview',
         config: {
           systemInstruction:
-            'Eres Tia, un asistente de inteligencia artificial integrado en un CRM para creadores de contenido. Tu objetivo es ayudar al usuario a gestionar sus tareas, marcas, contactos, plantillas y perfil. Se concisa, util, amable y profesional. Responde siempre en espanol.',
+            'Eres Efi, un asistente de inteligencia artificial integrado en un CRM para creadores de contenido. Tu objetivo es ayudar al usuario a gestionar sus tareas, marcas, contactos, plantillas y perfil. Se concisa, util, amable y profesional. Responde siempre en espanol.',
           tools,
         },
       });
@@ -307,7 +307,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
         } ${isOpen ? 'pointer-events-none translate-y-4 scale-95 opacity-0' : 'translate-y-0 scale-100 opacity-100'}`}
       >
         <button
-          id="tia-assistant-btn"
+          id="efi-assistant-btn"
           type="button"
           onClick={() => setIsOpen(true)}
           className={
@@ -330,7 +330,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">
                 Asistente
               </p>
-              <p className="text-sm font-bold text-[var(--text-primary)]">Tia</p>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Efi</p>
             </div>
           ) : null}
         </button>
@@ -377,7 +377,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold tracking-wide text-[var(--text-primary)]">Tia</h3>
+                    <h3 className="text-sm font-bold tracking-wide text-[var(--text-primary)]">Efi</h3>
                     <StatusBadge tone="accent" className="shrink-0">
                       Workspace
                     </StatusBadge>
@@ -417,7 +417,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                   <div className="flex justify-start">
                     <div className="flex items-center gap-2 rounded-[1rem] rounded-tl-[0.4rem] border border-[color:var(--line-soft)] bg-[color:var(--surface-card)] px-4 py-3 text-[var(--text-secondary)] shadow-[0_12px_24px_-24px_rgba(63,43,33,0.24)]">
                       <CircleNotch size={16} className="animate-spin" />
-                      <span className="text-xs font-medium">Tia esta pensando...</span>
+                      <span className="text-xs font-medium">Efi esta pensando...</span>
                     </div>
                   </div>
                 ) : null}
@@ -448,7 +448,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => event.key === 'Enter' && void handlePaperPlaneRight()}
-                  placeholder="Escribe o habla con Tia..."
+                  placeholder="Escribe o habla con Efi..."
                   className="flex-1 border-none bg-transparent px-2 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none"
                 />
 

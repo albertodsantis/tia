@@ -90,7 +90,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           {
             target: 'body',
             content:
-              'Bienvenida a Tia. Este tour te muestra el flujo base del workspace para ubicar navegacion, pipeline y relaciones.',
+              'Bienvenida a Efi. Este tour te muestra el flujo base del workspace para ubicar navegacion, pipeline y relaciones.',
             placement: 'center',
             disableBeacon: true,
           },
@@ -116,7 +116,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           {
             target: 'body',
             content:
-              'Bienvenida a Tia. En movil vas a moverte sobre todo con la barra inferior y siempre volveras rapido a cada modulo.',
+              'Bienvenida a Efi. En movil vas a moverte sobre todo con la barra inferior y siempre volveras rapido a cada modulo.',
             placement: 'center',
             disableBeacon: true,
           },
@@ -142,9 +142,9 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           },
         ];
 
-    if (typeof document !== 'undefined' && document.querySelector('#tia-assistant-btn')) {
+    if (typeof document !== 'undefined' && document.querySelector('#efi-assistant-btn')) {
       baseSteps.push({
-        target: '#tia-assistant-btn',
+        target: '#efi-assistant-btn',
         content:
           'Cuando la IA esta disponible, puedes abrirla desde aqui para crear tareas o actualizar estados con lenguaje natural.',
         placement: isDesktop ? 'left' : 'top',

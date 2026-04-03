@@ -1,8 +1,8 @@
-# Tia - Master Design System
+# Efi - Master Design System
 
 ## 1. Purpose
 
-This document is the single design authority for Tia.
+This document is the single design authority for Efi.
 
 It defines the canonical visual system, interaction tone, and adoption rules for any UI work created by humans, Codex, or external design-assist tools such as UI/UX Pro Max.
 
@@ -28,7 +28,7 @@ Precedence order:
 
 ## 3. Product Context
 
-Tia is a Spanish-first micro SaaS CRM for content creators and creator operators.
+Efi is a Spanish-first micro SaaS CRM for content creators and creator operators.
 
 The product must feel:
 
@@ -98,7 +98,7 @@ Disallowed drift:
 - adding a second primary design language
 - switching to a hard-cornered corporate dashboard look
 - introducing a heavy component framework with its own visual identity
-- using external inspiration as direct canon without translating it to Tia
+- using external inspiration as direct canon without translating it to Efi
 - turning routine app views into marketing-style hero compositions
 - using dense card grids as the default product language
 
@@ -565,13 +565,13 @@ Features: click-outside dismissal, chevron rotation animation, `z-[100]` dropdow
 
 #### `Toaster` (`components/Toaster.tsx`)
 
-Event-driven toast notification display. Listens for `tia-toast` custom events on `window`.
+Event-driven toast notification display. Listens for `efi-toast` custom events on `window`.
 
 Toast types: `success` (emerald), `error` (rose), `info` (blue).
 
 Auto-dismiss after 4 seconds. Manual dismiss via close button. Positioned `fixed bottom-6 right-6`, `z-[200]`.
 
-Toast helper: `apps/web/src/lib/toast.ts` dispatches `tia-toast` events.
+Toast helper: `apps/web/src/lib/toast.ts` dispatches `efi-toast` events.
 
 ### 8.5 AI Assistant
 
@@ -687,7 +687,7 @@ UI/UX Pro Max and similar tools are approved as idea generators and consistency 
 When external proposals are used:
 
 - treat them as inputs, not canon
-- map their suggestions to Tia's product context
+- map their suggestions to Efi's product context
 - preserve Spanish-first copy and the current product shape
 - merge useful ideas into this file before treating them as reusable rules
 - avoid adopting another library's naming, token structure, or style language verbatim unless intentionally approved
@@ -699,7 +699,7 @@ When Codex or a teammate uses UI/UX Pro Max:
 1. gather the proposal, reference, or generated system
 2. compare it against this master
 3. keep any idea that improves clarity, hierarchy, conversion, or polish without breaking the current identity
-4. translate the accepted idea into Tia-specific language and tokens
+4. translate the accepted idea into Efi-specific language and tokens
 5. update this file if the idea becomes reusable system guidance
 6. update `FRONTEND_GUIDELINES.md` only with implementation-facing guidance derived from this master
 

@@ -1,8 +1,8 @@
-# Tia - Frontend Guidelines
+# Efi - Frontend Guidelines
 
 ## 1. Purpose
 
-This document defines the frontend implementation rules for the Tia web app.
+This document defines the frontend implementation rules for the Efi web app.
 
 The canonical design authority lives in `design-system/MASTER.md`.
 
@@ -14,7 +14,7 @@ This document is written in English because technical documentation in this repo
 
 Product rules:
 
-- Tia is designed for a Spanish-speaking audience
+- Efi is designed for a Spanish-speaking audience
 - brand tone is Spanish-first
 - visible navigation labels, product copy, and screen text should remain in Spanish
 - a single screen should not mix English and Spanish labels unless there is a clear product reason
@@ -31,7 +31,7 @@ Use this document to explain how the frontend should implement the master, not t
 
 ## 4. Design System Lock
 
-Approved design system: `Tia Internal Mobile CRM System`
+Approved design system: `Efi Internal Mobile CRM System`
 
 Technical base:
 
@@ -234,7 +234,7 @@ The toast system uses a custom event bus (`toast.ts` + `Toaster` component) rath
 
 ## 10. Desktop Scroll Safety
 
-Desktop scrolling is a protected shell behavior in Tia and must not be changed casually.
+Desktop scrolling is a protected shell behavior in Efi and must not be changed casually.
 
 Current implementation contract:
 
@@ -308,7 +308,7 @@ Rules for adoption:
 
 - compare new ideas against `design-system/MASTER.md` first
 - merge reusable accepted ideas into the master before repeating them broadly
-- translate external references into Tia-specific language and patterns
+- translate external references into Efi-specific language and patterns
 - do not let generated systems create a second token set or an unrelated dashboard aesthetic
 - prefer proposals that improve calmness, credibility, and day-to-day usability over flashy novelty
 

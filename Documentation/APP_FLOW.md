@@ -1,12 +1,12 @@
-# Tia - Application Flow and UX Map
+# Efi - Application Flow and UX Map
 
 ## 1. Purpose
 
-This document defines the main navigation, primary states, and screen transitions for Tia. The application is a responsive web SPA with a desktop sidebar and mobile bottom tab bar navigation pattern.
+This document defines the main navigation, primary states, and screen transitions for Efi. The application is a responsive web SPA with a desktop sidebar and mobile bottom tab bar navigation pattern.
 
 ## 2. Language and UX Policy
 
-Tia is designed for Spanish-speaking users.
+Efi is designed for Spanish-speaking users.
 
 Rules:
 

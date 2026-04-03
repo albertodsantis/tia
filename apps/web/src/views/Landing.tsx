@@ -170,7 +170,7 @@ export default function Landing({
               <path d="M10,24 C10,15 18,9 32,9 C46,9 54,15 54,24 C54,27 48,28 40,26 C36,25 34,22 32,22 C30,22 28,25 24,26 C16,28 10,27 10,24Z" fill="url(#logo-grad)"/>
             </svg>
             <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-              Tia
+              Efi
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -446,7 +446,7 @@ export default function Landing({
         {/* Footer */}
         <div className="border-t py-8 text-center [border-color:var(--line-soft)] lg:mt-16">
           <p className="text-xs text-[var(--text-secondary)]/60">
-            Tia — workspace operativo para creadores de contenido
+            Efi — workspace operativo para creadores de contenido
           </p>
         </div>
       </div>

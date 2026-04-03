@@ -1,8 +1,8 @@
-# Tia - Backend Structure
+# Efi - Backend Structure
 
 ## 1. Purpose
 
-This document defines the backend architecture, data model, API contract, and validation layer for Tia. The backend is a modular monolith with a REST API, currently backed by an in-memory store with PostgreSQL 16 planned as the target database.
+This document defines the backend architecture, data model, API contract, and validation layer for Efi. The backend is a modular monolith with a REST API, currently backed by an in-memory store with PostgreSQL 16 planned as the target database.
 
 ## 2. Language and Audience Context
 
@@ -10,7 +10,7 @@ This document is written in English for technical consistency.
 
 Product-facing behavior still follows these rules:
 
-- Tia serves Spanish-speaking users
+- Efi serves Spanish-speaking users
 - visible UI text remains in Spanish
 - backend contracts and engineering documentation remain in English
 
