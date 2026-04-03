@@ -653,10 +653,11 @@ const MainLayout = () => {
 const DEFAULT_ACCENT = '#C96F5B';
 
 const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
+const COLOR_PICKER_STORAGE_KEY = 'hasPickedAccentColor';
 
 const AppShell = () => {
   const { isBootstrapping, bootstrapError, profile, accentColor, setAccentColor } = useAppContext();
-  const [colorPicked, setColorPicked] = useState(false);
+  const [colorPicked, setColorPicked] = useState(() => !!localStorage.getItem(COLOR_PICKER_STORAGE_KEY));
   const [forceOnboarding, setForceOnboarding] = useState(false);
 
   const needsColorPicker = !isBootstrapping && !bootstrapError && !colorPicked && accentColor === DEFAULT_ACCENT;
@@ -667,6 +668,7 @@ const AppShell = () => {
     } catch {
       // Let the user proceed even if the API call fails
     }
+    localStorage.setItem(COLOR_PICKER_STORAGE_KEY, '1');
     if (!localStorage.getItem(ONBOARDING_STORAGE_KEY)) {
       setForceOnboarding(true);
     }
