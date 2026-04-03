@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Check } from '@phosphor-icons/react';
-import { getAccentCssVariables, getAccessibleAccentForeground, getGradientCss, getRepresentativeHex, isGradientAccent } from '../lib/accent';
-
-const ACCENT_OPTIONS = [
-  { name: 'Efi', value: 'gradient:instagram' },
-  { name: 'Arcilla', value: '#C96F5B' },
-  { name: 'Terracota', value: '#C65D4B' },
-  { name: 'Cobre', value: '#B86A45' },
-  { name: 'Eucalipto', value: '#5D8D7B' },
-  { name: 'Violeta', value: '#8B5CF6' },
-  { name: 'Indigo', value: '#6366F1' },
-  { name: 'Cielo', value: '#0EA5E9' },
-  { name: 'Turquesa', value: '#06B6D4' },
-  { name: 'Fucsia', value: '#D946EF' },
-] as const;
+import { ACCENT_OPTIONS, getAccessibleAccentForeground, getRepresentativeHex, getSwatchCss } from '../lib/accent';
 
 const BRAND_ORANGE = '#F56040';
 const BRAND_PURPLE = '#833AB4';
@@ -65,10 +52,9 @@ export default function WelcomeColorPicker({
         <div className="grid grid-cols-5 gap-3 sm:gap-4">
           {ACCENT_OPTIONS.map((option) => {
             const isSelected = selected === option.value;
-            const isGrad = isGradientAccent(option.value);
             const displayHex = getRepresentativeHex(option.value);
             const fg = getAccessibleAccentForeground(option.value);
-            const bg = isGrad ? (getGradientCss(option.value) || displayHex) : option.value;
+            const bg = getSwatchCss(option.value);
             return (
               <button
                 key={option.value}
@@ -114,7 +100,7 @@ export default function WelcomeColorPicker({
           style={
             selected
               ? {
-                  background: isGradientAccent(selected) ? (getGradientCss(selected) || selected) : selected,
+                  background: getSwatchCss(selected),
                   color: getAccessibleAccentForeground(selected),
                   boxShadow: `0 12px 30px -12px ${getRepresentativeHex(selected)}60`,
                 }

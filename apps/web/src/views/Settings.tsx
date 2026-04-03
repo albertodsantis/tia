@@ -31,21 +31,7 @@ import {
 } from '../components/ui';
 import { authApi } from '../lib/api';
 import { toast } from '../lib/toast';
-import { getSwatchCss } from '../lib/accent';
-
-const ACCENT_OPTIONS = [
-  { name: 'IG', value: 'gradient:instagram' },
-  { name: 'TikTok', value: 'conic:tiktok' },
-  { name: 'Matcha', value: '#74A12E' },
-
-  { name: 'Cobre', value: '#B86A45' },
-  { name: 'Eucalipto', value: '#5D8D7B' },
-  { name: 'Violeta', value: '#8B5CF6' },
-  { name: 'Indigo', value: '#6366F1' },
-  { name: 'Cielo', value: '#0EA5E9' },
-  { name: 'Turquesa', value: '#06B6D4' },
-  { name: 'Fucsia', value: '#D946EF' },
-] as const;
+import { ACCENT_OPTIONS, getSwatchCss } from '../lib/accent';
 
 const TEMPLATE_VARIABLES = [
   { key: 'brandName', label: 'Marca' },
