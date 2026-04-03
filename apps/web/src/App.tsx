@@ -480,7 +480,7 @@ const MainLayout = () => {
       <div className="flex min-h-screen items-center justify-center bg-[var(--surface-app)] px-6">
         <SurfaceCard className="w-full max-w-lg p-8 text-center">
           <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            {`T\u00eda`}
+            Efi
           </p>
           <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
             Cargando workspace
