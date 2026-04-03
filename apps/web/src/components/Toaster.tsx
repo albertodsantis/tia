@@ -5,6 +5,7 @@ interface ToastEvent {
   id: string;
   message: string;
   type: 'success' | 'error' | 'info';
+  pointsEarned?: number;
 }
 
 export default function Toaster() {
@@ -36,7 +37,14 @@ export default function Toaster() {
           {t.type === 'success' && <CheckCircle size={18} className="text-emerald-500" />}
           {t.type === 'error' && <XCircle size={18} className="text-rose-500" />}
           {t.type === 'info' && <Info size={18} className="text-blue-500" />}
-          <p className="text-sm font-medium text-[var(--text-primary)]">{t.message}</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            {t.message}
+            {t.pointsEarned && t.pointsEarned > 0 ? (
+              <span className="ml-2 font-bold" style={{ color: 'var(--accent-color)' }}>
+                +{t.pointsEarned} ⚡
+              </span>
+            ) : null}
+          </p>
           <button
             onClick={() => setToasts((prev) => prev.filter((item) => item.id !== t.id))}
             className="ml-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"

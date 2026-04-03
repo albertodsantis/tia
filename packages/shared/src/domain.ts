@@ -219,3 +219,45 @@ export interface AppState {
   templates: Template[];
   theme: AppTheme;
 }
+
+// ────────────────────────────────────────────────────────────
+// Efisystem — gamification types
+// ────────────────────────────────────────────────────────────
+
+export type PointEventType =
+  | 'config_accent_change'    // every accent change; service awards points only on 2nd
+  | 'config_profile_complete'
+  | 'config_first_goal'
+  | 'network_first_partner'
+  | 'network_partner_subsequent'
+  | 'network_first_contact'
+  | 'network_contact_subsequent'
+  | 'pipeline_first_task'
+  | 'pipeline_task_moved'
+  | 'pipeline_task_completed'
+  | 'pipeline_task_paid';
+
+export type BadgeKey =
+  | 'perfil_estelar'       // Completaste tu perfil al 100%
+  | 'vision_clara'         // Definiste 3 objetivos estratégicos
+  | 'circulo_intimo'       // Agregaste 5 socios a tu red
+  | 'directorio_dorado'    // 10 Socios y 10 Contactos en tu red
+  | 'motor_de_ideas'       // Creaste 5 entregas en tu pipeline
+  | 'promesa_cumplida'     // Completaste 10 entregas
+  | 'creador_imparable'    // Completaste 25 entregas
+  | 'negocio_en_marcha'    // Cobraste 5 entregas
+  | 'lluvia_de_billetes';  // Cobraste 20 entregas
+
+export interface EfisystemAward {
+  pointsEarned: number;
+  newTotal: number;
+  newLevel: number;
+  leveledUp: boolean;
+  newBadges: BadgeKey[];
+}
+
+export interface EfisystemSnapshot {
+  totalPoints: number;
+  currentLevel: number;
+  unlockedBadges: BadgeKey[];
+}

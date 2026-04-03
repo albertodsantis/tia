@@ -20,6 +20,7 @@ import type {
   UpdateTaskRequest,
 } from '@shared';
 import type { PostgresAppStore } from '../db/repository';
+import { GamificationService, checkProfileComplete } from '../services/gamification';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Bad request';
@@ -39,7 +40,7 @@ function getUserId(req: Request): string {
   return (req as any).userId;
 }
 
-export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
+export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool, gamification: GamificationService) {
   const router = Router();
 
   // All v1 routes require authentication
@@ -48,12 +49,23 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
   router.get('/bootstrap', async (req, res) => {
     try {
       const userId = getUserId(req);
-      const response: AppBootstrapResponse = {
-        appState: await appStore.getSnapshot(userId),
-      };
+      const [appState, efisystem] = await Promise.all([
+        appStore.getSnapshot(userId),
+        appStore.getEfisystemSnapshot(userId),
+      ]);
+      const response: AppBootstrapResponse = { appState, efisystem };
       res.json(response);
     } catch (error) {
       console.error('Bootstrap error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/efisystem', async (req, res) => {
+    try {
+      res.json(await appStore.getEfisystemSnapshot(getUserId(req)));
+    } catch (error) {
+      console.error('Efisystem error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -91,8 +103,10 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.post('/tasks', async (req, res) => {
     try {
-      const task = await appStore.createTask(getUserId(req), req.body as CreateTaskRequest);
-      res.status(201).json(task);
+      const userId = getUserId(req);
+      const task = await appStore.createTask(userId, req.body as CreateTaskRequest);
+      const efisystem = await gamification.processEvent(userId, 'pipeline_first_task');
+      res.status(201).json({ ...task, efisystem });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
     }
@@ -113,11 +127,23 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.patch('/tasks/:taskId', async (req, res) => {
     try {
-      const task = await appStore.updateTask(getUserId(req), req.params.taskId, req.body as UpdateTaskRequest);
+      const userId = getUserId(req);
+      const body = req.body as UpdateTaskRequest;
+      const task = await appStore.updateTask(userId, req.params.taskId, body);
       if (!task) {
         return res.status(404).json({ error: 'Task not found' });
       }
-      res.json(task);
+
+      let efisystem = null;
+      if (body.status === 'Cobrado') {
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_paid');
+      } else if (body.status === 'Completada') {
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_completed');
+      } else if (body.status !== undefined) {
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_moved');
+      }
+
+      res.json({ ...task, ...(efisystem ? { efisystem } : {}) });
     } catch (error) {
       return res.status(400).json({ error: getErrorMessage(error) });
     }
@@ -134,8 +160,17 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.post('/partners', async (req, res) => {
     try {
-      const partner = await appStore.createPartner(getUserId(req), req.body as CreatePartnerRequest);
-      res.status(201).json(partner);
+      const userId = getUserId(req);
+      const partner = await appStore.createPartner(userId, req.body as CreatePartnerRequest);
+
+      // Try first-partner event; if it yields 0 pts, fire subsequent
+      let efisystem = await gamification.processEvent(userId, 'network_first_partner');
+      if (efisystem.pointsEarned === 0) {
+        const subsequent = await gamification.processEvent(userId, 'network_partner_subsequent');
+        efisystem = GamificationService.mergeAwards(efisystem, subsequent);
+      }
+
+      res.status(201).json({ ...partner, efisystem });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
     }
@@ -159,15 +194,24 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.post('/partners/:partnerId/contacts', async (req, res) => {
     try {
+      const userId = getUserId(req);
       const contact = await appStore.addContact(
-        getUserId(req),
+        userId,
         req.params.partnerId,
         req.body as CreateContactRequest,
       );
       if (!contact) {
         return res.status(404).json({ error: 'Partner not found' });
       }
-      res.status(201).json(contact);
+
+      // Try first-contact event; if it yields 0 pts, fire subsequent
+      let efisystem = await gamification.processEvent(userId, 'network_first_contact');
+      if (efisystem.pointsEarned === 0) {
+        const subsequent = await gamification.processEvent(userId, 'network_contact_subsequent');
+        efisystem = GamificationService.mergeAwards(efisystem, subsequent);
+      }
+
+      res.status(201).json({ ...contact, efisystem });
     } catch (error) {
       return res.status(400).json({ error: getErrorMessage(error) });
     }
@@ -213,8 +257,55 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.patch('/profile', async (req, res) => {
     try {
-      const profile = await appStore.updateProfile(getUserId(req), req.body as UpdateProfileRequest);
-      res.json(profile);
+      const userId = getUserId(req);
+      const body = req.body as UpdateProfileRequest;
+      const profile = await appStore.updateProfile(userId, body);
+
+      let efisystem = null;
+      const awards = [];
+
+      // Profile completeness badge
+      if (checkProfileComplete(profile)) {
+        const award = await gamification.processEvent(userId, 'config_profile_complete');
+        awards.push(award);
+      }
+
+      // First goal event
+      if (body.goals !== undefined) {
+        if (profile.goals.length >= 1) {
+          const alreadyFired = await appStore.hasTransaction(userId, 'config_first_goal');
+          if (!alreadyFired) {
+            const award = await gamification.processEvent(userId, 'config_first_goal');
+            awards.push(award);
+          }
+        }
+
+        // vision_clara badge: 3+ goals
+        if (profile.goals.length >= 3) {
+          const isNew = await appStore.unlockBadge(userId, 'vision_clara');
+          if (isNew) {
+            // Attach the badge to the first award or create a synthetic one
+            if (awards.length > 0) {
+              awards[0].newBadges.push('vision_clara');
+            } else {
+              const snap = await appStore.getEfisystemSummary(userId);
+              awards.push({
+                pointsEarned: 0,
+                newTotal: snap.totalPoints,
+                newLevel: snap.currentLevel,
+                leveledUp: false,
+                newBadges: ['vision_clara' as const],
+              });
+            }
+          }
+        }
+      }
+
+      if (awards.length > 0) {
+        efisystem = awards.reduce((acc, cur) => GamificationService.mergeAwards(acc, cur));
+      }
+
+      res.json({ ...profile, ...(efisystem ? { efisystem } : {}) });
     } catch (error) {
       const message = getErrorMessage(error);
       console.error('[PATCH /profile] Error:', message);
@@ -235,8 +326,17 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool) {
 
   router.patch('/settings', async (req, res) => {
     try {
-      const response = await appStore.updateSettings(getUserId(req), req.body as UpdateSettingsRequest);
-      res.json(response);
+      const userId = getUserId(req);
+      const body = req.body as UpdateSettingsRequest;
+      const response = await appStore.updateSettings(userId, body);
+
+      let efisystem = null;
+      if (body.accentColor) {
+        efisystem = await gamification.processEvent(userId, 'config_accent_change');
+        if (efisystem.pointsEarned === 0) efisystem = null; // don't noise up response if no points
+      }
+
+      res.json({ ...response, ...(efisystem ? { efisystem } : {}) });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
     }

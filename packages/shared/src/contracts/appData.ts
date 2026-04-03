@@ -1,7 +1,10 @@
 import type {
   AppState,
   AppTheme,
+  BadgeKey,
   Contact,
+  EfisystemAward,
+  EfisystemSnapshot,
   Goal,
   MediaKitProfile,
   Partner,
@@ -17,7 +20,22 @@ import type {
 
 export interface AppBootstrapResponse {
   appState: AppState;
+  efisystem: EfisystemSnapshot;
 }
+
+// Mutating responses that include gamification award data
+export interface TaskWithAward extends Task {
+  efisystem?: EfisystemAward;
+}
+export interface PartnerWithAward extends Partner {
+  efisystem?: EfisystemAward;
+}
+export interface ContactWithAward extends Contact {
+  efisystem?: EfisystemAward;
+}
+
+// Re-export for convenience
+export type { BadgeKey, EfisystemAward, EfisystemSnapshot };
 
 export interface DashboardSummaryResponse {
   activePipelineValue: number;

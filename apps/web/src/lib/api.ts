@@ -4,20 +4,24 @@ import type {
   ChangePasswordRequest,
   ChangePasswordResponse,
   Contact,
+  ContactWithAward,
   CreateContactRequest,
   CreatePartnerRequest,
   CreateTaskRequest,
   CreateTemplateRequest,
   DeleteAccountResponse,
   DeleteEntityResponse,
+  EfisystemSnapshot,
   GoogleAuthUrlResponse,
   LoginRequest,
   MeResponse,
   Partner,
+  PartnerWithAward,
   RegisterRequest,
   SettingsResponse,
   StrategicViewResponse,
   Task,
+  TaskWithAward,
   Template,
   UpdateContactRequest,
   UpdatePartnerRequest,
@@ -98,21 +102,22 @@ export const authApi = {
 
 export const appApi = {
   getBootstrap: () => apiRequest<AppBootstrapResponse>('/api/v1/bootstrap'),
+  getEfisystem: () => apiRequest<EfisystemSnapshot>('/api/v1/efisystem'),
   getStrategicView: () => apiRequest<StrategicViewResponse>('/api/v1/strategic-view'),
   getProfile: () => apiRequest<UserProfile>('/api/v1/profile'),
   updateProfile: (payload: UpdateProfileRequest) =>
-    apiRequest<UserProfile>('/api/v1/profile', {
+    apiRequest<UserProfile & { efisystem?: import('@shared').EfisystemAward }>('/api/v1/profile', {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
   getSettings: () => apiRequest<SettingsResponse>('/api/v1/settings'),
   updateSettings: (payload: UpdateSettingsRequest) =>
-    apiRequest<AppSettingsResponse>('/api/v1/settings', {
+    apiRequest<AppSettingsResponse & { efisystem?: import('@shared').EfisystemAward }>('/api/v1/settings', {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
   createTask: (payload: CreateTaskRequest) =>
-    apiRequest<Task>('/api/v1/tasks', {
+    apiRequest<TaskWithAward>('/api/v1/tasks', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
@@ -121,12 +126,12 @@ export const appApi = {
       method: 'DELETE',
     }),
   updateTask: (taskId: string, payload: UpdateTaskRequest) =>
-    apiRequest<Task>(`/api/v1/tasks/${taskId}`, {
+    apiRequest<TaskWithAward>(`/api/v1/tasks/${taskId}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
   createPartner: (payload: CreatePartnerRequest) =>
-    apiRequest<Partner>('/api/v1/partners', {
+    apiRequest<PartnerWithAward>('/api/v1/partners', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
@@ -136,7 +141,7 @@ export const appApi = {
       body: JSON.stringify(payload),
     }),
   addContact: (partnerId: string, payload: CreateContactRequest) =>
-    apiRequest<Contact>(`/api/v1/partners/${partnerId}/contacts`, {
+    apiRequest<ContactWithAward>(`/api/v1/partners/${partnerId}/contacts`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

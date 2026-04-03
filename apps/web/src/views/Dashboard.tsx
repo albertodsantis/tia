@@ -5,13 +5,23 @@ import {
   CaretLeft,
   CaretRight,
   Clock,
+  Lock,
+  Star,
+  Eye,
+  Users,
+  Trophy,
+  Medal,
+  Rocket,
+  CurrencyDollar,
+  Money,
   Target,
 } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import { EmptyState, StatusBadge, SurfaceCard, cx } from '../components/ui';
 import { toast } from '../lib/toast';
-import type { Task, TaskStatus } from '@shared/domain';
+import type { BadgeKey, Task, TaskStatus } from '@shared/domain';
 import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
+import EfisystemWidget from '../components/EfisystemWidget';
 
 /* ── constants ──────────────────────────────────────────────── */
 
@@ -454,10 +464,95 @@ function RevenueChart({ tasks, accentHex, accentGradient }: { tasks: Task[]; acc
   );
 }
 
+/* ── Achievements grid ──────────────────────────────────────── */
+
+interface BadgeDef {
+  key: BadgeKey;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+const ALL_BADGES: BadgeDef[] = [
+  { key: 'perfil_estelar', label: 'Perfil Estelar', description: 'Completaste tu perfil al 100%', icon: Star },
+  { key: 'vision_clara', label: 'Visión Clara', description: 'Definiste 3 objetivos estratégicos', icon: Eye },
+  { key: 'circulo_intimo', label: 'Círculo Íntimo', description: 'Agregaste 5 socios a tu red', icon: Users },
+  { key: 'directorio_dorado', label: 'Directorio Dorado', description: '10 socios y 10 contactos en tu red', icon: Trophy },
+  { key: 'motor_de_ideas', label: 'Motor de Ideas', description: 'Creaste 5 entregas en tu pipeline', icon: Rocket },
+  { key: 'promesa_cumplida', label: 'Promesa Cumplida', description: 'Completaste 10 entregas', icon: Medal },
+  { key: 'creador_imparable', label: 'Creador Imparable', description: 'Completaste 25 entregas', icon: Target },
+  { key: 'negocio_en_marcha', label: 'Negocio en Marcha', description: 'Cobraste 5 entregas', icon: CurrencyDollar },
+  { key: 'lluvia_de_billetes', label: 'Lluvia de Billetes', description: 'Cobraste 20 entregas', icon: Money },
+];
+
+function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) {
+  const Icon = badge.icon;
+  return (
+    <div
+      className={cx(
+        'relative flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition-all',
+        unlocked
+          ? 'border-(--line-soft) bg-(--surface-card)'
+          : 'border-(--line-soft) bg-(--surface-muted) opacity-50',
+      )}
+    >
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-full"
+        style={{
+          background: unlocked ? 'var(--accent-soft-strong)' : 'transparent',
+        }}
+      >
+        <Icon
+          size={22}
+          weight={unlocked ? 'fill' : 'regular'}
+          style={{ color: unlocked ? 'var(--accent-color)' : 'var(--text-tertiary)' }}
+        />
+      </div>
+      <div>
+        <p className="text-[11px] font-semibold leading-tight text-(--text-primary)">
+          {badge.label}
+        </p>
+        <p className="mt-0.5 text-[10px] leading-tight text-(--text-secondary)">
+          {badge.description}
+        </p>
+      </div>
+      {!unlocked && (
+        <Lock
+          size={12}
+          weight="fill"
+          className="absolute right-2 top-2 text-(--text-tertiary)"
+        />
+      )}
+    </div>
+  );
+}
+
+function AchievementsGrid({ unlockedBadges }: { unlockedBadges: BadgeKey[] }) {
+  return (
+    <SurfaceCard className="p-5">
+      <div className="mb-4">
+        <h2 className="text-base font-bold tracking-tight text-(--text-primary)">Logros</h2>
+        <p className="mt-0.5 text-xs text-(--text-secondary)">
+          {unlockedBadges.length} de {ALL_BADGES.length} desbloqueados
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+        {ALL_BADGES.map((badge) => (
+          <BadgeTile
+            key={badge.key}
+            badge={badge}
+            unlocked={unlockedBadges.includes(badge.key)}
+          />
+        ))}
+      </div>
+    </SurfaceCard>
+  );
+}
+
 /* ── Dashboard ──────────────────────────────────────────────── */
 
 export default function Dashboard() {
-  const { tasks, partners, accentColor, accentHex, accentGradient, updateTaskStatus, profile } = useAppContext();
+  const { tasks, partners, accentColor, accentHex, accentGradient, updateTaskStatus, profile, efisystem } = useAppContext();
   const today = new Date();
   const todayIso = formatLocalDateISO(today);
   const startOfToday = startOfLocalDay(today);
@@ -629,6 +724,10 @@ export default function Dashboard() {
       {generalGoals.length > 0 && (
         <GoalsMarquee goals={generalGoals} accentHex={accentHex} accentGradient={accentGradient} />
       )}
+
+      {/* Efisystem: level widget + achievements */}
+      <EfisystemWidget efisystem={efisystem} accentHex={accentHex} />
+      <AchievementsGrid unlockedBadges={efisystem.unlockedBadges} />
 
       {/* Main 2-col grid */}
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">

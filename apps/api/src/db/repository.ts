@@ -7,6 +7,7 @@ import {
 } from '@shared';
 import type {
   AppState,
+  BadgeKey,
   Contact,
   CreateContactRequest,
   CreatePartnerRequest,
@@ -14,6 +15,7 @@ import type {
   CreateTemplateRequest,
   DashboardSummaryResponse,
   DeleteEntityResponse,
+  EfisystemSnapshot,
   Goal,
   GoalAggregation,
   GoalPriority,
@@ -1187,5 +1189,166 @@ export class PostgresAppStore {
         partnerCount: unassignedPartnersResult.rows[0].partner_count,
       },
     };
+  }
+
+  /* ================================================================
+     Efisystem — gamification data access
+     ================================================================ */
+
+  async getEfisystemSummary(userId: string): Promise<{ totalPoints: number; currentLevel: number }> {
+    const result = await this.pool.query(
+      `SELECT total_points, current_level FROM efisystem_summary WHERE user_id = $1`,
+      [userId],
+    );
+    if (result.rows.length === 0) return { totalPoints: 0, currentLevel: 1 };
+    return {
+      totalPoints: result.rows[0].total_points,
+      currentLevel: result.rows[0].current_level,
+    };
+  }
+
+  async upsertEfisystemSummary(userId: string, totalPoints: number, currentLevel: number): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO efisystem_summary (user_id, total_points, current_level, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id) DO UPDATE
+         SET total_points = $2, current_level = $3, updated_at = NOW()`,
+      [userId, totalPoints, currentLevel],
+    );
+  }
+
+  async insertTransaction(userId: string, eventType: string, points: number, meta: object = {}): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO efisystem_transactions (user_id, event_type, points, meta)
+       VALUES ($1, $2, $3, $4)`,
+      [userId, eventType, points, JSON.stringify(meta)],
+    );
+  }
+
+  async updateLastTransactionPoints(userId: string, eventType: string, points: number): Promise<void> {
+    await this.pool.query(
+      `UPDATE efisystem_transactions
+       SET points = $3
+       WHERE id = (
+         SELECT id FROM efisystem_transactions
+         WHERE user_id = $1 AND event_type = $2
+         ORDER BY created_at DESC
+         LIMIT 1
+       )`,
+      [userId, eventType, points],
+    );
+  }
+
+  async countTodayTransactions(userId: string, eventType: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt
+       FROM efisystem_transactions
+       WHERE user_id = $1 AND event_type = $2
+         AND created_at >= CURRENT_DATE`,
+      [userId, eventType],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countAllTransactions(userId: string, eventType: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt
+       FROM efisystem_transactions
+       WHERE user_id = $1 AND event_type = $2`,
+      [userId, eventType],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async hasTransaction(userId: string, eventType: string): Promise<boolean> {
+    const result = await this.pool.query(
+      `SELECT 1 FROM efisystem_transactions
+       WHERE user_id = $1 AND event_type = $2
+       LIMIT 1`,
+      [userId, eventType],
+    );
+    return result.rows.length > 0;
+  }
+
+  async getUnlockedBadges(userId: string): Promise<BadgeKey[]> {
+    const result = await this.pool.query(
+      `SELECT badge_key FROM efisystem_badges
+       WHERE user_id = $1
+       ORDER BY unlocked_at ASC`,
+      [userId],
+    );
+    return result.rows.map((r: any) => r.badge_key as BadgeKey);
+  }
+
+  async unlockBadge(userId: string, badgeKey: BadgeKey): Promise<boolean> {
+    const result = await this.pool.query(
+      `INSERT INTO efisystem_badges (user_id, badge_key)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, badge_key) DO NOTHING`,
+      [userId, badgeKey],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getEfisystemSnapshot(userId: string): Promise<EfisystemSnapshot> {
+    const [summary, badges] = await Promise.all([
+      this.getEfisystemSummary(userId),
+      this.getUnlockedBadges(userId),
+    ]);
+    return {
+      totalPoints: summary.totalPoints,
+      currentLevel: summary.currentLevel,
+      unlockedBadges: badges,
+    };
+  }
+
+  async countPartners(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM partners WHERE user_id = $1`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countContacts(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM contacts WHERE user_id = $1`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countGoals(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM goals WHERE user_id = $1`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countTasksCreated(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks WHERE user_id = $1`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countCompletedTasks(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1 AND status IN ('Completada', 'Cobrado')`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  async countPaidTasks(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1 AND status = 'Cobrado'`,
+      [userId],
+    );
+    return result.rows[0].cnt;
   }
 }

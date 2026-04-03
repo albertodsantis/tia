@@ -21,6 +21,7 @@ import { createMediaKitRouter } from './routes/mediakit';
 import { initPool, closePool } from './db/connection';
 import { runMigrations } from './db/migrate';
 import { PostgresAppStore } from './db/repository';
+import { GamificationService } from './services/gamification';
 import type pg from 'pg';
 
 const PgSession = connectPgSimple(session);
@@ -94,7 +95,8 @@ export async function createApp(): Promise<{
   // Public media kit route (no auth required)
   app.use('/mk', createMediaKitRouter(pool));
 
-  app.use('/api/v1', createV1Router(appStore, pool));
+  const gamification = new GamificationService(appStore);
+  app.use('/api/v1', createV1Router(appStore, pool, gamification));
   app.use('/api/auth', authLimiter, createAuthRouter(oauth2Client, env.APP_URL, pool));
   app.use('/api/calendar', createCalendarRouter(oauth2Client));
 

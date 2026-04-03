@@ -28,6 +28,7 @@ import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import WelcomeColorPicker from './views/WelcomeColorPicker';
 import Toaster from './components/Toaster';
+import Confetti from './components/Confetti';
 import MoreOptionsMenu from './components/MoreOptionsMenu';
 import LegalModal from './components/LegalModal';
 import type { LegalPage } from './components/LegalModal';
@@ -687,6 +688,7 @@ const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
       {!isBootstrapping && !bootstrapError ? <OnboardingTour forceRun={forceOnboarding} /> : null}
       <MainLayout />
       <Toaster />
+      <Confetti />
     </>
   );
 };

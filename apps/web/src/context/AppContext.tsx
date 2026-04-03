@@ -7,7 +7,10 @@ import {
 import type {
   AppState,
   AppTheme,
+  BadgeKey,
   Contact,
+  EfisystemAward,
+  EfisystemSnapshot,
   Partner,
   Task,
   Template,
@@ -17,6 +20,26 @@ import type {
 import { appApi } from '../lib/api';
 import { getAccentCssVariables, getGradientCss, getRepresentativeHex, getSurfaceOverrides, isGradientAccent } from '../lib/accent';
 import { addLocalDays, formatLocalDateISO } from '../lib/date';
+import { toast } from '../lib/toast';
+
+// ── Badge display labels ──────────────────────────────────────
+const BADGE_LABELS: Record<BadgeKey, string> = {
+  perfil_estelar: 'Perfil Estelar',
+  vision_clara: 'Visión Clara',
+  circulo_intimo: 'Círculo Íntimo',
+  directorio_dorado: 'Directorio Dorado',
+  motor_de_ideas: 'Motor de Ideas',
+  promesa_cumplida: 'Promesa Cumplida',
+  creador_imparable: 'Creador Imparable',
+  negocio_en_marcha: 'Negocio en Marcha',
+  lluvia_de_billetes: 'Lluvia de Billetes',
+};
+
+const emptyEfisystem: EfisystemSnapshot = {
+  totalPoints: 0,
+  currentLevel: 1,
+  unlockedBadges: [],
+};
 
 interface AppContextType extends AppState {
   email: string;
@@ -27,6 +50,7 @@ interface AppContextType extends AppState {
   isBootstrapping: boolean;
   bootstrapError: string | null;
   actionError: string | null;
+  efisystem: EfisystemSnapshot;
   onLogout: () => void;
   refreshAppData: () => Promise<void>;
   dismissActionError: () => void;
@@ -101,17 +125,46 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => void; email: string; provider: 'email' | 'google'; onProviderChange: (provider: 'email' | 'google') => void }> = ({ children, onLogout, email, provider, onProviderChange }) => {
   const [state, setState] = useState<AppState>(emptyState);
+  const [efisystem, setEfisystem] = useState<EfisystemSnapshot>(emptyEfisystem);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // ── Award processing ──────────────────────────────────────────
+  const applyAward = (award: EfisystemAward | undefined, toastMsg?: string) => {
+    if (!award || award.pointsEarned === 0) return;
+
+    setEfisystem((current) => ({
+      totalPoints: award.newTotal,
+      currentLevel: award.newLevel,
+      unlockedBadges: [
+        ...current.unlockedBadges,
+        ...award.newBadges.filter((b) => !current.unlockedBadges.includes(b)),
+      ],
+    }));
+
+    if (award.leveledUp) {
+      window.dispatchEvent(new CustomEvent('efi-confetti'));
+      toast.success(`¡Subiste al Nivel ${award.newLevel}! ⚡`);
+    }
+
+    award.newBadges.forEach((badge) => {
+      toast.success(`Logro desbloqueado: ${BADGE_LABELS[badge] ?? badge}`);
+    });
+
+    if (toastMsg) {
+      toast.success(toastMsg, award.pointsEarned);
+    }
+  };
 
   const refreshAppData = async () => {
     setIsBootstrapping(true);
     setBootstrapError(null);
 
     try {
-      const { appState } = await appApi.getBootstrap();
+      const { appState, efisystem: efisystemData } = await appApi.getBootstrap();
       setState(normalizeAppState(appState));
+      setEfisystem(efisystemData ?? emptyEfisystem);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo cargar la app.';
       setBootstrapError(message);
@@ -233,7 +286,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
       return existingPartner;
     }
 
-    const createdPartner = await appApi.createPartner({
+    const res = await appApi.createPartner({
       name: normalizedName,
       status,
       logo,
@@ -248,23 +301,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
 
     setState((current) => ({
       ...current,
-      partners: upsertPartnerInState(current.partners, createdPartner),
+      partners: upsertPartnerInState(current.partners, res),
     }));
 
-    return createdPartner;
+    applyAward(res.efisystem, 'Colaboradora agregada');
+
+    return res;
   };
 
   const addTask = async (task: Omit<Task, 'id' | 'createdAt'>) => {
     setActionError(null);
 
     try {
-      const createdTask = await appApi.createTask(task);
+      const res = await appApi.createTask(task);
       setState((current) => ({
         ...current,
-        tasks: [...current.tasks, createdTask],
+        tasks: [...current.tasks, res],
       }));
 
-      return createdTask;
+      applyAward(res.efisystem, 'Entrega creada');
+
+      return res;
     } catch (error) {
       return trackError(error);
     }
@@ -275,7 +332,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     const previousTask = state.tasks.find((task) => task.id === taskId);
 
     try {
-      const updatedTask = await appApi.updateTask(taskId, { status });
+      const res = await appApi.updateTask(taskId, { status });
 
       if (
         previousTask &&
@@ -291,8 +348,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
 
       setState((current) => ({
         ...current,
-        tasks: current.tasks.map((task) => (task.id === taskId ? updatedTask : task)),
+        tasks: current.tasks.map((task) => (task.id === taskId ? res : task)),
       }));
+
+      // Confetti on Cobrado
+      if (status === 'Cobrado' && previousTask?.status !== 'Cobrado') {
+        window.dispatchEvent(new CustomEvent('efi-confetti'));
+      }
+
+      applyAward(res.efisystem);
     } catch (error) {
       trackError(error);
     }
@@ -302,13 +366,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     setActionError(null);
 
     try {
-      const updatedTask = await appApi.updateTask(taskId, updates);
+      const res = await appApi.updateTask(taskId, updates);
       setState((current) => ({
         ...current,
-        tasks: current.tasks.map((task) => (task.id === taskId ? updatedTask : task)),
+        tasks: current.tasks.map((task) => (task.id === taskId ? res : task)),
       }));
 
-      return updatedTask;
+      applyAward(res.efisystem);
+
+      return res;
     } catch (error) {
       return trackError(error);
     }
@@ -393,15 +459,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     setActionError(null);
 
     try {
-      const createdContact = await appApi.addContact(partnerId, contact);
+      const res = await appApi.addContact(partnerId, contact);
       setState((current) => ({
         ...current,
         partners: current.partners.map((partner) =>
           partner.id === partnerId
-            ? { ...partner, contacts: [...partner.contacts, createdContact] }
+            ? { ...partner, contacts: [...partner.contacts, res] }
             : partner,
         ),
       }));
+
+      applyAward(res.efisystem);
     } catch (error) {
       trackError(error);
     }
@@ -459,12 +527,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     setActionError(null);
 
     try {
-      const updatedProfile = await appApi.updateProfile(profile);
-      const normalized = normalizeProfile(updatedProfile);
+      const res = await appApi.updateProfile(profile);
+      const normalized = normalizeProfile(res);
       setState((current) => ({
         ...current,
         profile: normalized,
       }));
+      applyAward((res as any).efisystem);
       return normalized;
     } catch (error) {
       return trackError(error);
@@ -475,12 +544,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     setActionError(null);
 
     try {
-      const settings = await appApi.updateSettings({ accentColor: color });
+      const res = await appApi.updateSettings({ accentColor: color });
       setState((current) => ({
         ...current,
-        accentColor: settings.accentColor,
-        theme: settings.theme,
+        accentColor: res.accentColor,
+        theme: res.theme,
       }));
+      applyAward((res as any).efisystem);
     } catch (error) {
       trackError(error);
     }
@@ -546,6 +616,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         isBootstrapping,
         bootstrapError,
         actionError,
+        efisystem,
         onLogout,
         refreshAppData,
         dismissActionError,
