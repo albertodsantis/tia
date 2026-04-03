@@ -209,7 +209,7 @@ export default function Landing({
 
             <p className="mt-5 max-w-lg text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
               Gestiona colaboraciones, entregables y contactos desde un workspace
-              compacto diseñado para influencers y freelancers creativos.
+              compacto diseñado para freelancers creativos.
             </p>
 
             {/* Feature grid - visible on desktop below hero */}
