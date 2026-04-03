@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lightning } from '@phosphor-icons/react';
+import { Lightning, Trophy } from '@phosphor-icons/react';
 import type { BadgeKey, EfisystemSnapshot } from '@shared';
 import { SurfaceCard } from './ui';
 
@@ -64,9 +64,10 @@ function getPromptText(unlockedBadges: BadgeKey[]): string {
 interface Props {
   efisystem: EfisystemSnapshot;
   accentHex: string;
+  onOpenBadges?: () => void;
 }
 
-export default function EfisystemWidget({ efisystem, accentHex }: Props) {
+export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges }: Props) {
   const { totalPoints, currentLevel, unlockedBadges } = efisystem;
   const { current: currentThreshold, next: nextThreshold } = getThresholds(currentLevel);
   const isMaxLevel = currentLevel >= 10;
@@ -114,8 +115,25 @@ export default function EfisystemWidget({ efisystem, accentHex }: Props) {
         )}
       </div>
 
-      {/* Prompt */}
-      <p className="mt-3 text-xs text-(--text-secondary) leading-relaxed">{promptText}</p>
+      {/* Prompt + Medallas button */}
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <p className="text-xs text-(--text-secondary) leading-relaxed">{promptText}</p>
+        {onOpenBadges && (
+          <button
+            type="button"
+            onClick={onOpenBadges}
+            className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              background: `linear-gradient(135deg, ${accentHex}22 0%, ${accentHex}38 100%)`,
+              color: accentHex,
+              border: `1px solid ${accentHex}44`,
+            }}
+          >
+            <Trophy size={13} weight="fill" />
+            Medallas
+          </button>
+        )}
+      </div>
     </SurfaceCard>
   );
 }

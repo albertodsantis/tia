@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CalendarDot,
   CheckCircle,
@@ -15,6 +16,7 @@ import {
   CurrencyDollar,
   Money,
   Target,
+  X,
 } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import { EmptyState, StatusBadge, SurfaceCard, cx } from '../components/ui';
@@ -527,25 +529,51 @@ function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) 
   );
 }
 
-function AchievementsGrid({ unlockedBadges }: { unlockedBadges: BadgeKey[] }) {
-  return (
-    <SurfaceCard className="p-5">
-      <div className="mb-4">
-        <h2 className="text-base font-bold tracking-tight text-(--text-primary)">Logros</h2>
-        <p className="mt-0.5 text-xs text-(--text-secondary)">
-          {unlockedBadges.length} de {ALL_BADGES.length} desbloqueados
-        </p>
+/* ── BadgesDrawer ───────────────────────────────────────────── */
+
+function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[]; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Panel */}
+      <div className="relative flex h-full w-full max-w-sm flex-col bg-[var(--surface-card)] shadow-2xl animate-in slide-in-from-right duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-5 py-4">
+          <div>
+            <h2 className="text-base font-bold text-[var(--text-primary)]">Logros</h2>
+            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+              {unlockedBadges.length} de {ALL_BADGES.length} desbloqueados
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="grid grid-cols-3 gap-3">
+            {ALL_BADGES.map((badge) => (
+              <BadgeTile key={badge.key} badge={badge} unlocked={unlockedBadges.includes(badge.key)} />
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-        {ALL_BADGES.map((badge) => (
-          <BadgeTile
-            key={badge.key}
-            badge={badge}
-            unlocked={unlockedBadges.includes(badge.key)}
-          />
-        ))}
-      </div>
-    </SurfaceCard>
+    </div>,
+    document.body,
   );
 }
 
@@ -562,6 +590,7 @@ export default function Dashboard() {
   const weekEnd = new Date(startOfToday);
   weekEnd.setDate(weekEnd.getDate() + 6);
 
+  const [badgesOpen, setBadgesOpen] = useState(false);
   const [periodView, setPeriodView] = useState<'month' | 'year' | 'all'>('month');
   const [periodMonth, setPeriodMonth] = useState(today.getMonth());
   const [periodYear, setPeriodYear] = useState(today.getFullYear());
@@ -725,9 +754,11 @@ export default function Dashboard() {
         <GoalsMarquee goals={generalGoals} accentHex={accentHex} accentGradient={accentGradient} />
       )}
 
-      {/* Efisystem: level widget + achievements */}
-      <EfisystemWidget efisystem={efisystem} accentHex={accentHex} />
-      <AchievementsGrid unlockedBadges={efisystem.unlockedBadges} />
+      {/* Efisystem: level widget */}
+      <EfisystemWidget efisystem={efisystem} accentHex={accentHex} onOpenBadges={() => setBadgesOpen(true)} />
+      {badgesOpen && (
+        <BadgesDrawer unlockedBadges={efisystem.unlockedBadges} onClose={() => setBadgesOpen(false)} />
+      )}
 
       {/* Main 2-col grid */}
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
