@@ -108,6 +108,14 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
             content: 'El directorio te da contexto de marca, contactos y outreach sin salir del workspace.',
           },
           {
+            target: '#nav-strategic',
+            content: 'Estrategia visualiza cómo tus tareas y marcas contribuyen a tus objetivos de negocio.',
+          },
+          {
+            target: '#nav-profile',
+            content: 'Perfil define tu identidad, objetivos y material de presentación ante marcas.',
+          },
+          {
             target: '#nav-settings',
             content: 'Desde ajustes controlas tema, integraciones y plantillas reutilizables.',
           },
@@ -133,6 +141,16 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           {
             target: '#nav-directory',
             content: 'Directorio concentra marcas, contactos y outreach sin salir de la app.',
+            placement: 'top',
+          },
+          {
+            target: '#nav-strategic',
+            content: 'Estrategia conecta tus tareas y marcas con los objetivos de negocio.',
+            placement: 'top',
+          },
+          {
+            target: '#nav-profile',
+            content: 'Perfil es tu identidad y material de presentación ante marcas.',
             placement: 'top',
           },
           {
