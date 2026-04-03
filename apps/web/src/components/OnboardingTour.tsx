@@ -97,7 +97,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           {
             target: '#nav-dashboard',
             content:
-              'Aqui aterrizas con el resumen operativo: valor abierto, entregables cercanos y senales del pipeline.',
+              'Dashboard: Resumen operativo de todo tu workspace.',
           },
           {
             target: '#nav-pipeline',
@@ -109,22 +109,22 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           },
           {
             target: '#nav-strategic',
-            content: 'Estrategia visualiza cómo tus tareas y marcas contribuyen a tus objetivos de negocio.',
+            content: 'Estrategia para visualizar tus objetivos generales.',
           },
           {
             target: '#nav-profile',
-            content: 'Perfil define tu identidad, objetivos y material de presentación ante marcas.',
+            content: 'Perfil define tu identidad y crea tu material de presentación para clientes.',
           },
           {
             target: '#nav-settings',
-            content: 'Desde ajustes controlas tema, integraciones y plantillas reutilizables.',
+            content: 'Desde ajustes gestionas tus plantillas, elige tema, notificaciones y integraciones.',
           },
         ]
       : [
           {
             target: 'body',
             content:
-              'Bienvenid@ a Efi. En movil vas a moverte sobre todo con la barra inferior y siempre volveras rapido a cada modulo.',
+              'Bienvenid@ a Efi. En el telefono vas a moverte sobre todo con la barra inferior.',
             placement: 'center',
             disableBeacon: true,
           },
