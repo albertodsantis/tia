@@ -130,32 +130,32 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           },
           {
             target: '#nav-dashboard',
-            content: 'Inicio te devuelve al resumen del dia y al estado general del workspace.',
+            content: 'Dashboard: Resumen operativo de todo tu workspace.',
             placement: 'top',
           },
           {
             target: '#nav-pipeline',
-            content: 'Pipeline es tu mesa operativa para tareas, fases y calendario.',
+            content: 'El pipeline concentra tareas, fases y calendario en una misma superficie.',
             placement: 'top',
           },
           {
             target: '#nav-directory',
-            content: 'Directorio concentra marcas, contactos y outreach sin salir de la app.',
+            content: 'El directorio te da contexto de marca, contactos y outreach sin salir del workspace.',
             placement: 'top',
           },
           {
             target: '#nav-strategic',
-            content: 'Estrategia conecta tus tareas y marcas con los objetivos de negocio.',
+            content: 'Estrategia para visualizar tus objetivos generales.',
             placement: 'top',
           },
           {
             target: '#nav-profile',
-            content: 'Perfil es tu identidad y material de presentación ante marcas.',
+            content: 'Perfil define tu identidad y crea tu material de presentación para clientes.',
             placement: 'top',
           },
           {
             target: '#nav-settings',
-            content: 'Ajustes agrupa tema, integraciones, plantillas y utilidades del sistema.',
+            content: 'Desde ajustes gestionas tus plantillas, elige tema, notificaciones y integraciones.',
             placement: 'top',
           },
         ];
