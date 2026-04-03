@@ -532,6 +532,13 @@ function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) 
 /* ── BadgesDrawer ───────────────────────────────────────────── */
 
 function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[]; onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
@@ -542,17 +549,17 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
       {/* Panel */}
-      <div className="relative flex h-full w-full max-w-sm flex-col bg-[var(--surface-card)] shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className={`relative flex h-full w-full max-w-sm flex-col bg-(--surface-card) shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-5 py-4">
           <div>
-            <h2 className="text-base font-bold text-[var(--text-primary)]">Logros</h2>
+            <h2 className="text-base font-bold text-[var(--text-primary)]">Emblemas</h2>
             <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-              {unlockedBadges.length} de {ALL_BADGES.length} desbloqueados
+              {unlockedBadges.length} de {ALL_BADGES.length} ganados
             </p>
           </div>
           <button
