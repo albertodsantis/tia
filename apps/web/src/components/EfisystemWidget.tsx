@@ -40,7 +40,7 @@ function getThresholds(level: number): { current: number; next: number } {
 
 const PROMPTS: Array<{ badge: BadgeKey; text: string }> = [
   { badge: 'perfil_estelar', text: 'Completa tu perfil para ganar +100 ⚡' },
-  { badge: 'vision_clara', text: 'Define 3 objetivos estratégicos para ganar +100 ⚡' },
+  { badge: 'vision_clara', text: 'Define 3 objetivos estratégicos para desbloquear Visión Clara' },
   { badge: 'motor_de_ideas', text: 'Crea 5 entregas en tu pipeline para ganar tu próximo logro' },
   { badge: 'circulo_intimo', text: 'Agrega 5 socios a tu red para ganar tu próximo logro' },
   { badge: 'promesa_cumplida', text: 'Completa 10 entregas para ganar tu próximo logro' },

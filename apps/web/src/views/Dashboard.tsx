@@ -772,7 +772,7 @@ export default function Dashboard() {
       {/* Main 2-col grid */}
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
         {/* ── Left: stacked cards ────────────────────────── */}
-        <div className="space-y-5">
+        <div className="order-2 space-y-5 xl:order-1">
           {/* Financial Flow */}
           <SurfaceCard className="relative overflow-hidden p-5 lg:p-6">
             <div
@@ -987,10 +987,10 @@ export default function Dashboard() {
 
         </div>
 
-        {/* ── Right: Tu día ──────────────────────────────── */}
-        <SurfaceCard className="p-5 lg:p-6">
+        {/* ── Right: Agenda ──────────────────────────────── */}
+        <SurfaceCard className="order-1 p-5 lg:p-6 xl:order-2">
           <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            Tu día
+            Agenda
           </p>
 
           {hasAgendaItems ? (
