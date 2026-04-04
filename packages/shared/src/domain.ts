@@ -240,6 +240,7 @@ export type PointEventType =
   | 'network_first_contact'
   | 'network_contact_subsequent'
   | 'pipeline_first_task'
+  | 'pipeline_first_checklist_item'
   | 'pipeline_task_moved'
   | 'pipeline_task_completed'
   | 'pipeline_task_paid';

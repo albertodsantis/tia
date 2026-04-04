@@ -1589,7 +1589,7 @@ export default function Pipeline() {
               <div className="mb-3 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <ListChecks size={14} />
-                  Checklist
+                  Sub-Tareas
                 </label>
                 {checklistItems.length > 0 && (
                   <span className="text-xs font-bold tabular-nums text-[var(--text-secondary)]">

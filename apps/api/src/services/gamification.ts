@@ -72,6 +72,7 @@ export class GamificationService {
       case 'network_first_partner':
       case 'network_first_contact':
       case 'pipeline_first_task':
+      case 'pipeline_first_checklist_item':
       case 'pipeline_task_moved': {
         const already = await this.appStore.hasTransaction(userId, eventType);
         if (!already) {
@@ -207,5 +208,6 @@ const POINTS: Partial<Record<PointEventType, number>> = {
   network_first_partner: 20,
   network_first_contact: 20,
   pipeline_first_task: 20,
+  pipeline_first_checklist_item: 20,
   pipeline_task_moved: 10,
 };

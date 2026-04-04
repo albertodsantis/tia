@@ -141,6 +141,9 @@ export function createV1Router(appStore: PostgresAppStore, _pool: pg.Pool, gamif
         efisystem = await gamification.processEvent(userId, 'pipeline_task_completed');
       } else if (body.status !== undefined) {
         efisystem = await gamification.processEvent(userId, 'pipeline_task_moved');
+      } else if (Array.isArray(body.checklistItems) && body.checklistItems.length > 0) {
+        const award = await gamification.processEvent(userId, 'pipeline_first_checklist_item');
+        if (award.pointsEarned > 0) efisystem = award;
       }
 
       res.json({ ...task, ...(efisystem ? { efisystem } : {}) });
