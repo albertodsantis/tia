@@ -227,6 +227,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               value: Number(value),
               dueDate,
               status: 'Pendiente',
+              checklistItems: [],
             });
 
             functionResponses.push({

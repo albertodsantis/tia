@@ -2,6 +2,7 @@ import type {
   AppState,
   AppTheme,
   BadgeKey,
+  ChecklistItem,
   Contact,
   EfisystemAward,
   EfisystemSnapshot,
@@ -53,6 +54,7 @@ export interface CreateTaskRequest {
   value: number;
   gcalEventId?: string;
   actualPayment?: number;
+  checklistItems?: ChecklistItem[];
 }
 
 export type UpdateTaskRequest = Partial<CreateTaskRequest>;

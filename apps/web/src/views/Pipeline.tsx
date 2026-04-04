@@ -6,18 +6,21 @@ import {
   CalendarBlank,
   CalendarDots,
   CheckCircle,
+  Circle,
   CaretDown,
   CaretLeft,
   CaretRight,
   CurrencyCircleDollar,
   CloudArrowDown,
   List,
+  ListChecks,
   PencilLine,
   Plus,
   ArrowClockwise,
   MagnifyingGlass,
   Kanban,
   TextT,
+  X,
 } from '@phosphor-icons/react';
 import {
   DndContext,
@@ -30,7 +33,7 @@ import {
   useDraggable,
   useDroppable,
 } from '@dnd-kit/core';
-import { getPartnerLookupKey, type Task, type TaskStatus } from '@shared';
+import { getPartnerLookupKey, type ChecklistItem, type Task, type TaskStatus } from '@shared';
 import { Target } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import OverlayModal from '../components/OverlayModal';
@@ -397,6 +400,10 @@ export default function Pipeline() {
     () => typeof window !== 'undefined' && window.innerWidth >= 1536,
   );
   const [searchQuery, setMagnifyingGlassQuery] = useState('');
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [newItemText, setNewItemText] = useState('');
+  const [poppingId, setPoppingId] = useState<string | null>(null);
+  const newItemInputRef = useRef<HTMLInputElement>(null);
 
   const sortedTasks = useMemo(
     () => [...tasks].sort((a, b) => parseLocalDate(a.dueDate).getTime() - parseLocalDate(b.dueDate).getTime()),
@@ -506,6 +513,8 @@ export default function Pipeline() {
     setEditingTaskId(null);
     setForm(EMPTY_FORM);
     setIsPartnerPickerOpen(false);
+    setChecklistItems([]);
+    setNewItemText('');
   };
 
   const requestTaskDeletion = (task: Task) => {
@@ -531,6 +540,7 @@ export default function Pipeline() {
       status: task.status,
       goalId: task.goalId || '',
     });
+    setChecklistItems(task.checklistItems ?? []);
     setIsPartnerPickerOpen(false);
     setModalMode('edit');
   };
@@ -562,6 +572,7 @@ export default function Pipeline() {
         dueDate: form.dueDate,
         value: Number(form.value) || 0,
         goalId: form.goalId || undefined,
+        checklistItems: [],
       };
 
       if (modalMode === 'edit' && editingTaskId) {
@@ -578,6 +589,41 @@ export default function Pipeline() {
     } finally {
       setIsSubmittingTask(false);
     }
+  };
+
+  const saveChecklist = async (items: ChecklistItem[]) => {
+    if (!editingTaskId) return;
+    try {
+      await updateTask(editingTaskId, { checklistItems: items } as any);
+    } catch {
+      toast.error('Error al guardar el checklist');
+    }
+  };
+
+  const toggleChecklistItem = (id: string) => {
+    setPoppingId(id);
+    setTimeout(() => setPoppingId(null), 250);
+    const updated = checklistItems.map((item) =>
+      item.id === id ? { ...item, done: !item.done } : item,
+    );
+    setChecklistItems(updated);
+    void saveChecklist(updated);
+  };
+
+  const addChecklistItem = () => {
+    const text = newItemText.trim();
+    if (!text) return;
+    const newItem: ChecklistItem = { id: crypto.randomUUID(), text, done: false };
+    const updated = [...checklistItems, newItem];
+    setChecklistItems(updated);
+    setNewItemText('');
+    void saveChecklist(updated);
+  };
+
+  const deleteChecklistItem = (id: string) => {
+    const updated = checklistItems.filter((item) => item.id !== id);
+    setChecklistItems(updated);
+    void saveChecklist(updated);
   };
 
   const changeStatus = async (taskId: string, status: TaskStatus) => {
@@ -745,6 +791,12 @@ export default function Pipeline() {
             <StatusBadge tone={isOverdue ? 'danger' : 'neutral'}>
               {formatTaskDate(task.dueDate, { day: '2-digit', month: 'short' })}{relativeTime ? ` · ${relativeTime}` : ''}
             </StatusBadge>
+            {task.checklistItems.length > 0 && (
+              <StatusBadge tone="neutral">
+                <ListChecks size={11} />
+                {task.checklistItems.filter((i) => i.done).length}/{task.checklistItems.length}
+              </StatusBadge>
+            )}
           </div>
 
           <p
@@ -1532,6 +1584,85 @@ export default function Pipeline() {
               )}
             </div>
           </div>
+
+          {modalMode === 'edit' && (
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                  <ListChecks size={14} />
+                  Checklist
+                </label>
+                {checklistItems.length > 0 && (
+                  <span className="text-xs font-bold tabular-nums text-[var(--text-secondary)]">
+                    {checklistItems.filter((i) => i.done).length}/{checklistItems.length}
+                  </span>
+                )}
+              </div>
+
+              <div className="overflow-hidden rounded-[1.2rem] border [border-color:var(--line-soft)]">
+                {[...checklistItems.filter((i) => !i.done), ...checklistItems.filter((i) => i.done)].map((item) => (
+                  <div
+                    key={item.id}
+                    className="group flex items-center gap-3 border-b px-4 py-3 transition-colors last:border-b-0 [border-color:var(--line-soft)]"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleChecklistItem(item.id)}
+                      className="shrink-0"
+                      aria-label={item.done ? 'Marcar pendiente' : 'Marcar completado'}
+                    >
+                      <span className={cx('inline-flex', poppingId === item.id && 'animate-check-pop')}>
+                        {item.done ? (
+                          <CheckCircle weight="fill" size={20} style={{ color: accentHex }} />
+                        ) : (
+                          <Circle size={20} className="text-[var(--text-secondary)]/30" />
+                        )}
+                      </span>
+                    </button>
+
+                    <span
+                      className={cx(
+                        'flex-1 text-sm leading-5 transition-all duration-200',
+                        item.done
+                          ? 'text-[var(--text-secondary)]/40 line-through'
+                          : 'text-[var(--text-primary)]',
+                      )}
+                    >
+                      {item.text}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteChecklistItem(item.id)}
+                      className="shrink-0 text-[var(--text-secondary)]/40 opacity-0 transition-opacity hover:text-[var(--text-secondary)] group-hover:opacity-100"
+                      aria-label="Eliminar elemento"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Plus size={20} className="shrink-0 text-[var(--text-secondary)]/30" />
+                  <input
+                    ref={newItemInputRef}
+                    type="text"
+                    value={newItemText}
+                    onChange={(e) => setNewItemText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addChecklistItem();
+                      }
+                    }}
+                    onBlur={addChecklistItem}
+                    placeholder="Añadir elemento..."
+                    className="flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]/40"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
             </form>
           </ModalPanel>
         </OverlayModal>

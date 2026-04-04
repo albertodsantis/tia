@@ -185,6 +185,7 @@ function mapRowToTask(row: any): Task {
     ...(row.completed_at ? { completedAt: row.completed_at instanceof Date ? row.completed_at.toISOString() : row.completed_at } : {}),
     ...(row.cobrado_at ? { cobradoAt: row.cobrado_at instanceof Date ? row.cobrado_at.toISOString() : row.cobrado_at } : {}),
     ...(row.actual_payment != null ? { actualPayment: Number(row.actual_payment) } : {}),
+    checklistItems: Array.isArray(row.checklist_items) ? row.checklist_items : [],
   };
 }
 
@@ -299,7 +300,7 @@ export class PostgresAppStore {
       ),
       this.pool.query(
         `SELECT id, title, description, partner_id, goal_id, status, due_date, value, gcal_event_id,
-                created_at, completed_at, cobrado_at, actual_payment
+                created_at, completed_at, cobrado_at, actual_payment, checklist_items
          FROM tasks WHERE user_id = $1 ORDER BY due_date ASC LIMIT 4`,
         [userId],
       ),
@@ -317,7 +318,7 @@ export class PostgresAppStore {
   async listTasks(userId: string): Promise<Task[]> {
     const { rows } = await this.pool.query(
       `SELECT id, title, description, partner_id, goal_id, status, due_date, value, gcal_event_id,
-              created_at, completed_at, cobrado_at, actual_payment
+              created_at, completed_at, cobrado_at, actual_payment, checklist_items
        FROM tasks WHERE user_id = $1 ORDER BY due_date ASC`,
       [userId],
     );
@@ -381,6 +382,7 @@ export class PostgresAppStore {
       createdAt,
       ...(gcalEventId ? { gcalEventId } : {}),
       ...(actualPayment != null ? { actualPayment } : {}),
+      checklistItems: [],
     };
   }
 
@@ -451,11 +453,15 @@ export class PostgresAppStore {
       setClauses.push(`goal_id = $${idx++}`);
       values.push(gid);
     }
+    if ((updates as any).checklistItems !== undefined) {
+      setClauses.push(`checklist_items = $${idx++}`);
+      values.push(JSON.stringify((updates as any).checklistItems));
+    }
 
     if (setClauses.length === 0) {
       const { rows } = await this.pool.query(
         `SELECT id, title, description, partner_id, goal_id, status, due_date, value, gcal_event_id,
-                created_at, completed_at, cobrado_at, actual_payment
+                created_at, completed_at, cobrado_at, actual_payment, checklist_items
          FROM tasks WHERE id = $1 AND user_id = $2`,
         [taskId, userId],
       );
@@ -469,7 +475,7 @@ export class PostgresAppStore {
     const { rows: updated } = await this.pool.query(
       `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${idx} AND user_id = $${idx + 1} RETURNING
        id, title, description, partner_id, goal_id, status, due_date, value, gcal_event_id,
-       created_at, completed_at, cobrado_at, actual_payment`,
+       created_at, completed_at, cobrado_at, actual_payment, checklist_items`,
       values,
     );
 

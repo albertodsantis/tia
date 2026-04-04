@@ -43,6 +43,12 @@ export function getPartnerLookupKey(value: string) {
   return value.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -57,6 +63,7 @@ export interface Task {
   completedAt?: string;
   cobradoAt?: string;
   actualPayment?: number;
+  checklistItems: ChecklistItem[];
 }
 
 export interface TaskStatusTransition {

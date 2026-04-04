@@ -7,11 +7,18 @@
   --font-sans: var(--font-primary);
   --font-playwrite: "Playwrite Ireland", cursive;
   --animate-shimmer: shimmer 3s infinite;
+  --animate-check-pop: check-pop 0.22s ease-out;
 
   @keyframes shimmer {
     0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; }
     20% { opacity: 0.5; }
     40%, 100% { transform: translateX(150%) skewX(-15deg); opacity: 0; }
+  }
+
+  @keyframes check-pop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.28); }
+    100% { transform: scale(1); }
   }
 }
 

@@ -44,6 +44,7 @@ const initialState: AppState = {
       dueDate: '2026-03-22',
       value: 1500,
       createdAt: '2026-03-10T10:00:00.000Z',
+      checklistItems: [],
     },
     {
       id: '2',
@@ -54,6 +55,7 @@ const initialState: AppState = {
       dueDate: '2026-04-05',
       value: 2000,
       createdAt: '2026-03-12T14:00:00.000Z',
+      checklistItems: [],
     },
     {
       id: '3',
@@ -64,6 +66,7 @@ const initialState: AppState = {
       dueDate: '2026-03-20',
       value: 800,
       createdAt: '2026-03-08T09:00:00.000Z',
+      checklistItems: [],
     },
   ],
   partners: [
@@ -393,6 +396,7 @@ class InMemoryAppStore {
       gcalEventId: normalizeOptionalText(input.gcalEventId),
       createdAt: now,
       actualPayment: input.actualPayment !== undefined ? normalizeMoney(input.actualPayment) : undefined,
+      checklistItems: [],
     };
 
     const partnerExists = this.state.partners.some((partner) => partner.id === task.partnerId);
