@@ -572,7 +572,7 @@ export default function Pipeline() {
         dueDate: form.dueDate,
         value: Number(form.value) || 0,
         goalId: form.goalId || undefined,
-        checklistItems: [],
+        checklistItems,
       };
 
       if (modalMode === 'edit' && editingTaskId) {
@@ -1435,7 +1435,7 @@ export default function Pipeline() {
                 required
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
-                className={cx(fieldClass, 'min-h-[110px]')}
+                className={cx(fieldClass, 'min-h-[56px]')}
                 style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder=""
               />
@@ -1585,8 +1585,7 @@ export default function Pipeline() {
             </div>
           </div>
 
-          {modalMode === 'edit' && (
-            <div>
+          <div>
               <div className="mb-3 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <ListChecks size={14} />
@@ -1662,7 +1661,6 @@ export default function Pipeline() {
                 </div>
               </div>
             </div>
-          )}
             </form>
           </ModalPanel>
         </OverlayModal>
