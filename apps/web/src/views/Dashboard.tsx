@@ -572,7 +572,7 @@ const BADGE_MATERIALS: Record<BadgeKey, MaterialStyle> = {
   },
 };
 
-function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) {
+function BadgeTile({ badge, unlocked, accentHex }: { badge: BadgeDef; unlocked: boolean; accentHex: string }) {
   const Icon = badge.icon;
   const mat = BADGE_MATERIALS[badge.key];
 
@@ -616,7 +616,7 @@ function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) 
           style={
             unlocked
               ? {
-                  background: 'linear-gradient(180deg, #2a2a3c 0%, #18182a 100%)',
+                  background: `linear-gradient(180deg, color-mix(in srgb, ${accentHex} 12%, #1a1a24) 0%, color-mix(in srgb, ${accentHex} 6%, #111118) 100%)`,
                   borderBottom: `3px solid ${mat.tileBorderColor}`,
                   boxShadow: `0 6px 16px -2px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), 0 3px 8px -2px ${mat.tileBorderColor}`,
                 }
@@ -658,7 +658,7 @@ function BadgeTile({ badge, unlocked }: { badge: BadgeDef; unlocked: boolean }) 
 
 /* ── BadgesDrawer ───────────────────────────────────────────── */
 
-function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[]; onClose: () => void }) {
+function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: BadgeKey[]; onClose: () => void; accentHex: string }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -682,12 +682,12 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
       {/* Panel */}
       <div
         className={`relative flex h-full w-full max-w-sm flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ background: 'linear-gradient(180deg, #0e0e1a 0%, #090910 55%, #060608 100%)' }}
+        style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${accentHex} 8%, #0c0c14) 0%, #090910 55%, #060608 100%)` }}
       >
         {/* Ambient ceiling glow */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-72"
-          style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(70,50,160,0.45) 0%, transparent 68%)' }}
+          style={{ background: `radial-gradient(ellipse at 50% -10%, ${accentHex}70 0%, transparent 68%)` }}
         />
 
         {/* Header */}
@@ -697,7 +697,7 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
         >
           <div>
             <h2 className="text-base font-bold" style={{ color: '#dcdcf0' }}>Sala de Placas</h2>
-            <p className="mt-0.5 text-xs" style={{ color: '#50508a' }}>
+            <p className="mt-0.5 text-xs" style={{ color: `${accentHex}88` }}>
               {unlockedBadges.length} de {ALL_BADGES.length} ganados
             </p>
           </div>
@@ -705,7 +705,7 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
             type="button"
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
-            style={{ color: '#50508a' }}
+            style={{ color: `${accentHex}88` }}
           >
             <X size={18} />
           </button>
@@ -715,7 +715,7 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
         <div className="relative z-10 flex-1 overflow-y-auto p-5">
           <div className="grid grid-cols-3 gap-x-3 gap-y-7">
             {ALL_BADGES.map((badge) => (
-              <BadgeTile key={badge.key} badge={badge} unlocked={unlockedBadges.includes(badge.key)} />
+              <BadgeTile key={badge.key} badge={badge} unlocked={unlockedBadges.includes(badge.key)} accentHex={accentHex} />
             ))}
           </div>
         </div>
@@ -907,7 +907,7 @@ export default function Dashboard() {
         <EfisystemWidget efisystem={efisystem} accentHex={accentHex} onOpenBadges={() => setBadgesOpen(true)} />
       </div>
       {badgesOpen && (
-        <BadgesDrawer unlockedBadges={efisystem.unlockedBadges} onClose={() => setBadgesOpen(false)} />
+        <BadgesDrawer unlockedBadges={efisystem.unlockedBadges} onClose={() => setBadgesOpen(false)} accentHex={accentHex} />
       )}
 
       {/* Main 2-col grid */}
