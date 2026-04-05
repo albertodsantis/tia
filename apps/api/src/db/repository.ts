@@ -94,6 +94,7 @@ function normalizeEmail(email: string | undefined) {
 
 const ALLOWED_GRADIENTS = new Set(['instagram']);
 const ALLOWED_CONICS = new Set(['tiktok']);
+const ALLOWED_RETROS = new Set(['crt']);
 
 function normalizeAccentColor(color: string | undefined) {
   const normalized = normalizeRequiredText(color, 'El color');
@@ -108,6 +109,13 @@ function normalizeAccentColor(color: string | undefined) {
     const key = normalized.slice('conic:'.length);
     if (!ALLOWED_CONICS.has(key)) {
       throw new Error('El tema no es valido.');
+    }
+    return normalized;
+  }
+  if (normalized.startsWith('retro:')) {
+    const key = normalized.slice('retro:'.length);
+    if (!ALLOWED_RETROS.has(key)) {
+      throw new Error('El tema retro no es valido.');
     }
     return normalized;
   }
