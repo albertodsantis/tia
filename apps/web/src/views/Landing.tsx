@@ -46,7 +46,7 @@ const professions = [
   { label: 'Conferencista',        Icon: Presentation },
   { label: 'DJ',                   Icon: Headphones },
   { label: 'Reclutador',           Icon: Briefcase },
-  { label: 'Coach',                Icon: Compass },
+  { label: 'Asesoría / Consultoría',                Icon: Compass },
 ];
 
 const features = [
