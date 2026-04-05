@@ -1,25 +1,63 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ChartBar,
-  BriefcaseMetal,
-  CheckCircle,
+  Article,
   ArrowSquareOut,
-  Copy,
-  FolderPlus,
-  Image,
+  Broadcast,
+  BriefcaseMetal,
+  Briefcase,
+  Camera,
+  ChartBar,
+  ChatsCircle,
+  CheckCircle,
   CircleNotch,
+  Compass,
+  Copy,
+  FloppyDisk,
+  FolderPlus,
+  Headphones,
+  Image,
+  Microphone,
+  MonitorPlay,
+  PencilLine,
   Plus,
+  Presentation,
+  Radio,
   Sparkle,
+  Star,
   Trash,
   Users,
+  Warning,
   X,
 } from '@phosphor-icons/react';
-import type { MediaKitMetric, MediaKitOffer, MediaKitProfile, Partner, SocialProfiles, UserProfile } from '@shared';
+import type { FreelancerType, MediaKitMetric, MediaKitOffer, MediaKitProfile, Partner, SocialProfiles, UserProfile } from '@shared';
+import OverlayModal from '../components/OverlayModal';
+import { PROFESSION_LABELS } from '../lib/professions';
 import { useAppContext } from '../context/AppContext';
 import { Avatar, Button, SurfaceCard, cx } from '../components/ui';
 import ImageUpload from '../components/ImageUpload';
 import { appApi } from '../lib/api';
 import { toast } from '../lib/toast';
+
+// ─── Profession catalogue (icons + labels) ───────────────────────────────────
+
+const PROFESSION_ICONS: Record<FreelancerType, React.ElementType> = {
+  content_creator:   Star,
+  podcaster:         Microphone,
+  streamer:          MonitorPlay,
+  radio:             Radio,
+  photographer:      Camera,
+  copywriter:        Article,
+  community_manager: ChatsCircle,
+  host_mc:           Broadcast,
+  speaker:           Presentation,
+  dj:                Headphones,
+  recruiter:         Briefcase,
+  coach:             Compass,
+};
+
+const PROFESSIONS_LIST = Object.keys(PROFESSION_LABELS) as FreelancerType[];
+
+// ─── Profile field styles ─────────────────────────────────────────────────────
 
 const fieldClass =
   'w-full rounded-[1rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-4 py-3.5 text-base sm:text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:outline-none focus:ring-2';
@@ -126,6 +164,236 @@ function SectionHeader({
   );
 }
 
+// ─── ProfessionModal ──────────────────────────────────────────────────────────
+
+function ProfessionModal({
+  primaryProfession,
+  secondaryProfessions,
+  accentHex,
+  accentGradient,
+  onClose,
+  onSave,
+}: {
+  primaryProfession: FreelancerType | undefined;
+  secondaryProfessions: FreelancerType[];
+  accentHex: string;
+  accentGradient: string;
+  onClose: () => void;
+  onSave: (primary: FreelancerType, secondaries: FreelancerType[]) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [primary, setPrimary] = useState<FreelancerType | null>(primaryProfession ?? null);
+  const [secondaries, setSecondaries] = useState<FreelancerType[]>(secondaryProfessions);
+  const [saving, setSaving] = useState(false);
+
+  const toggleSecondary = (value: FreelancerType) => {
+    setSecondaries((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  const handleSave = async () => {
+    if (!primary) return;
+    setSaving(true);
+    try {
+      await onSave(primary, secondaries);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    setPrimary(primaryProfession ?? null);
+    setSecondaries(secondaryProfessions);
+    setEditing(true);
+  };
+
+  const PrimaryIcon = primary ? PROFESSION_ICONS[primary] : null;
+
+  return (
+    <OverlayModal onClose={onClose}>
+      <div className="relative mx-auto w-full max-w-md rounded-[1.5rem] border border-[var(--line-soft)] bg-[var(--surface-card-strong)] shadow-[var(--shadow-floating)]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-6 py-4">
+          <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/80 uppercase">
+            Tu actividad
+          </p>
+          <div className="flex items-center gap-2">
+            {!editing && (
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                className="flex items-center gap-1.5 rounded-xl border border-[var(--line-soft)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              >
+                <PencilLine size={12} />
+                Editar
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl p-1.5 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          {!editing ? (
+            /* ── Read mode ── */
+            <div>
+              {primaryProfession ? (
+                <>
+                  <p className="mb-2 text-[10px] font-bold tracking-widest text-[var(--text-secondary)]/60 uppercase">
+                    Principal
+                  </p>
+                  <div
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                    style={{ backgroundColor: `${accentHex}15`, border: `1px solid ${accentHex}30` }}
+                  >
+                    {PrimaryIcon && (
+                      <PrimaryIcon size={20} weight="duotone" style={{ color: accentHex, flexShrink: 0 }} />
+                    )}
+                    <span className="text-sm font-bold" style={{ color: accentHex }}>
+                      {PROFESSION_LABELS[primaryProfession]}
+                    </span>
+                  </div>
+
+                  {secondaryProfessions.length > 0 && (
+                    <div className="mt-4">
+                      <p className="mb-2 text-[10px] font-bold tracking-widest text-[var(--text-secondary)]/60 uppercase">
+                        También
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {secondaryProfessions.map((s) => {
+                          const Icon = PROFESSION_ICONS[s];
+                          return (
+                            <span
+                              key={s}
+                              className="flex items-center gap-1.5 rounded-full border border-[var(--line-soft)] bg-[var(--surface-muted)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)]"
+                            >
+                              <Icon size={12} weight="duotone" />
+                              {PROFESSION_LABELS[s]}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="mt-5 text-[11px] leading-5 text-[var(--text-secondary)]/60">
+                    En el futuro, tu actividad principal determinará la plantilla de tu perfil público.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  No has definido tu actividad principal todavía.
+                </p>
+              )}
+            </div>
+          ) : (
+            /* ── Edit mode ── */
+            <div>
+              {/* Warning */}
+              <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <Warning size={16} weight="fill" className="mt-0.5 shrink-0 text-amber-500" />
+                <p className="text-xs leading-5 text-amber-700 dark:text-amber-300">
+                  Cambiar tu actividad principal afectará la plantilla de tu perfil público en el futuro. Hazlo con cuidado.
+                </p>
+              </div>
+
+              {/* Primary picker */}
+              <p className="mb-2 text-[10px] font-bold tracking-widest text-[var(--text-secondary)]/60 uppercase">
+                Actividad principal
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {PROFESSIONS_LIST.map((value) => {
+                  const selected = primary === value;
+                  const Icon = PROFESSION_ICONS[value];
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setPrimary(value)}
+                      className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition-all duration-100 active:scale-[0.97]"
+                      style={{
+                        borderColor: selected ? accentHex : 'var(--line-soft)',
+                        backgroundColor: selected ? `${accentHex}12` : 'var(--surface-card)',
+                        color: selected ? accentHex : 'var(--text-primary)',
+                      }}
+                    >
+                      <Icon
+                        size={16}
+                        weight="duotone"
+                        style={{ color: selected ? accentHex : 'var(--text-secondary)', flexShrink: 0 }}
+                      />
+                      {PROFESSION_LABELS[value]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Secondary picker */}
+              {primary && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[10px] font-bold tracking-widest text-[var(--text-secondary)]/60 uppercase">
+                    También hago <span className="normal-case font-normal tracking-normal text-[var(--text-tertiary)]">(opcional)</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {PROFESSIONS_LIST.filter((v) => v !== primary).map((value) => {
+                      const active = secondaries.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => toggleSecondary(value)}
+                          className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-100"
+                          style={{
+                            borderColor: active ? accentHex : 'var(--line-soft)',
+                            backgroundColor: active ? `${accentHex}12` : 'var(--surface-card)',
+                            color: active ? accentHex : 'var(--text-secondary)',
+                          }}
+                        >
+                          {PROFESSION_LABELS[value]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="flex-1 rounded-2xl border border-[var(--line-soft)] py-3 text-sm font-bold text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-muted)]/50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={!primary || saving}
+                  onClick={handleSave}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: accentGradient }}
+                >
+                  {saving ? <CircleNotch size={15} className="animate-spin" /> : <FloppyDisk size={15} />}
+                  {saving ? 'Guardando…' : 'Guardar'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </OverlayModal>
+  );
+}
+
+// ─── Profile view ─────────────────────────────────────────────────────────────
+
 export default function Profile() {
   const { profile, updateProfile, accentColor, accentHex, accentGradient, partners, addPartner } = useAppContext();
   const [profileForm, setProfileForm] = useState<UserProfile>(() => {
@@ -143,6 +411,7 @@ export default function Profile() {
   const profileFormRef = useRef(profileForm);
   profileFormRef.current = profileForm;
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [professionModalOpen, setProfessionModalOpen] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedDisplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -657,6 +926,21 @@ export default function Profile() {
                 <p className="mt-2 text-sm font-semibold text-[var(--text-secondary)]">
                   {profileForm.handle || '@usuario'}
                 </p>
+                {/* Profession chip */}
+                {(() => {
+                  const prof = profile.primaryProfession;
+                  const Icon = prof ? PROFESSION_ICONS[prof] : null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setProfessionModalOpen(true)}
+                      className="mt-2 flex items-center gap-1.5 rounded-full border border-[var(--line-soft)] bg-[var(--surface-card)] px-3 py-1 text-xs font-semibold text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                    >
+                      {Icon && <Icon size={12} weight="duotone" style={{ color: accentHex }} />}
+                      {prof ? PROFESSION_LABELS[prof] : 'Definir actividad'}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 
@@ -1260,6 +1544,20 @@ export default function Profile() {
       </div>
 
       </div>
+
+      {professionModalOpen && (
+        <ProfessionModal
+          primaryProfession={profile.primaryProfession}
+          secondaryProfessions={profile.secondaryProfessions ?? []}
+          accentHex={accentHex}
+          accentGradient={accentGradient}
+          onClose={() => setProfessionModalOpen(false)}
+          onSave={async (primary, secondaries) => {
+            await updateProfile({ primaryProfession: primary, secondaryProfessions: secondaries });
+            toast.success('Actividad actualizada');
+          }}
+        />
+      )}
     </div>
   );
 }
