@@ -242,8 +242,6 @@ function ProfessionStep({
   onToggleSecondary: (v: FreelancerType) => void;
   onNext: () => void;
 }) {
-  const secondaryOptions = PROFESSIONS.filter((p) => p.value !== primary);
-
   return (
     <div>
       <h2 className="mb-1 text-center text-xl font-bold text-(--text-primary)">
@@ -292,18 +290,21 @@ function ProfessionStep({
             ¿También haces alguna de estas? <span className="text-(--text-tertiary)">(opcional)</span>
           </p>
           <div className="flex flex-wrap gap-2">
-            {secondaryOptions.map(({ value }) => {
+            {PROFESSIONS.map(({ value }) => {
+              const isPrimary = value === primary;
               const active = secondaries.includes(value);
               return (
                 <button
                   key={value}
                   type="button"
-                  onClick={() => onToggleSecondary(value)}
-                  className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150"
+                  onClick={() => !isPrimary && onToggleSecondary(value)}
+                  disabled={isPrimary}
+                  className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 disabled:cursor-not-allowed"
                   style={{
-                    borderColor: active ? 'var(--accent)' : 'var(--border-subtle)',
-                    backgroundColor: active ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
-                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    borderColor: isPrimary ? 'var(--accent)' : active ? 'var(--accent)' : 'var(--border-subtle)',
+                    backgroundColor: isPrimary ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : active ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
+                    color: isPrimary ? 'var(--accent)' : active ? 'var(--accent)' : 'var(--text-secondary)',
+                    opacity: isPrimary ? 0.45 : 1,
                   }}
                 >
                   {PROFESSION_LABELS[value]}
