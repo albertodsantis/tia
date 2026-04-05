@@ -89,17 +89,16 @@ function TermsContent() {
 
       <Section title="Aceptación de los términos">
         <p>
-          Al crear una cuenta y usar Tía, aceptas estos Términos y Condiciones. Si no estás de
+          Al crear una cuenta y usar Efi, aceptas estos Términos y Condiciones. Si no estás de
           acuerdo, no debes usar el servicio.
         </p>
       </Section>
 
       <Section title="Descripción del servicio">
         <p>
-          Tía es una plataforma de CRM personal diseñada para creadores de contenido e
-          influencers. Permite gestionar relaciones con marcas y colaboradores, hacer seguimiento
-          de campañas y organizar tareas. Es un espacio personal — no existe colaboración entre
-          cuentas.
+          Efi es una plataforma de CRM personal diseñada para freelancers. Permite gestionar
+          relaciones con clientes y colaboradores, hacer seguimiento de proyectos y organizar
+          tareas. Es un espacio personal — no existe colaboración entre cuentas.
         </p>
       </Section>
 
@@ -123,14 +122,14 @@ function TermsContent() {
 
       <Section title="Propiedad intelectual">
         <p>
-          El software, diseño y marca de Tía son propiedad de sus creadores y están protegidos por
+          El software, diseño y marca de Efi son propiedad de sus creadores y están protegidos por
           las leyes de propiedad intelectual. Tus datos y contenidos siguen siendo tuyos.
         </p>
       </Section>
 
       <Section title="Limitación de responsabilidad">
         <p>
-          Tía se proporciona «tal cual», sin garantías de disponibilidad continua. No somos
+          Efi se proporciona «tal cual», sin garantías de disponibilidad continua. No somos
           responsables de pérdidas de datos derivadas de fallos técnicos imprevisibles. Recomendamos
           exportar tus datos periódicamente.
         </p>
@@ -187,7 +186,7 @@ function CookiesContent() {
           Si inicias sesión con Google, Google puede establecer sus propias cookies de
           autenticación. Estas están sujetas a la{' '}
           <strong className="text-[var(--text-primary)]">Política de Privacidad de Google</strong>.
-          Tía no establece ninguna cookie de publicidad, analítica de terceros ni rastreo.
+          Efi no establece ninguna cookie de publicidad, analítica de terceros ni rastreo.
         </p>
       </Section>
 
@@ -206,8 +205,8 @@ function CookiesContent() {
 function FaqContent() {
   const items = [
     {
-      q: '¿Qué es Tía?',
-      a: 'Tía es un CRM personal para creadores de contenido e influencers. Te ayuda a gestionar tus colaboraciones con marcas, hacer seguimiento de campañas y mantener tus contactos organizados en un solo lugar.',
+      q: '¿Qué es Efi?',
+      a: 'Efi es un CRM personal para freelancers. Te ayuda a gestionar tus proyectos con clientes, hacer seguimiento de entregas y mantener tus contactos organizados en un solo lugar.',
     },
     {
       q: '¿Cómo agrego un nuevo partner o colaboración?',
@@ -230,7 +229,7 @@ function FaqContent() {
       a: 'Puedes cerrar sesión desde el botón de la barra lateral. Para eliminar tu cuenta y todos tus datos, escríbenos a soporte@efi.app y lo gestionamos en 48 horas.',
     },
     {
-      q: '¿Tía funciona en el móvil?',
+      q: '¿Efi funciona en el móvil?',
       a: 'Sí. La interfaz está optimizada para escritorio y móvil. En dispositivos pequeños verás la navegación en la parte inferior de la pantalla.',
     },
     {

@@ -215,14 +215,14 @@ export default function Landing({
           {/* Left: Hero */}
           <div className="max-w-2xl">
             <h1 className="mt-6 text-[clamp(2.2rem,5.5vw,3.8rem)] font-black leading-[1.08] tracking-tight text-[var(--text-primary)]">
-              Tu espacio operativo para{' '}
+              El lado fácil de ser{' '}
               <span
                 className="bg-clip-text text-transparent"
                 style={{
                   backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
                 }}
               >
-                freelancers.
+                freelancer.
               </span>
             </h1>
 
