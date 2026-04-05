@@ -15,6 +15,7 @@ import type {
   GoogleAuthUrlResponse,
   LoginRequest,
   MeResponse,
+  NotificationsResponse,
   Partner,
   PartnerWithAward,
   RegisterRequest,
@@ -180,4 +181,7 @@ export const appApi = {
       method: 'DELETE',
       body: JSON.stringify({ path }),
     }),
+  getNotifications: () => apiRequest<NotificationsResponse>('/api/v1/notifications'),
+  markNotificationsSeen: () =>
+    apiRequest<{ success: boolean }>('/api/v1/notifications/seen', { method: 'PATCH' }),
 };

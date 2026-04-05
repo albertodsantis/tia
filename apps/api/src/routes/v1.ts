@@ -5,11 +5,13 @@ import type pg from 'pg';
 import { isStorageConfigured, uploadFile, deleteFile } from '../lib/storage';
 import type {
   AppBootstrapResponse,
+  AppNotification,
   CreateContactRequest,
   CreatePartnerRequest,
   CreateTaskRequest,
   CreateTemplateRequest,
   DashboardSummaryResponse,
+  NotificationsResponse,
   SessionUser,
   SettingsResponse,
   StrategicViewResponse,
@@ -399,6 +401,216 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
       res.json(history);
     } catch (error) {
       console.error('Partner status history error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /* ── Notifications ────────────────────────────────────────── */
+
+  router.get('/notifications', async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const threeDaysLater = new Date(today);
+      threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+
+      const [tasksResult, goalsResult, partnersResult, contactsResult, efisystem, settingsResult] =
+        await Promise.all([
+          pool.query(
+            `SELECT id, title, status, due_date, completed_at FROM tasks WHERE user_id = $1`,
+            [userId],
+          ),
+          pool.query(`SELECT id FROM goals WHERE user_id = $1`, [userId]),
+          pool.query(`SELECT id FROM partners WHERE user_id = $1`, [userId]),
+          pool.query(`SELECT id FROM contacts WHERE user_id = $1`, [userId]),
+          appStore.getEfisystemSnapshot(userId),
+          pool.query(
+            `SELECT last_seen_notifications_at FROM user_settings WHERE user_id = $1`,
+            [userId],
+          ),
+        ]);
+
+      const notifications: AppNotification[] = [];
+
+      // ── Agenda ──────────────────────────────────────────────
+      const active = tasksResult.rows.filter(
+        t => t.status !== 'Completada' && t.status !== 'Cobrado',
+      );
+      const overdue = active.filter(t => new Date(t.due_date) < today);
+      const dueSoon = active.filter(t => {
+        const d = new Date(t.due_date);
+        return d >= today && d <= threeDaysLater;
+      });
+      const unpaid = tasksResult.rows.filter(t => t.status === 'Completada');
+
+      if (overdue.length === 1) {
+        notifications.push({
+          id: `overdue-${overdue[0].id}`,
+          category: 'agenda',
+          title: 'Entrega vencida',
+          body: `"${overdue[0].title}" ya pasó su fecha límite.`,
+          actionTab: 'pipeline',
+        });
+      } else if (overdue.length > 1) {
+        notifications.push({
+          id: 'overdue-multiple',
+          category: 'agenda',
+          title: `${overdue.length} entregas vencidas`,
+          body: 'Tienes entregas pendientes con fecha límite vencida.',
+          actionTab: 'pipeline',
+        });
+      }
+
+      if (dueSoon.length === 1) {
+        notifications.push({
+          id: `due-soon-${dueSoon[0].id}`,
+          category: 'agenda',
+          title: 'Entrega próxima',
+          body: `"${dueSoon[0].title}" vence en los próximos 3 días.`,
+          actionTab: 'pipeline',
+        });
+      } else if (dueSoon.length > 1) {
+        notifications.push({
+          id: 'due-soon-multiple',
+          category: 'agenda',
+          title: `${dueSoon.length} entregas próximas`,
+          body: 'Tienes entregas que vencen en los próximos 3 días.',
+          actionTab: 'pipeline',
+        });
+      }
+
+      if (unpaid.length === 1) {
+        notifications.push({
+          id: `unpaid-${unpaid[0].id}`,
+          category: 'agenda',
+          title: 'Cobro pendiente',
+          body: `"${unpaid[0].title}" está completa pero sin cobrar.`,
+          actionTab: 'pipeline',
+        });
+      } else if (unpaid.length > 1) {
+        notifications.push({
+          id: 'unpaid-multiple',
+          category: 'agenda',
+          title: `${unpaid.length} cobros pendientes`,
+          body: 'Tienes entregas completadas que aún no has cobrado.',
+          actionTab: 'pipeline',
+        });
+      }
+
+      // ── Gamificación ─────────────────────────────────────────
+      const unlockedBadges = new Set(efisystem.unlockedBadges);
+      const goalCount = goalsResult.rows.length;
+      const partnerCount = partnersResult.rows.length;
+      const contactCount = contactsResult.rows.length;
+      const totalTasks = tasksResult.rows.length;
+      const completedTasks = tasksResult.rows.filter(
+        t => t.status === 'Completada' || t.status === 'Cobrado',
+      ).length;
+      const paidTasks = tasksResult.rows.filter(t => t.status === 'Cobrado').length;
+
+      type GamificationNudge = AppNotification & { progress: number };
+      const nudges: GamificationNudge[] = [];
+
+      if (!unlockedBadges.has('vision_clara') && goalCount > 0 && goalCount < 3) {
+        const missing = 3 - goalCount;
+        nudges.push({
+          id: 'badge-vision-clara',
+          category: 'gamification',
+          title: 'Cerca de "Visión Clara"',
+          body: `Define ${missing} objetivo${missing > 1 ? 's' : ''} más para desbloquear esta placa.`,
+          actionTab: 'strategic',
+          progress: goalCount / 3,
+        });
+      }
+      if (!unlockedBadges.has('circulo_intimo') && partnerCount > 0 && partnerCount < 5) {
+        const missing = 5 - partnerCount;
+        nudges.push({
+          id: 'badge-circulo-intimo',
+          category: 'gamification',
+          title: 'Cerca de "Círculo Íntimo"',
+          body: `Agrega ${missing} socio${missing > 1 ? 's' : ''} más para desbloquear esta placa.`,
+          actionTab: 'directory',
+          progress: partnerCount / 5,
+        });
+      }
+      if (!unlockedBadges.has('directorio_dorado') && (partnerCount >= 7 || contactCount >= 7)) {
+        const p = Math.min(partnerCount, 10) / 10;
+        const c = Math.min(contactCount, 10) / 10;
+        nudges.push({
+          id: 'badge-directorio-dorado',
+          category: 'gamification',
+          title: 'Cerca de "Directorio Dorado"',
+          body: `Necesitas ${Math.max(0, 10 - partnerCount)} socios y ${Math.max(0, 10 - contactCount)} contactos más.`,
+          actionTab: 'directory',
+          progress: (p + c) / 2,
+        });
+      }
+      if (!unlockedBadges.has('motor_de_ideas') && totalTasks > 0 && totalTasks < 5) {
+        const missing = 5 - totalTasks;
+        nudges.push({
+          id: 'badge-motor-de-ideas',
+          category: 'gamification',
+          title: 'Cerca de "Motor de Ideas"',
+          body: `Crea ${missing} entrega${missing > 1 ? 's' : ''} más para desbloquear esta placa.`,
+          actionTab: 'pipeline',
+          progress: totalTasks / 5,
+        });
+      }
+      if (!unlockedBadges.has('promesa_cumplida') && completedTasks > 0 && completedTasks < 10) {
+        const missing = 10 - completedTasks;
+        nudges.push({
+          id: 'badge-promesa-cumplida',
+          category: 'gamification',
+          title: 'Cerca de "Promesa Cumplida"',
+          body: `Completa ${missing} entrega${missing > 1 ? 's' : ''} más para desbloquear esta placa.`,
+          actionTab: 'pipeline',
+          progress: completedTasks / 10,
+        });
+      }
+      if (!unlockedBadges.has('negocio_en_marcha') && paidTasks > 0 && paidTasks < 5) {
+        const missing = 5 - paidTasks;
+        nudges.push({
+          id: 'badge-negocio-en-marcha',
+          category: 'gamification',
+          title: 'Cerca de "Negocio en Marcha"',
+          body: `Cobra ${missing} entrega${missing > 1 ? 's' : ''} más para desbloquear esta placa.`,
+          actionTab: 'pipeline',
+          progress: paidTasks / 5,
+        });
+      }
+
+      // Add top 2 gamification nudges sorted by proximity to goal
+      nudges.sort((a, b) => b.progress - a.progress);
+      for (const { progress: _p, ...nudge } of nudges.slice(0, 2)) {
+        notifications.push(nudge);
+      }
+
+      // ── hasUnread ─────────────────────────────────────────────
+      const lastSeen: Date | null = settingsResult.rows[0]?.last_seen_notifications_at ?? null;
+      const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
+      const hasUnread = notifications.length > 0 && (!lastSeen || lastSeen < eightHoursAgo);
+
+      const response: NotificationsResponse = { notifications, hasUnread };
+      res.json(response);
+    } catch (error) {
+      console.error('Notifications error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/notifications/seen', async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      await pool.query(
+        `INSERT INTO user_settings (user_id, last_seen_notifications_at)
+         VALUES ($1, NOW())
+         ON CONFLICT (user_id) DO UPDATE SET last_seen_notifications_at = NOW()`,
+        [userId],
+      );
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Notifications seen error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

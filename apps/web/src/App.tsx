@@ -31,6 +31,7 @@ import WelcomeOnboarding from './views/WelcomeOnboarding';
 import Toaster from './components/Toaster';
 import Confetti from './components/Confetti';
 import MoreOptionsMenu from './components/MoreOptionsMenu';
+import NotificationBell from './components/NotificationBell';
 import LegalModal from './components/LegalModal';
 import type { LegalPage } from './components/LegalModal';
 import { Avatar, SurfaceCard, cx } from './components/ui';
@@ -614,7 +615,10 @@ const MainLayout = () => {
                   <p className={cx('text-[var(--text-secondary)] flex-1 min-w-0 hidden lg:block', isDesktop ? 'text-sm leading-6' : 'text-xs leading-5')}>
                     {activeTabConfig.description}
                   </p>
-                  <MoreOptionsMenu onSelect={setActiveLegalPage} />
+                  <div className="ml-auto flex items-center shrink-0">
+                    <NotificationBell onNavigate={setActiveTab} />
+                    <MoreOptionsMenu onSelect={setActiveLegalPage} />
+                  </div>
                 </div>
 
                 <div

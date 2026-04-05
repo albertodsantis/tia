@@ -1,4 +1,5 @@
 import type {
+  AppNotification,
   AppState,
   AppTheme,
   BadgeKey,
@@ -36,7 +37,12 @@ export interface ContactWithAward extends Contact {
 }
 
 // Re-export for convenience
-export type { BadgeKey, EfisystemAward, EfisystemSnapshot };
+export type { AppNotification, BadgeKey, EfisystemAward, EfisystemSnapshot };
+
+export interface NotificationsResponse {
+  notifications: AppNotification[];
+  hasUnread: boolean;
+}
 
 export interface DashboardSummaryResponse {
   activePipelineValue: number;

@@ -244,6 +244,20 @@ export interface AppState {
 }
 
 // ────────────────────────────────────────────────────────────
+// Notifications
+// ────────────────────────────────────────────────────────────
+
+export type AppNotificationCategory = 'agenda' | 'gamification';
+
+export interface AppNotification {
+  id: string;
+  category: AppNotificationCategory;
+  title: string;
+  body: string;
+  actionTab?: string;
+}
+
+// ────────────────────────────────────────────────────────────
 // Efisystem — gamification types
 // ────────────────────────────────────────────────────────────
 
