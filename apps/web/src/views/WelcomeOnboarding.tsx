@@ -18,22 +18,23 @@ import {
 } from '@phosphor-icons/react';
 import type { FreelancerType } from '@shared';
 import { useAppContext } from '../context/AppContext';
+import { PROFESSION_LABELS } from '../lib/professions';
 
 // ─── Profession catalogue ────────────────────────────────────────────────────
 
-const PROFESSIONS: { value: FreelancerType; label: string; Icon: React.ElementType }[] = [
-  { value: 'content_creator',  label: 'Creador de contenido', Icon: Star },
-  { value: 'podcaster',        label: 'Podcaster',            Icon: Microphone },
-  { value: 'streamer',         label: 'Streamer',             Icon: MonitorPlay },
-  { value: 'radio',            label: 'Radio',                Icon: Radio },
-  { value: 'photographer',     label: 'Fotógrafo',            Icon: Camera },
-  { value: 'copywriter',       label: 'Copywriter',           Icon: Article },
-  { value: 'community_manager',label: 'Community Manager',    Icon: ChatsCircle },
-  { value: 'host_mc',          label: 'Host / Presentador',   Icon: Broadcast },
-  { value: 'speaker',          label: 'Conferencista',        Icon: Presentation },
-  { value: 'dj',               label: 'DJ',                   Icon: Headphones },
-  { value: 'recruiter',        label: 'Reclutador',           Icon: Briefcase },
-  { value: 'coach',            label: 'Coach',                Icon: Compass },
+const PROFESSIONS: { value: FreelancerType; Icon: React.ElementType }[] = [
+  { value: 'content_creator',   Icon: Star },
+  { value: 'podcaster',         Icon: Microphone },
+  { value: 'streamer',          Icon: MonitorPlay },
+  { value: 'radio',             Icon: Radio },
+  { value: 'photographer',      Icon: Camera },
+  { value: 'copywriter',        Icon: Article },
+  { value: 'community_manager', Icon: ChatsCircle },
+  { value: 'host_mc',           Icon: Broadcast },
+  { value: 'speaker',           Icon: Presentation },
+  { value: 'dj',                Icon: Headphones },
+  { value: 'recruiter',         Icon: Briefcase },
+  { value: 'coach',             Icon: Compass },
 ];
 
 // ─── Background decoration ───────────────────────────────────────────────────
@@ -45,7 +46,7 @@ function Glows() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
       <div
-        className="absolute -top-32 right-[-10%] h-112 w-112 rounded-full blur-[120px] opacity-30"
+        className="absolute -top-32 right-[-10%] h-112 w-md rounded-full blur-[120px] opacity-30"
         style={{ backgroundColor: BRAND_ORANGE }}
       />
       <div
@@ -254,8 +255,9 @@ function ProfessionStep({
 
       {/* Primary grid — 2 columns */}
       <div className="grid grid-cols-2 gap-2.5">
-        {PROFESSIONS.map(({ value, label, Icon }) => {
+        {PROFESSIONS.map(({ value, Icon }) => {
           const selected = primary === value;
+          const label = PROFESSION_LABELS[value];
           return (
             <button
               key={value}
@@ -290,7 +292,7 @@ function ProfessionStep({
             ¿También haces alguna de estas? <span className="text-(--text-tertiary)">(opcional)</span>
           </p>
           <div className="flex flex-wrap gap-2">
-            {secondaryOptions.map(({ value, label }) => {
+            {secondaryOptions.map(({ value }) => {
               const active = secondaries.includes(value);
               return (
                 <button
@@ -304,7 +306,7 @@ function ProfessionStep({
                     color: active ? 'var(--accent)' : 'var(--text-secondary)',
                   }}
                 >
-                  {label}
+                  {PROFESSION_LABELS[value]}
                 </button>
               );
             })}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Target,
   TrendUp,
@@ -22,6 +22,7 @@ import {
 import OverlayModal from '../components/OverlayModal';
 import CustomSelect from '../components/CustomSelect';
 import { toast } from '../lib/toast';
+import { PROFESSION_LABELS } from '../lib/professions';
 import type { Goal, GoalAggregation, GoalPriority, GoalStatus, StrategicViewResponse } from '@shared';
 
 const formatCurrency = (v: number) => `$${v.toLocaleString('es-ES')}`;
@@ -60,7 +61,7 @@ const priorityColors: Record<string, string> = {
 };
 
 const fieldClass =
-  'w-full rounded-[1rem] border border-(--line-soft) bg-(--surface-card-strong) px-4 py-3 text-base sm:text-sm font-medium text-(--text-primary) transition-all placeholder:text-(--text-secondary)/70 focus:outline-none focus:ring-2';
+  'w-full rounded-2xl border border-(--line-soft) bg-(--surface-card-strong) px-4 py-3 text-base sm:text-sm font-medium text-(--text-primary) transition-all placeholder:text-(--text-secondary)/70 focus:outline-none focus:ring-2';
 
 const labelClass =
   'mb-2 block text-[11px] font-bold tracking-[0.16em] text-(--text-secondary)/80 uppercase';
@@ -267,6 +268,7 @@ function GoalFormModal({
   initial,
   accentHex,
   accentGradient,
+  professionSuggestions,
   onClose,
   onSave,
   onDelete,
@@ -274,12 +276,29 @@ function GoalFormModal({
   initial: ReturnType<typeof emptyGoalForm>;
   accentHex: string;
   accentGradient: string;
+  professionSuggestions: string[];
   onClose: () => void;
   onSave: (goal: ReturnType<typeof emptyGoalForm>) => void;
   onDelete?: () => void;
 }) {
   const [form, setForm] = useState(initial);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isNew = !initial.id;
+
+  const handleAreaFocus = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (professionSuggestions.length > 0) setShowSuggestions(true);
+  };
+
+  const handleAreaBlur = () => {
+    hideTimer.current = setTimeout(() => setShowSuggestions(false), 150);
+  };
+
+  const handleSuggestionPick = (label: string) => {
+    setField('area', label);
+    setShowSuggestions(false);
+  };
 
   const setField = <K extends keyof typeof form>(field: K, value: (typeof form)[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -306,7 +325,7 @@ function GoalFormModal({
               <button
                 type="button"
                 onClick={onDelete}
-                className="flex items-center gap-2 rounded-[1rem] border border-rose-200 bg-transparent px-4 py-3 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-50 dark:border-rose-500/20 dark:hover:bg-rose-500/10"
+                className="flex items-center gap-2 rounded-2xl border border-rose-200 bg-transparent px-4 py-3 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-50 dark:border-rose-500/20 dark:hover:bg-rose-500/10"
               >
                 <Trash size={14} />
                 Eliminar
@@ -315,7 +334,7 @@ function GoalFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-[1rem] border border-(--line-soft) bg-transparent px-4 py-3 text-sm font-bold text-(--text-primary) transition-colors hover:bg-(--surface-muted)/50"
+              className="flex-1 rounded-2xl border border-(--line-soft) bg-transparent px-4 py-3 text-sm font-bold text-(--text-primary) transition-colors hover:bg-(--surface-muted)/50"
             >
               Cancelar
             </button>
@@ -328,13 +347,31 @@ function GoalFormModal({
       >
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-1">
-            <label className={labelClass}>Área / Vertical</label>
-            <input
-              value={form.area}
-              onChange={(e) => setField('area', e.target.value)}
-              className={cx(fieldClass, 'bg-(--surface-muted)')}
-              style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-            />
+            <label className={labelClass}>Actividad</label>
+            <div className="relative">
+              <input
+                value={form.area}
+                onChange={(e) => setField('area', e.target.value)}
+                onFocus={handleAreaFocus}
+                onBlur={handleAreaBlur}
+                className={cx(fieldClass, 'bg-(--surface-muted)')}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+              />
+              {showSuggestions && (
+                <div className="absolute top-full left-0 right-0 z-20 mt-1 overflow-hidden rounded-2xl border border-(--line-soft) bg-(--surface-card) shadow-lg">
+                  {professionSuggestions.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onMouseDown={() => handleSuggestionPick(label)}
+                      className="w-full px-4 py-2.5 text-left text-sm font-medium text-(--text-primary) hover:bg-(--surface-muted) transition-colors"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>Objetivo General</label>
@@ -431,6 +468,13 @@ function GoalFormModal({
 
 export default function StrategicView() {
   const { accentHex, accentGradient, profile, updateProfile, tasks, partners } = useAppContext();
+
+  const professionSuggestions = useMemo(() => {
+    const labels: string[] = [];
+    if (profile.primaryProfession) labels.push(PROFESSION_LABELS[profile.primaryProfession]);
+    for (const s of profile.secondaryProfessions ?? []) labels.push(PROFESSION_LABELS[s]);
+    return labels;
+  }, [profile.primaryProfession, profile.secondaryProfessions]);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [modalGoal, setModalGoal] = useState<ReturnType<typeof emptyGoalForm> | null>(null);
   const [saving, setSaving] = useState(false);
@@ -565,7 +609,7 @@ export default function StrategicView() {
                     type="button"
                     onClick={() => setSelectedGoalId(item.goal.id)}
                     className={cx(
-                      'w-full rounded-[1rem] border px-4 py-4 text-left transition-all',
+                      'w-full rounded-2xl border px-4 py-4 text-left transition-all',
                       isActive
                         ? 'border-transparent bg-(--surface-card-strong) shadow-(--shadow-soft)'
                         : 'border-transparent bg-(--surface-card)/75 hover:bg-(--surface-muted)/90',
@@ -629,6 +673,7 @@ export default function StrategicView() {
           initial={modalGoal}
           accentHex={accentHex}
           accentGradient={accentGradient}
+          professionSuggestions={professionSuggestions}
           onClose={() => setModalGoal(null)}
           onSave={handleSaveModal}
           onDelete={modalGoal.id ? () => { setModalGoal(null); handleDeleteGoal(); } : undefined}
