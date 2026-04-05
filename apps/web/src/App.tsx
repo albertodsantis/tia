@@ -676,9 +676,10 @@ const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
     } catch {
       // Let the user proceed even if the API call fails
     }
-    if (!localStorage.getItem(ONBOARDING_STORAGE_KEY)) {
-      setForceOnboarding(true);
-    }
+    // Always show the tour for new users — clear any stale localStorage key
+    // from previous accounts on the same browser.
+    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    setForceOnboarding(true);
     setColorPicked(true);
   };
 

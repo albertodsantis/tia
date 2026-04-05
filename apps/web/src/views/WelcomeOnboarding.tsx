@@ -175,10 +175,10 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-200 flex items-center justify-center bg-(--surface-app) font-sans">
+    <div className="fixed inset-0 z-200 overflow-y-auto bg-(--surface-app) font-sans">
       <Glows />
 
-      <div className="relative z-10 w-full max-w-md px-6">
+      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-6 py-10">
         <ProgressDots current={step} />
 
         {step === 'profession' && (
