@@ -857,6 +857,8 @@ export class PostgresAppStore {
       mediaKit,
       goals: goalsResult.rows.map(mapRowToGoal),
       notificationsEnabled: row.notifications_enabled,
+      primaryProfession: row.primary_profession ?? undefined,
+      secondaryProfessions: row.secondary_professions ?? [],
     };
   }
 
@@ -901,6 +903,14 @@ export class PostgresAppStore {
       if (updates.notificationsEnabled !== undefined) {
         setClauses.push(`notifications_enabled = $${idx++}`);
         values.push(Boolean(updates.notificationsEnabled));
+      }
+      if (updates.primaryProfession !== undefined) {
+        setClauses.push(`primary_profession = $${idx++}`);
+        values.push(updates.primaryProfession);
+      }
+      if (updates.secondaryProfessions !== undefined) {
+        setClauses.push(`secondary_professions = $${idx++}`);
+        values.push(JSON.stringify(updates.secondaryProfessions));
       }
 
       if (updates.socialProfiles !== undefined) {

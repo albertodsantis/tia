@@ -310,7 +310,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
       partners: upsertPartnerInState(current.partners, res),
     }));
 
-    applyAward(res.efisystem, 'Colaboradora agregada');
+    applyAward(res.efisystem, 'Colaboración agregada');
 
     return res;
   };

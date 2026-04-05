@@ -11,6 +11,20 @@ export type PartnershipType = 'Permanente' | 'Plazo Fijo' | 'One Time' | 'Por de
 
 export type AppTheme = 'light' | 'dark';
 
+export type FreelancerType =
+  | 'content_creator'
+  | 'podcaster'
+  | 'streamer'
+  | 'radio'
+  | 'photographer'
+  | 'copywriter'
+  | 'community_manager'
+  | 'host_mc'
+  | 'speaker'
+  | 'dj'
+  | 'recruiter'
+  | 'coach';
+
 export interface Contact {
   id: string;
   name: string;
@@ -216,6 +230,8 @@ export interface UserProfile {
   mediaKit: MediaKitProfile;
   goals: Goal[];
   notificationsEnabled: boolean;
+  primaryProfession?: FreelancerType;
+  secondaryProfessions?: FreelancerType[];
 }
 
 export interface AppState {

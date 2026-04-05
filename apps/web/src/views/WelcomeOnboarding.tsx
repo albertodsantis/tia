@@ -1,25 +1,135 @@
 import React, { useRef, useState } from 'react';
-import { ArrowRight, Buildings, Target } from '@phosphor-icons/react';
+import {
+  ArrowRight,
+  Article,
+  Broadcast,
+  Briefcase,
+  Buildings,
+  Camera,
+  ChatsCircle,
+  Compass,
+  Headphones,
+  Microphone,
+  MonitorPlay,
+  Presentation,
+  Radio,
+  Star,
+  Target,
+} from '@phosphor-icons/react';
+import type { FreelancerType } from '@shared';
 import { useAppContext } from '../context/AppContext';
+
+// ─── Profession catalogue ────────────────────────────────────────────────────
+
+const PROFESSIONS: { value: FreelancerType; label: string; Icon: React.ElementType }[] = [
+  { value: 'content_creator',  label: 'Creador de contenido', Icon: Star },
+  { value: 'podcaster',        label: 'Podcaster',            Icon: Microphone },
+  { value: 'streamer',         label: 'Streamer',             Icon: MonitorPlay },
+  { value: 'radio',            label: 'Radio',                Icon: Radio },
+  { value: 'photographer',     label: 'Fotógrafo',            Icon: Camera },
+  { value: 'copywriter',       label: 'Copywriter',           Icon: Article },
+  { value: 'community_manager',label: 'Community Manager',    Icon: ChatsCircle },
+  { value: 'host_mc',          label: 'Host / Presentador',   Icon: Broadcast },
+  { value: 'speaker',          label: 'Conferencista',        Icon: Presentation },
+  { value: 'dj',               label: 'DJ',                   Icon: Headphones },
+  { value: 'recruiter',        label: 'Reclutador',           Icon: Briefcase },
+  { value: 'coach',            label: 'Coach',                Icon: Compass },
+];
+
+// ─── Background decoration ───────────────────────────────────────────────────
 
 const BRAND_ORANGE = '#F56040';
 const BRAND_PURPLE = '#833AB4';
 
-type Step = 'partner' | 'goal';
+function Glows() {
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div
+        className="absolute -top-32 right-[-10%] h-112 w-112 rounded-full blur-[120px] opacity-30"
+        style={{ backgroundColor: BRAND_ORANGE }}
+      />
+      <div
+        className="absolute bottom-[-8%] left-[-8%] h-96 w-96 rounded-full blur-[120px] opacity-25"
+        style={{ backgroundColor: BRAND_PURPLE }}
+      />
+    </div>
+  );
+}
+
+// ─── Progress dots ───────────────────────────────────────────────────────────
+
+const STEPS = ['profession', 'partner', 'goal'] as const;
+type Step = (typeof STEPS)[number];
+
+function ProgressDots({ current }: { current: Step }) {
+  const idx = STEPS.indexOf(current);
+  return (
+    <div className="mb-10 flex items-center justify-center gap-2">
+      {STEPS.map((s, i) => (
+        <div
+          key={s}
+          className="h-1.5 rounded-full transition-all duration-300"
+          style={{
+            width: i === idx ? '2rem' : '0.5rem',
+            backgroundColor: i === idx ? 'var(--accent)' : 'var(--text-tertiary)',
+            opacity: i === idx ? 1 : i < idx ? 0.6 : 0.3,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 
 export default function WelcomeOnboarding({ onComplete }: { onComplete: () => void }) {
   const { addPartner, updateProfile, profile } = useAppContext();
-  const [step, setStep] = useState<Step>('partner');
+
+  // Profession step
+  const [primary, setPrimary] = useState<FreelancerType | null>(null);
+  const [secondaries, setSecondaries] = useState<FreelancerType[]>([]);
+
+  // Partner / goal steps
+  const [step, setStep] = useState<Step>('profession');
   const [partnerName, setPartnerName] = useState('');
   const [goalText, setGoalText] = useState('');
   const [saving, setSaving] = useState(false);
+
   const partnerRef = useRef<HTMLInputElement>(null);
   const goalRef = useRef<HTMLInputElement>(null);
+
+  // ── Profession handlers ──────────────────────────────────────────────────
+
+  const toggleSecondary = (value: FreelancerType) => {
+    setSecondaries((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  const handleProfessionNext = async () => {
+    if (!primary) return;
+    setSaving(true);
+    try {
+      await updateProfile({
+        primaryProfession: primary,
+        secondaryProfessions: secondaries,
+      });
+    } catch {
+      // Don't block on failure
+    }
+    setSaving(false);
+    setStep('partner');
+    setTimeout(() => partnerRef.current?.focus(), 50);
+  };
+
+  // ── Partner handler ──────────────────────────────────────────────────────
 
   const handlePartnerNext = () => {
     setStep('goal');
     setTimeout(() => goalRef.current?.focus(), 50);
   };
+
+  // ── Finish handler ───────────────────────────────────────────────────────
 
   const handleFinish = async () => {
     setSaving(true);
@@ -55,136 +165,229 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
         });
       }
     } catch {
-      // Don't block progress on API failures
+      // Don't block on failure
     }
     setSaving(false);
     onComplete();
   };
 
-  const isPartnerStep = step === 'partner';
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--surface-app)] font-sans">
-      {/* Background glows */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute -top-32 right-[-10%] h-[28rem] w-[28rem] rounded-full blur-[120px] opacity-30"
-          style={{ backgroundColor: BRAND_ORANGE }}
-        />
-        <div
-          className="absolute bottom-[-8%] left-[-8%] h-96 w-96 rounded-full blur-[120px] opacity-25"
-          style={{ backgroundColor: BRAND_PURPLE }}
-        />
-      </div>
+    <div className="fixed inset-0 z-200 flex items-center justify-center bg-(--surface-app) font-sans">
+      <Glows />
 
       <div className="relative z-10 w-full max-w-md px-6">
-        {/* Progress dots */}
-        <div className="mb-10 flex items-center justify-center gap-2">
-          <div
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: isPartnerStep ? '2rem' : '0.5rem',
-              backgroundColor: isPartnerStep ? 'var(--accent)' : 'var(--text-tertiary)',
-              opacity: isPartnerStep ? 1 : 0.4,
-            }}
-          />
-          <div
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: !isPartnerStep ? '2rem' : '0.5rem',
-              backgroundColor: !isPartnerStep ? 'var(--accent)' : 'var(--text-tertiary)',
-              opacity: !isPartnerStep ? 1 : 0.4,
-            }}
-          />
-        </div>
+        <ProgressDots current={step} />
 
-        {/* Step content */}
-        {isPartnerStep ? (
-          <div key="partner">
-            <div className="mb-6 flex justify-center">
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: 'var(--surface-card)' }}
-              >
-                <Buildings size={28} weight="duotone" style={{ color: 'var(--accent)' }} />
-              </div>
-            </div>
-            <h2 className="mb-2 text-center text-xl font-bold text-[var(--text-primary)]">
-              ¿Con quién estás trabajando?
-            </h2>
-            <p className="mb-8 text-center text-sm text-[var(--text-secondary)]">
-              Escribe el nombre de una marca o cliente con el que colaboras ahora mismo.
-            </p>
-            <input
-              ref={partnerRef}
-              autoFocus
-              type="text"
-              value={partnerName}
-              onChange={(e) => setPartnerName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handlePartnerNext()}
-              placeholder="Ej. Nike, Marca Bonita, Juan García…"
-              className="w-full rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-3.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
-            />
-            <button
-              type="button"
-              onClick={handlePartnerNext}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] py-4 text-sm font-bold text-[var(--accent-foreground)] transition-all active:scale-[0.98] hover:opacity-90"
-            >
-              Continuar <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={handlePartnerNext}
-              className="mt-3 w-full py-2 text-xs text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-            >
-              Omitir por ahora
-            </button>
-          </div>
-        ) : (
-          <div key="goal">
-            <div className="mb-6 flex justify-center">
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: 'var(--surface-card)' }}
-              >
-                <Target size={28} weight="duotone" style={{ color: 'var(--accent)' }} />
-              </div>
-            </div>
-            <h2 className="mb-2 text-center text-xl font-bold text-[var(--text-primary)]">
-              ¿Cuál es tu objetivo este año?
-            </h2>
-            <p className="mb-8 text-center text-sm text-[var(--text-secondary)]">
-              Tu objetivo estratégico principal. Puedes editarlo después con más detalle.
-            </p>
-            <input
-              ref={goalRef}
-              type="text"
-              value={goalText}
-              onChange={(e) => setGoalText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !saving && handleFinish()}
-              placeholder="Ej. Cerrar 10 colaboraciones pagas este año…"
-              className="w-full rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-3.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
-            />
-            <button
-              type="button"
-              disabled={saving}
-              onClick={handleFinish}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] py-4 text-sm font-bold text-[var(--accent-foreground)] transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Guardando…' : 'Empecemos'}
-              {!saving && <ArrowRight size={16} />}
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={handleFinish}
-              className="mt-3 w-full py-2 text-xs text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors disabled:opacity-50"
-            >
-              Omitir por ahora
-            </button>
-          </div>
+        {step === 'profession' && (
+          <ProfessionStep
+            primary={primary}
+            secondaries={secondaries}
+            saving={saving}
+            onSelectPrimary={setPrimary}
+            onToggleSecondary={toggleSecondary}
+            onNext={handleProfessionNext}
+          />
+        )}
+
+        {step === 'partner' && (
+          <DataStep
+            inputRef={partnerRef}
+            icon={<Buildings size={28} weight="duotone" style={{ color: 'var(--accent)' }} />}
+            title="¿Con quién estás trabajando?"
+            subtitle="Escribe el nombre de una marca o cliente con el que colaboras ahora mismo."
+            value={partnerName}
+            onChange={setPartnerName}
+            placeholder="Ej. Nike, Marca Bonita, Juan García…"
+            ctaLabel="Continuar"
+            onNext={handlePartnerNext}
+          />
+        )}
+
+        {step === 'goal' && (
+          <DataStep
+            inputRef={goalRef}
+            icon={<Target size={28} weight="duotone" style={{ color: 'var(--accent)' }} />}
+            title="¿Cuál es tu objetivo este año?"
+            subtitle="Tu objetivo estratégico principal. Puedes editarlo después con más detalle."
+            value={goalText}
+            onChange={setGoalText}
+            placeholder="Ej. Cerrar 10 colaboraciones pagas este año…"
+            ctaLabel="Empecemos"
+            saving={saving}
+            onNext={handleFinish}
+          />
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Profession step ─────────────────────────────────────────────────────────
+
+function ProfessionStep({
+  primary,
+  secondaries,
+  saving,
+  onSelectPrimary,
+  onToggleSecondary,
+  onNext,
+}: {
+  primary: FreelancerType | null;
+  secondaries: FreelancerType[];
+  saving: boolean;
+  onSelectPrimary: (v: FreelancerType) => void;
+  onToggleSecondary: (v: FreelancerType) => void;
+  onNext: () => void;
+}) {
+  const secondaryOptions = PROFESSIONS.filter((p) => p.value !== primary);
+
+  return (
+    <div>
+      <h2 className="mb-1 text-center text-xl font-bold text-(--text-primary)">
+        ¿Cuál es tu actividad principal?
+      </h2>
+      <p className="mb-6 text-center text-sm text-(--text-secondary)">
+        Selecciona la que mejor te define.
+      </p>
+
+      {/* Primary grid — 2 columns */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {PROFESSIONS.map(({ value, label, Icon }) => {
+          const selected = primary === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSelectPrimary(value)}
+              className="flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-150 active:scale-[0.97]"
+              style={{
+                borderColor: selected ? 'var(--accent)' : 'var(--border-subtle)',
+                backgroundColor: selected ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
+              }}
+            >
+              <Icon
+                size={20}
+                weight="duotone"
+                style={{ color: selected ? 'var(--accent)' : 'var(--text-secondary)', flexShrink: 0 }}
+              />
+              <span
+                className="text-xs font-semibold leading-tight"
+                style={{ color: selected ? 'var(--accent)' : 'var(--text-primary)' }}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Secondary section — appears once primary is chosen */}
+      {primary && (
+        <div className="mt-5">
+          <p className="mb-2.5 text-xs font-medium text-(--text-secondary)">
+            ¿También haces alguna de estas? <span className="text-(--text-tertiary)">(opcional)</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {secondaryOptions.map(({ value, label }) => {
+              const active = secondaries.includes(value);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onToggleSecondary(value)}
+                  className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150"
+                  style={{
+                    borderColor: active ? 'var(--accent)' : 'var(--border-subtle)',
+                    backgroundColor: active ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        disabled={!primary || saving}
+        onClick={onNext}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--accent) py-4 text-sm font-bold text-(--accent-foreground) transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {saving ? 'Guardando…' : 'Continuar'}
+        {!saving && <ArrowRight size={16} />}
+      </button>
+    </div>
+  );
+}
+
+// ─── Shared data-entry step (partner + goal) ─────────────────────────────────
+
+function DataStep({
+  inputRef,
+  icon,
+  title,
+  subtitle,
+  value,
+  onChange,
+  placeholder,
+  ctaLabel,
+  saving = false,
+  onNext,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  ctaLabel: string;
+  saving?: boolean;
+  onNext: () => void;
+}) {
+  return (
+    <div>
+      <div className="mb-6 flex justify-center">
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-2xl"
+          style={{ backgroundColor: 'var(--surface-card)' }}
+        >
+          {icon}
+        </div>
+      </div>
+      <h2 className="mb-2 text-center text-xl font-bold text-(--text-primary)">{title}</h2>
+      <p className="mb-8 text-center text-sm text-(--text-secondary)">{subtitle}</p>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && !saving && onNext()}
+        placeholder={placeholder}
+        className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 transition-all"
+      />
+      <button
+        type="button"
+        disabled={saving}
+        onClick={onNext}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--accent) py-4 text-sm font-bold text-(--accent-foreground) transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {saving ? 'Guardando…' : ctaLabel}
+        {!saving && <ArrowRight size={16} />}
+      </button>
+      <button
+        type="button"
+        disabled={saving}
+        onClick={onNext}
+        className="mt-3 w-full py-2 text-xs text-(--text-tertiary) hover:text-(--text-secondary) transition-colors disabled:opacity-50"
+      >
+        Omitir por ahora
+      </button>
     </div>
   );
 }
