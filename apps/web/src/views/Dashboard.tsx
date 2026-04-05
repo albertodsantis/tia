@@ -696,7 +696,7 @@ function BadgesDrawer({ unlockedBadges, onClose }: { unlockedBadges: BadgeKey[];
           style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div>
-            <h2 className="text-base font-bold" style={{ color: '#dcdcf0' }}>Sala de Trofeos</h2>
+            <h2 className="text-base font-bold" style={{ color: '#dcdcf0' }}>Sala de Placas</h2>
             <p className="mt-0.5 text-xs" style={{ color: '#50508a' }}>
               {unlockedBadges.length} de {ALL_BADGES.length} ganados
             </p>

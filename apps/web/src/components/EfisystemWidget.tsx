@@ -129,7 +129,7 @@ export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges }: 
             }}
           >
             <Trophy size={13} weight="fill" />
-            Emblemas
+            Placas
           </button>
         )}
       </div>
