@@ -27,6 +27,7 @@ import Landing from './views/Landing';
 import AIAssistant from './components/AIAssistant';
 import OnboardingTour from './components/OnboardingTour';
 import WelcomeColorPicker from './views/WelcomeColorPicker';
+import WelcomeOnboarding from './views/WelcomeOnboarding';
 import Toaster from './components/Toaster';
 import Confetti from './components/Confetti';
 import MoreOptionsMenu from './components/MoreOptionsMenu';
@@ -662,10 +663,12 @@ const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
 
 const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
   const { isBootstrapping, bootstrapError, profile, accentColor, setAccentColor } = useAppContext();
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [colorPicked, setColorPicked] = useState(false);
   const [forceOnboarding, setForceOnboarding] = useState(false);
 
-  const needsColorPicker = isNewRegistration && !isBootstrapping && !bootstrapError && !colorPicked && accentColor === DEFAULT_ACCENT;
+  const needsOnboarding = isNewRegistration && !isBootstrapping && !bootstrapError && !onboardingDone;
+  const needsColorPicker = isNewRegistration && !isBootstrapping && !bootstrapError && onboardingDone && !colorPicked && accentColor === DEFAULT_ACCENT;
 
   const handleColorSelected = async (color: string) => {
     try {
@@ -678,6 +681,10 @@ const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
     }
     setColorPicked(true);
   };
+
+  if (needsOnboarding) {
+    return <WelcomeOnboarding onComplete={() => setOnboardingDone(true)} />;
+  }
 
   if (needsColorPicker) {
     return (
