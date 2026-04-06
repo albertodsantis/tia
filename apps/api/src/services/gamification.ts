@@ -31,15 +31,7 @@ function computeLevel(totalPoints: number): number {
 // ────────────────────────────────────────────────────────────
 
 export function checkProfileComplete(profile: UserProfile): boolean {
-  const hasSocial = Object.values(profile.socialProfiles).some(v => v?.trim().length > 0);
-  const hasStat = profile.mediaKit.insightStats?.some(s => s.value?.trim().length > 0);
-  return !!(
-    profile.name?.trim() &&
-    profile.handle?.trim() &&
-    profile.avatar?.trim() &&
-    hasSocial &&
-    hasStat
-  );
+  return profile.mediaKit.enabledBlocks.length >= 1;
 }
 
 // ────────────────────────────────────────────────────────────
