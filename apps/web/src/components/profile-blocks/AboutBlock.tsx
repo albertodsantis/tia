@@ -75,7 +75,7 @@ export default function AboutBlock({
               onChange={(e) => onParagraphChange(index, e.target.value)}
               className={textareaClass}
               style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-              placeholder="Describe tu voz, tu universo y como trabajas con marcas."
+              placeholder="Habla de ti, de tus proyectos y servicios."
             />
           </div>
         ))}
