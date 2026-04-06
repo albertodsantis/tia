@@ -28,7 +28,7 @@ const GRADIENT_PRESETS: Record<string, { gradient: string; representative: strin
     representative: '#E1306C',
   },
   dawn: {
-    gradient: 'linear-gradient(180deg, #FF4E36 0%, #FFA100 45%, #B5FF00 100%)',
+    gradient: 'linear-gradient(180deg, #FF4E36 0%, #FFA100 45%, #FFD93D 100%)',
     representative: '#FFA100',
   },
 };
