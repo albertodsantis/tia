@@ -284,7 +284,7 @@ function ProfessionModal({
                   )}
 
                   <p className="mt-5 text-[11px] leading-5 text-[var(--text-secondary)]/60">
-                    En el futuro, tu actividad principal determinará la plantilla de tu perfil público.
+                    Diseño estándar activo. Pronto: plantillas por profesión para resaltar tu talento.
                   </p>
                 </>
               ) : (
