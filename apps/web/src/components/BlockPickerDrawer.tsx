@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  Article,
   ChartBar,
   ChatsCircle,
   Envelope,
   Image,
+  Link,
   Tag,
   Users,
   X,
@@ -25,20 +25,20 @@ const BLOCK_META: Record<BlockType, BlockMeta> = {
   brands: { label: 'Marcas', description: 'Clientes y marcas con las que has trabajado', icon: ChatsCircle },
   services: { label: 'Servicios', description: 'Tarifas y paquetes de colaboración', icon: Tag },
   closing: { label: 'Cierre', description: 'CTA final y texto de footer', icon: Envelope },
-  // Phase 2 blocks — not yet implemented
-  testimonials: { label: 'Testimoniales', description: 'Opiniones de clientes y colaboradores', icon: Article },
-  press: { label: 'Prensa', description: 'Menciones y apariciones en medios', icon: Article },
-  speaking_topics: { label: 'Temas de conferencia', description: 'Temas y charlas que ofreces', icon: Article },
-  video_reel: { label: 'Reel / Video', description: 'Videos y contenido audiovisual destacado', icon: Article },
-  equipment: { label: 'Equipo / Gear', description: 'Herramientas y equipo que utilizas', icon: Article },
-  awards: { label: 'Premios', description: 'Reconocimientos y certificaciones', icon: Article },
-  faq: { label: 'FAQ', description: 'Preguntas frecuentes sobre tu trabajo', icon: Article },
-  episodes: { label: 'Episodios', description: 'Episodios destacados de tu podcast', icon: Article },
-  releases: { label: 'Lanzamientos', description: 'Releases y lanzamientos musicales', icon: Article },
-  links: { label: 'Links', description: 'Lista de enlaces — ideal para bio de Instagram', icon: Article },
+  // Phase 2 blocks — not yet in picker
+  testimonials: { label: 'Testimoniales', description: 'Opiniones de clientes y colaboradores', icon: Tag },
+  press: { label: 'Prensa', description: 'Menciones y apariciones en medios', icon: Tag },
+  speaking_topics: { label: 'Temas de conferencia', description: 'Temas y charlas que ofreces', icon: Tag },
+  video_reel: { label: 'Reel / Video', description: 'Videos y contenido audiovisual destacado', icon: Tag },
+  equipment: { label: 'Equipo / Gear', description: 'Herramientas y equipo que utilizas', icon: Tag },
+  awards: { label: 'Premios', description: 'Reconocimientos y certificaciones', icon: Tag },
+  faq: { label: 'FAQ', description: 'Preguntas frecuentes sobre tu trabajo', icon: Tag },
+  episodes: { label: 'Episodios', description: 'Episodios destacados de tu podcast', icon: Tag },
+  releases: { label: 'Lanzamientos', description: 'Releases y lanzamientos musicales', icon: Tag },
+  links: { label: 'Links', description: 'Lista de enlaces — ideal para bio de Instagram', icon: Link },
 };
 
-const PHASE_1_BLOCKS: BlockType[] = ['about', 'metrics', 'portfolio', 'brands', 'services', 'closing'];
+const AVAILABLE_BLOCKS: BlockType[] = ['about', 'metrics', 'portfolio', 'brands', 'services', 'closing', 'links'];
 
 interface BlockPickerDrawerProps {
   enabledBlocks: BlockType[];
@@ -48,7 +48,7 @@ interface BlockPickerDrawerProps {
 }
 
 export default function BlockPickerDrawer({ enabledBlocks, accentHex, onAdd, onClose }: BlockPickerDrawerProps) {
-  const available = PHASE_1_BLOCKS.filter((type) => !enabledBlocks.includes(type));
+  const available = AVAILABLE_BLOCKS.filter((type) => !enabledBlocks.includes(type));
 
   return (
     <OverlayModal onClose={onClose}>

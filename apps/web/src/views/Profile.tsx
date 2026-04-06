@@ -43,6 +43,7 @@ import { toast } from '../lib/toast';
 
 import BlockWrapper from '../components/profile-blocks/BlockWrapper';
 import BlockPickerDrawer from '../components/BlockPickerDrawer';
+import TemplatePickerDrawer from '../components/TemplatePickerDrawer';
 import IdentityBlock from '../components/profile-blocks/IdentityBlock';
 import AboutBlock from '../components/profile-blocks/AboutBlock';
 import MetricsBlock from '../components/profile-blocks/MetricsBlock';
@@ -50,6 +51,7 @@ import PortfolioBlock from '../components/profile-blocks/PortfolioBlock';
 import BrandsBlock from '../components/profile-blocks/BrandsBlock';
 import ServicesBlock from '../components/profile-blocks/ServicesBlock';
 import ClosingBlock from '../components/profile-blocks/ClosingBlock';
+import LinksBlock from '../components/profile-blocks/LinksBlock';
 
 // ─── Profession catalogue (icons + labels) ───────────────────────────────────
 
@@ -386,6 +388,7 @@ export default function Profile() {
   const [socialDropdown, setSocialDropdown] = useState<keyof SocialProfiles | null>(null);
   const [professionModalOpen, setProfessionModalOpen] = useState(false);
   const [blockPickerOpen, setBlockPickerOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedDisplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -638,6 +641,17 @@ export default function Profile() {
         mediaKit: { ...(current.mediaKit || {}), blockOrder: order } as MediaKitProfile,
       };
     });
+  };
+
+  const applyTemplate = (blocks: BlockType[]) => {
+    setProfileForm((current) => ({
+      ...current,
+      mediaKit: {
+        ...(current.mediaKit || {}),
+        enabledBlocks: blocks,
+        blockOrder: blocks,
+      } as MediaKitProfile,
+    }));
   };
 
   // ── HTML generation (legacy, block-aware in Phase 2) ──────────────────────
@@ -901,6 +915,42 @@ export default function Profile() {
             onFooterNoteChange={(v) => setMediaKitField('footerNote', v)}
           />
         );
+      case 'links':
+        return (
+          <LinksBlock
+            mediaKit={mediaKit}
+            accentHex={accentHex}
+            onLinkChange={(index, field, value) =>
+              setProfileForm((current) => ({
+                ...current,
+                mediaKit: {
+                  ...(current.mediaKit || {}),
+                  links: safeArr(current.mediaKit?.links).map((item: any, i: number) =>
+                    i === index ? { ...item, [field]: value } : item,
+                  ),
+                } as MediaKitProfile,
+              }))
+            }
+            onAddLink={() =>
+              setProfileForm((current) => ({
+                ...current,
+                mediaKit: {
+                  ...(current.mediaKit || {}),
+                  links: [...safeArr(current.mediaKit?.links), { label: '', url: '' }],
+                } as MediaKitProfile,
+              }))
+            }
+            onRemoveLink={(index) =>
+              setProfileForm((current) => ({
+                ...current,
+                mediaKit: {
+                  ...(current.mediaKit || {}),
+                  links: safeArr(current.mediaKit?.links).filter((_: any, i: number) => i !== index),
+                } as MediaKitProfile,
+              }))
+            }
+          />
+        );
       default:
         return null;
     }
@@ -1039,16 +1089,27 @@ export default function Profile() {
             <Sparkle size={28} className="mx-auto mb-3 text-[var(--text-secondary)]/50" weight="duotone" />
             <p className="text-sm font-bold text-[var(--text-primary)]">Tu perfil está vacío</p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Elige qué quieres mostrar en tu media kit
+              ¿Cómo quieres empezar?
             </p>
-            <button
-              type="button"
-              onClick={() => setBlockPickerOpen(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-5 py-2.5 text-sm font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--surface-muted)] active:scale-[0.98]"
-            >
-              <Plus size={15} />
-              Agregar primer bloque
-            </button>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setTemplatePickerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold text-white transition-all active:scale-[0.98]"
+                style={{ background: `${accentHex}` }}
+              >
+                <Sparkle size={15} weight="fill" />
+                Usar plantilla
+              </button>
+              <button
+                type="button"
+                onClick={() => setBlockPickerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-card-strong)] px-5 py-2.5 text-sm font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--surface-muted)] active:scale-[0.98]"
+              >
+                <Plus size={15} />
+                Elegir bloques
+              </button>
+            </div>
           </div>
         )}
 
@@ -1072,6 +1133,14 @@ export default function Profile() {
           accentHex={accentHex}
           onAdd={addBlock}
           onClose={() => setBlockPickerOpen(false)}
+        />
+      )}
+
+      {templatePickerOpen && (
+        <TemplatePickerDrawer
+          accentHex={accentHex}
+          onApply={applyTemplate}
+          onClose={() => setTemplatePickerOpen(false)}
         />
       )}
 
