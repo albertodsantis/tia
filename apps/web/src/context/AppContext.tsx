@@ -191,6 +191,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
       document.documentElement.removeAttribute('data-crt');
     }
 
+    // Expose accent key as attribute so CSS can target per-theme backgrounds
+    if (!state.accentColor.startsWith('#')) {
+      document.documentElement.setAttribute('data-accent', state.accentColor);
+    } else {
+      document.documentElement.removeAttribute('data-accent');
+    }
+
     // Guardamos en caché para que la Landing page pueda leerlo antes de iniciar sesión
     localStorage.setItem('efi_accent_color', state.accentColor);
   }, [state.accentColor]);
