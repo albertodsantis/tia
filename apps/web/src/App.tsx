@@ -529,14 +529,7 @@ const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-app)] font-sans text-[var(--text-primary)] transition-colors duration-300">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div
-          className="absolute -top-28 right-[-6%] h-80 w-80 rounded-full blur-3xl opacity-60"
-          style={{ backgroundColor: `${accentHex}22` }}
-        />
-        <div className="absolute bottom-0 left-[-4%] h-72 w-72 rounded-full bg-emerald-200/20 blur-3xl dark:bg-emerald-400/10" />
-      </div>
+    <div className="min-h-screen font-sans text-[var(--text-primary)] transition-colors duration-300">
 
       <div className="relative min-h-[100dvh] w-full lg:h-[100dvh] lg:p-4">
         <div className="min-h-[100dvh] w-full lg:h-[calc(100dvh-2rem)] lg:min-h-0 lg:overflow-hidden lg:rounded-[2rem] lg:border lg:bg-[var(--surface-shell)] lg:shadow-[var(--shadow-medium)] [border-color:var(--line-soft)]">
@@ -567,15 +560,6 @@ const MainLayout = () => {
                   : 'flex min-h-[100dvh] flex-col bg-[var(--surface-card)]',
               )}
             >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-75 transition-colors duration-700"
-                style={{
-                  background: accentSecondary
-                    ? `radial-gradient(circle at top left, ${accentHex}30 0%, ${accentHex}10 35%, transparent 65%), radial-gradient(circle at bottom right, ${accentSecondary}30 0%, ${accentSecondary}10 35%, transparent 65%)`
-                    : `radial-gradient(circle at top left, ${accentHex}30 0%, ${accentHex}10 35%, transparent 65%)`,
-                }}
-              />
-
               {/* Pull-to-refresh indicator (mobile) */}
               {!isDesktop && pullDistance > 0 && (
                 <div
