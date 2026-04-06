@@ -94,6 +94,14 @@ export function getRepresentativeHex(value: string): string {
 
 // Surface overrides — keyed by normalized accent value, defines light + dark surface variables
 const SURFACE_THEMES: Record<string, { light: Record<string, string>; dark: Record<string, string> }> = {
+  'gradient:dawn': {
+    light: {
+      '--body-theme-bg': 'linear-gradient(180deg, rgba(255, 78, 54, 0.28) 0%, rgba(255, 161, 0, 0.16) 22%, rgba(255, 217, 61, 0.06) 44%, transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%)',
+    },
+    dark: {
+      '--body-theme-bg': 'linear-gradient(180deg, rgba(255, 78, 54, 0.22) 0%, rgba(255, 161, 0, 0.12) 22%, rgba(255, 217, 61, 0.05) 44%, transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%)',
+    },
+  },
   'retro:crt': {
     light: {
       '--surface-app': '#0b0800',
@@ -157,6 +165,7 @@ const SURFACE_OVERRIDE_KEYS = [
   '--text-secondary',
   '--line-soft',
   '--line-strong',
+  '--body-theme-bg',
 ] as const;
 
 export function getSurfaceOverrides(accentColor: string, theme: 'light' | 'dark'): Record<string, string> {

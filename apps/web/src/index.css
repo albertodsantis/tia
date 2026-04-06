@@ -97,10 +97,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   background-color: var(--surface-app);
-  background-image:
+  background-image: var(--body-theme-bg,
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color, #c96f5b) 14%, transparent) 0%, transparent 34%),
     radial-gradient(circle at bottom left, rgba(114, 151, 140, 0.12) 0%, transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%)
+  );
   color: var(--text-primary);
 }
 
@@ -155,36 +156,12 @@ textarea:focus-visible {
 
 html.dark body {
   background-color: var(--surface-app);
-  background-image:
+  background-image: var(--body-theme-bg,
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color, #c96f5b) 6%, transparent) 0%, transparent 28%),
     radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.04) 0%, transparent 24%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%)
+  );
   color: var(--text-primary);
-}
-
-/* ── Dawn theme background ───────────────────────────────────────
-   Overrides the default single-accent radial gradient with the
-   full Dawn color range: coral top-right, warm gold bottom-left. */
-html[data-accent="gradient:dawn"] body {
-  background-image:
-    linear-gradient(180deg,
-      rgba(255, 78, 54, 0.28) 0%,
-      rgba(255, 161, 0, 0.16) 22%,
-      rgba(255, 217, 61, 0.06) 44%,
-      transparent 62%
-    ),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%);
-}
-
-html.dark[data-accent="gradient:dawn"] body {
-  background-image:
-    linear-gradient(180deg,
-      rgba(255, 78, 54, 0.22) 0%,
-      rgba(255, 161, 0, 0.12) 22%,
-      rgba(255, 217, 61, 0.05) 44%,
-      transparent 62%
-    ),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%);
 }
 
 /* ── CRT / Analog TV theme overlay ──────────────────────────────
