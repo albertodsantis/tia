@@ -411,6 +411,7 @@ export default function Profile() {
   const profileFormRef = useRef(profileForm);
   profileFormRef.current = profileForm;
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [socialDropdown, setSocialDropdown] = useState<keyof SocialProfiles | null>(null);
   const [professionModalOpen, setProfessionModalOpen] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedDisplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -999,19 +1000,7 @@ export default function Profile() {
               <label className={labelClass}>Handle</label>
               <input
                 value={profileForm.handle || ''}
-                onChange={(event) => {
-                  const newHandle = event.target.value;
-                  const cleanHandle = newHandle.replace(/^@/, '');
-                  setProfileForm((current) => {
-                    const newSocials = { ...(current.socialProfiles || {}) } as SocialProfiles;
-                    for (const field of socialProfileFields) {
-                      if (!newSocials[field.key]) {
-                        newSocials[field.key] = cleanHandle ? `@${cleanHandle}` : '';
-                      }
-                    }
-                    return { ...current, handle: newHandle, socialProfiles: newSocials };
-                  });
-                }}
+                onChange={(event) => setProfileField('handle', event.target.value)}
                 className={fieldClass}
                 style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
                 placeholder="@tuusuario"
@@ -1078,13 +1067,39 @@ export default function Profile() {
               {socialProfileFields.map((field) => (
                 <div key={field.key}>
                   <label className={labelClass}>{field.label}</label>
-                  <input
-                    value={profileForm.socialProfiles?.[field.key] || ''}
-                    onChange={(event) => setSocialField(field.key, event.target.value)}
-                    className={fieldClass}
-                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-                    placeholder={field.placeholder}
-                  />
+                  <div className="relative">
+                    <input
+                      value={profileForm.socialProfiles?.[field.key] || ''}
+                      onChange={(event) => setSocialField(field.key, event.target.value)}
+                      onFocus={() => {
+                        if (!profileForm.socialProfiles?.[field.key] && (profileForm.handle || '').trim()) {
+                          setSocialDropdown(field.key);
+                        }
+                      }}
+                      onBlur={() => setSocialDropdown(null)}
+                      className={fieldClass}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                      placeholder={field.placeholder}
+                    />
+                    {socialDropdown === field.key && (() => {
+                      const cleanHandle = (profileForm.handle || '').trim().replace(/^@/, '');
+                      return cleanHandle ? (
+                        <div className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-[var(--line-soft)] bg-[var(--surface-card)] shadow-lg">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setSocialField(field.key, `@${cleanHandle}`);
+                              setSocialDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-[var(--surface-muted)]"
+                          >
+                            <span className="font-bold" style={{ color: accentHex }}>@{cleanHandle}</span>
+                          </button>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
               ))}
             </div>
