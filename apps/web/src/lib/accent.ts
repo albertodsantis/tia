@@ -178,10 +178,30 @@ const SURFACE_OVERRIDE_KEYS = [
   '--body-theme-bg',
 ] as const;
 
+function getDefaultBodyBg(theme: 'light' | 'dark'): string {
+  if (theme === 'dark') {
+    return [
+      'radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 6%, transparent) 0%, transparent 28%)',
+      'radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.04) 0%, transparent 24%)',
+      'linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%)',
+    ].join(', ');
+  }
+  return [
+    'radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 14%, transparent) 0%, transparent 34%)',
+    'radial-gradient(circle at bottom left, rgba(114, 151, 140, 0.12) 0%, transparent 30%)',
+    'linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%)',
+  ].join(', ');
+}
+
 export function getSurfaceOverrides(accentColor: string, theme: 'light' | 'dark'): Record<string, string> {
   const themeData = SURFACE_THEMES[accentColor.toLowerCase()];
   const overrides = themeData ? themeData[theme] : {};
-  return Object.fromEntries(SURFACE_OVERRIDE_KEYS.map((key) => [key, overrides[key] ?? '']));
+  return Object.fromEntries(
+    SURFACE_OVERRIDE_KEYS.map((key) => [
+      key,
+      overrides[key] ?? (key === '--body-theme-bg' ? getDefaultBodyBg(theme) : ''),
+    ])
+  );
 }
 
 function hexToRgb(hex: string) {

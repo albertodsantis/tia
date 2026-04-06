@@ -97,11 +97,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   background-color: var(--surface-app);
-  background-image: var(--body-theme-bg,
-    radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color, #c96f5b) 14%, transparent) 0%, transparent 34%),
-    radial-gradient(circle at bottom left, rgba(114, 151, 140, 0.12) 0%, transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 82%, white) 0%, var(--surface-app) 100%)
-  );
+  background-image: var(--body-theme-bg);
   color: var(--text-primary);
 }
 
@@ -156,11 +152,7 @@ textarea:focus-visible {
 
 html.dark body {
   background-color: var(--surface-app);
-  background-image: var(--body-theme-bg,
-    radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color, #c96f5b) 6%, transparent) 0%, transparent 28%),
-    radial-gradient(circle at bottom left, rgba(99, 110, 140, 0.04) 0%, transparent 24%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-app) 94%, black) 0%, var(--surface-app) 100%)
-  );
+  background-image: var(--body-theme-bg);
   color: var(--text-primary);
 }
 
