@@ -403,6 +403,7 @@ export default function Pipeline() {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [poppingId, setPoppingId] = useState<string | null>(null);
+  const [expandedChecklists, setExpandedChecklists] = useState<Set<string>>(new Set());
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
   const sortedTasks = useMemo(
@@ -626,6 +627,28 @@ export default function Pipeline() {
     void saveChecklist(updated);
   };
 
+  const toggleExpandedChecklist = (taskId: string) => {
+    setExpandedChecklists((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const toggleChecklistItemOnCard = async (taskId: string, itemId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    const updated = task.checklistItems.map((item) =>
+      item.id === itemId ? { ...item, done: !item.done } : item,
+    );
+    try {
+      await updateTask(taskId, { checklistItems: updated } as any);
+    } catch {
+      toast.error('Error al actualizar la sub-tarea');
+    }
+  };
+
   const changeStatus = async (taskId: string, status: TaskStatus) => {
     setUpdatingTaskId(taskId);
 
@@ -791,12 +814,6 @@ export default function Pipeline() {
             <StatusBadge tone={isOverdue ? 'danger' : 'neutral'}>
               {formatTaskDate(task.dueDate, { day: '2-digit', month: 'short' })}{relativeTime ? ` · ${relativeTime}` : ''}
             </StatusBadge>
-            {task.checklistItems.length > 0 && (
-              <StatusBadge tone="neutral">
-                <ListChecks size={11} />
-                {task.checklistItems.filter((i) => i.done).length}/{task.checklistItems.length}
-              </StatusBadge>
-            )}
           </div>
 
           <p
@@ -807,6 +824,43 @@ export default function Pipeline() {
           >
             {task.description || 'Sin descripción todavía.'}
           </p>
+
+          {task.checklistItems.length > 0 && (
+            <div className="mt-3 space-y-1.5 border-t pt-3 [border-color:var(--line-soft)]">
+              {[...task.checklistItems.filter((i) => !i.done), ...task.checklistItems.filter((i) => i.done)]
+                .slice(0, expandedChecklists.has(task.id) ? undefined : 3)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void toggleChecklistItemOnCard(task.id, item.id); }}
+                    className="flex w-full items-center gap-2.5 text-left"
+                  >
+                    {item.done ? (
+                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                    ) : (
+                      <Circle size={13} className="shrink-0 text-[var(--text-secondary)]/40" />
+                    )}
+                    <span className={cx(
+                      'text-xs leading-4',
+                      item.done ? 'line-through text-[var(--text-secondary)]/40' : 'text-[var(--text-secondary)]',
+                    )}>
+                      {item.text}
+                    </span>
+                  </button>
+                ))}
+              {task.checklistItems.length > 3 && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); toggleExpandedChecklist(task.id); }}
+                  className="flex items-center gap-1 pt-0.5 text-xs font-semibold text-[var(--text-secondary)]/60 transition-colors hover:text-[var(--text-primary)]"
+                >
+                  <CaretDown size={11} className={cx('transition-transform duration-150', expandedChecklists.has(task.id) && 'rotate-180')} />
+                  {expandedChecklists.has(task.id) ? 'Ver menos' : `Ver ${task.checklistItems.length - 3} más`}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="mt-4 space-y-3">
             <CustomSelect
@@ -890,6 +944,42 @@ export default function Pipeline() {
           <p className="mt-1 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
             {task.description || 'Sin descripción todavía.'}
           </p>
+          {task.checklistItems.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {[...task.checklistItems.filter((i) => !i.done), ...task.checklistItems.filter((i) => i.done)]
+                .slice(0, expandedChecklists.has(task.id) ? undefined : 3)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => void toggleChecklistItemOnCard(task.id, item.id)}
+                    className="flex w-full items-center gap-2.5 text-left"
+                  >
+                    {item.done ? (
+                      <CheckCircle size={13} className="shrink-0 text-emerald-500" />
+                    ) : (
+                      <Circle size={13} className="shrink-0 text-[var(--text-secondary)]/40" />
+                    )}
+                    <span className={cx(
+                      'text-xs leading-4',
+                      item.done ? 'line-through text-[var(--text-secondary)]/40' : 'text-[var(--text-secondary)]',
+                    )}>
+                      {item.text}
+                    </span>
+                  </button>
+                ))}
+              {task.checklistItems.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => toggleExpandedChecklist(task.id)}
+                  className="flex items-center gap-1 pt-0.5 text-xs font-semibold text-[var(--text-secondary)]/60 transition-colors hover:text-[var(--text-primary)]"
+                >
+                  <CaretDown size={11} className={cx('transition-transform duration-150', expandedChecklists.has(task.id) && 'rotate-180')} />
+                  {expandedChecklists.has(task.id) ? 'Ver menos' : `Ver ${task.checklistItems.length - 3} más`}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="xl:pt-[1.55rem]">
