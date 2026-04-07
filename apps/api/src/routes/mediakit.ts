@@ -375,9 +375,10 @@ function generateEfiLinkHtml(params: {
 export function createMediaKitRouter(pool: pg.Pool): Router {
   const router = Router();
 
-  router.get('/@:handle', async (req, res) => {
+  // Regex ensures we only match /@somehandle (no slashes) — avoids intercepting Vite's /@vite/client etc.
+  router.get(/^\/@([^/]+)$/, async (req, res) => {
     try {
-      const rawHandle = req.params.handle;
+      const rawHandle = (req.params as any)[0] as string;
       const handle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
 
       const { rows } = await pool.query(
