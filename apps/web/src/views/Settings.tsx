@@ -29,7 +29,7 @@ import {
   ToggleSwitch,
   cx,
 } from '../components/ui';
-import { authApi, calendarApi } from '../lib/api';
+import { authApi } from '../lib/api';
 import { toast } from '../lib/toast';
 import { ACCENT_OPTIONS, getSwatchCss } from '../lib/accent';
 
@@ -74,62 +74,11 @@ export default function Settings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [calendarConnected, setCalendarConnected] = useState<boolean | null>(null);
-  const [calendarLoading, setCalendarLoading] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setAccountName(profile.name);
   }, [profile.name]);
-
-  useEffect(() => {
-    calendarApi.getStatus().then((r) => setCalendarConnected(r.connected)).catch(() => setCalendarConnected(false));
-  }, []);
-
-  const handleConnectCalendar = async () => {
-    setCalendarLoading(true);
-    try {
-      const { url } = await calendarApi.getConnectUrl();
-      const popup = window.open(url, 'google-calendar-auth', 'width=500,height=620,left=200,top=100');
-
-      const onMessage = (event: MessageEvent) => {
-        if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-          window.removeEventListener('message', onMessage);
-          popup?.close();
-          calendarApi.getStatus().then((r) => setCalendarConnected(r.connected));
-          toast.success('Google Calendar conectado');
-          setCalendarLoading(false);
-        }
-      };
-      window.addEventListener('message', onMessage);
-
-      // Fallback: if popup is closed without success
-      const poll = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(poll);
-          window.removeEventListener('message', onMessage);
-          calendarApi.getStatus().then((r) => setCalendarConnected(r.connected));
-          setCalendarLoading(false);
-        }
-      }, 500);
-    } catch {
-      toast.error('No se pudo iniciar la conexion con Google Calendar.');
-      setCalendarLoading(false);
-    }
-  };
-
-  const handleDisconnectCalendar = async () => {
-    setCalendarLoading(true);
-    try {
-      await calendarApi.disconnect();
-      setCalendarConnected(false);
-      toast.info('Google Calendar desconectado');
-    } catch {
-      toast.error('No se pudo desconectar Google Calendar.');
-    } finally {
-      setCalendarLoading(false);
-    }
-  };
 
   const handleAccountNameBlur = async () => {
     const trimmed = accountName.trim();
@@ -477,34 +426,10 @@ export default function Settings() {
             />
             <SettingRow
               icon={CalendarBlank}
-              title="Google Calendar"
-              description={
-                calendarConnected
-                  ? 'Conectado. Puedes sincronizar entregas desde el Pipeline.'
-                  : 'Conecta tu Google Calendar para enviar entregas y sincronizar fechas.'
-              }
-              trailing={
-                calendarConnected ? (
-                  <button
-                    type="button"
-                    onClick={() => void handleDisconnectCalendar()}
-                    disabled={calendarLoading}
-                    className="text-[11px] font-bold tracking-[0.16em] text-rose-400 uppercase transition-opacity disabled:opacity-50 dark:text-rose-500"
-                  >
-                    Desconectar
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void handleConnectCalendar()}
-                    disabled={calendarLoading || calendarConnected === null}
-                    className="text-[11px] font-bold tracking-[0.16em] text-(--accent) uppercase transition-opacity disabled:opacity-50"
-                  >
-                    {calendarLoading ? 'Conectando...' : 'Conectar'}
-                  </button>
-                )
-              }
-              className="px-0 py-3"
+              title="Sincronizacion con Google Calendar"
+              description="Proximamente. Podras sincronizar entregas y fechas con tu Google Calendar."
+              trailing={<ToggleSwitch checked={false} accentColor={accentGradient} disabled />}
+              className="cursor-not-allowed px-0 py-3 opacity-60"
             />
             <SettingRow
               icon={ShieldCheck}
