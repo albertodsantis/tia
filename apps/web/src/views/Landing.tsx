@@ -53,7 +53,7 @@ const features = [
   {
     icon: ChartBar,
     title: 'Perfil Público',
-    description: 'Tu vitrina profesional. Un enlace único con tus clientes.',
+    description: 'Tu vitrina profesional. Un enlace único para tus clientes.',
   },
   {
     icon: Kanban,
