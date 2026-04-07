@@ -190,14 +190,13 @@ The shared layer must not depend on:
 
 ### 8.2 Hosting
 
-- Vercel deployment: `vercel.json` + `api/index.js` serverless entry point
-- Backend: persistent Node 20 hosting or Vercel serverless
+- **Railway** — live production deployment (persistent Node 20 server)
 - Database: Supabase-managed PostgreSQL
+- `vercel.json` + `api/index.js` are legacy artifacts, unused
 
 ### 8.3 CI/CD
 
-- No CI/CD pipeline yet (pending)
-- Vercel deployment config is in place
+- No CI/CD pipeline
 
 ## 9. External Integrations
 

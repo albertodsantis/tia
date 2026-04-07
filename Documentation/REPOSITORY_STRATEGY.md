@@ -66,9 +66,9 @@ efi/
 │           ├── contracts/  # appData.ts, auth.ts, googleCalendar.ts
 │           └── index.ts
 ├── api/
-│   └── index.js            # Vercel serverless entry point
+│   └── index.js            # legacy Vercel serverless entry point (unused)
 ├── docker-compose.yml      # local PostgreSQL container
-├── vercel.json             # Vercel deployment config
+├── vercel.json             # legacy Vercel deployment config (unused)
 ├── README.md
 ├── CLAUDE.md
 ├── package.json
@@ -83,7 +83,7 @@ efi/
 
 - **packages/shared** — Shared domain models (`domain.ts`), API contracts (`contracts/`), and pure reusable helpers. No React-specific or Express-specific assumptions. Consumed by both `apps/web` and `apps/api`.
 
-- **api/index.js** — Vercel serverless entry point that imports the built Express app.
+- **api/index.js** — Legacy Vercel serverless entry point. Unused — production runs on Railway.
 
 - **Documentation/** — All project documentation: PRD, application flow, tech stack, backend structure, frontend guidelines, implementation plan, and this repository strategy.
 
@@ -99,7 +99,7 @@ The following structural and feature milestones have been completed:
 - Real authentication: email/password (bcryptjs) and Google OAuth (Supabase redirect); sessions persisted in PostgreSQL via `connect-pg-simple`
 - All core CRUD features: tasks, partners, contacts, templates, profile, settings, goals
 - Profile revamped as a modular block composer with 16+ block types
-- Public profile served at `/mk/:handle` (no authentication required)
+- Public profile served at `/@:handle` (no authentication required)
 - Google Calendar integration (sync up, sync down)
 - AI Assistant (Gemini) behind `GEMINI_API_KEY` feature flag
 - Gamification system (Efisystem): XP, levels, and 9 badges
@@ -107,7 +107,7 @@ The following structural and feature milestones have been completed:
 - Push notifications for task reminders
 - File uploads via multer + Supabase Storage
 - Security: Helmet, express-rate-limit, httpOnly session cookies
-- Vercel deployment config: `vercel.json` + `api/index.js`
+- Vercel deployment config: `vercel.json` + `api/index.js` (legacy, unused — deployed on Railway)
 - Unified dev server: Express + Vite middleware mode
 
 ## 6. Current Development Rules

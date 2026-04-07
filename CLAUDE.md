@@ -32,9 +32,9 @@ Monorepo structure:
   - `store/` — appStore.ts
 - `packages/shared/src/` — domain types and API contracts (no framework deps)
   - `domain.ts`, `contracts/` (appData.ts, auth.ts, googleCalendar.ts)
-- `api/index.js` — Vercel serverless entry point
+- `api/index.js` — legacy Vercel serverless entry point (unused)
 - `docker-compose.yml` — local PostgreSQL container
-- `vercel.json` — Vercel deployment config
+- `vercel.json` — legacy Vercel deployment config (unused)
 
 ## Language Policy
 
@@ -46,8 +46,8 @@ Monorepo structure:
 - PostgreSQL (Supabase) with multi-tenant data isolation (all tables scoped by `user_id`)
 - Email/password + Google OAuth authentication (bcrypt, express-session, connect-pg-simple)
 - File uploads via multer; drag-and-drop via @dnd-kit
-- Vercel deployment config present (`vercel.json`, `api/index.js`)
-- No CI/CD pipeline; no production deployment yet
+- Deployed on Railway (production); `vercel.json` and `api/index.js` are legacy artifacts, unused
+- No CI/CD pipeline
 
 ## Key Conventions
 

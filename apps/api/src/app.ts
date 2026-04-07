@@ -92,8 +92,8 @@ export async function createApp(): Promise<{
     res.json({ ok: true });
   });
 
-  // Public media kit route (no auth required)
-  app.use('/mk', createMediaKitRouter(pool));
+  // Public profile route (no auth required)
+  app.use('/@', createMediaKitRouter(pool));
 
   const gamification = new GamificationService(appStore);
   app.use('/api/v1', createV1Router(appStore, pool, gamification));

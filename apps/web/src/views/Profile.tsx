@@ -859,13 +859,13 @@ export default function Profile() {
   const handleOpenMediaKit = () => {
     const handle = (profileForm.handle || '').trim().replace(/^@/, '');
     if (!handle) return;
-    window.open(`/mk/${encodeURIComponent(handle)}`, '_blank');
+    window.open(`/@${encodeURIComponent(handle)}`, '_blank');
   };
 
   const handleCopyLink = async () => {
     const handle = (profileForm.handle || '').trim().replace(/^@/, '');
     if (!handle) return;
-    const url = `${window.location.origin}/mk/${encodeURIComponent(handle)}`;
+    const url = `${window.location.origin}/@${encodeURIComponent(handle)}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Enlace copiado');
@@ -1101,7 +1101,7 @@ export default function Profile() {
                   className="flex-1 justify-center sm:flex-none"
                 >
                   <ArrowSquareOut size={16} />
-                  <span className="italic text-sm">{`/mk/${(profileForm.handle || '').trim().replace(/^@/, '')}`}</span>
+                  <span className="italic text-sm">{`/@${(profileForm.handle || '').trim().replace(/^@/, '')}`}</span>
                 </Button>
                 <button
                   type="button"

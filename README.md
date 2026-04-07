@@ -82,9 +82,9 @@ efi/
 │   ├── contracts/              # appData.ts, auth.ts, googleCalendar.ts
 │   └── index.ts
 ├── api/
-│   └── index.js                # Vercel serverless entry point
+│   └── index.js                # legacy Vercel serverless entry point (unused)
 ├── docker-compose.yml          # local PostgreSQL container
-├── vercel.json                 # Vercel deployment config
+├── vercel.json                 # legacy Vercel deployment config (unused)
 ├── README.md
 ├── package.json
 └── tsconfig.json

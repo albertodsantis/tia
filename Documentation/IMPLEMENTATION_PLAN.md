@@ -36,7 +36,7 @@ The following milestones have been fully completed.
 - frontend API client and centralized fetch layer created (`api.ts`)
 - security: Helmet, express-rate-limit, httpOnly session cookies
 - file upload infrastructure: multer + Supabase Storage (`lib/storage.ts`)
-- Vercel deployment config: `vercel.json` + `api/index.js`
+- Vercel deployment config: `vercel.json` + `api/index.js` (legacy, unused — deployed on Railway)
 
 ### Milestone 3 — PostgreSQL Persistence [DONE]
 
