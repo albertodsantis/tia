@@ -36,9 +36,9 @@ import { ACCENT_OPTIONS, getSwatchCss } from '../lib/accent';
 const TEMPLATE_VARIABLES = [
   { key: 'brandName', label: 'Cliente' },
   { key: 'contactName', label: 'Contacto' },
-  { key: 'creatorName', label: 'Creador' },
+  { key: 'creatorName', label: 'Yo' },
   { key: 'deliverable', label: 'Entregable' },
-  { key: 'mediaKitLink', label: 'Media Kit' },
+  { key: 'mediaKitLink', label: 'Perfil Público' },
 ] as const;
 
 const fieldClass =

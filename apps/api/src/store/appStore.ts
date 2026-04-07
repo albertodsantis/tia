@@ -184,7 +184,7 @@ const initialState: AppState = {
     {
       id: 't1',
       name: '1. Primer contacto (Outreach)',
-      body: 'Hola {{contactName}},\n\nHe estado siguiendo el trabajo de {{brandName}} y me encanta su enfoque. Mi audiencia conecta muchísimo con su sector y creo que haríamos un gran equipo.\n\nTe dejo mi Media Kit interactivo para que conozcas más de mi perfil y métricas:\n{{mediaKitLink}}\n\n¿Tienen disponibilidad para una breve llamada la próxima semana y explorar ideas?\n\nSaludos,\n{{creatorName}}',
+      body: 'Hola {{contactName}},\n\nHe estado siguiendo el trabajo de {{brandName}} y me encanta su enfoque. Mi audiencia conecta muchísimo con su sector y creo que haríamos un gran equipo.\n\nTe dejo mi Perfil Público para que conozcas más de mi perfil y métricas:\n{{mediaKitLink}}\n\n¿Tienen disponibilidad para una breve llamada la próxima semana y explorar ideas?\n\nSaludos,\n{{creatorName}}',
     },
     {
       id: 't2',
