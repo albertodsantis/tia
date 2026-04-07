@@ -16,7 +16,7 @@ The product UI is Spanish-first. All technical documentation and code comments a
 - **Strategy (Estrategia)** — goal tracking, performance metrics, and progress overview
 - **Public Profile (Perfil Público)** — modular block composer for building a public profile link
 - **Settings (Ajustes)** — theme customization, integrations, and templates
-- **AI Assistant** — experimental conversational assistant powered by Google Gemini
+- **AI Assistant** — integrated conversational assistant powered by Google Gemini
 - **Onboarding** — guided welcome flow with color picker and tour for new users
 
 Desktop uses a sidebar layout; mobile uses bottom navigation.
@@ -147,7 +147,7 @@ The app will be available at **http://127.0.0.1:3000**.
 | `SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_ANON_KEY` | Yes | Supabase public anon key |
 | `SUPABASE_SERVICE_KEY` | Yes | Supabase service role key (server-side only) |
-| `GEMINI_API_KEY` | No | API key for the experimental Gemini-based AI assistant |
+| `GEMINI_API_KEY` | No | API key for the integrated Gemini-based AI assistant |
 | `PORT` | No | Server port (defaults to 3000) |
 | `NODE_ENV` | No | Runtime environment (defaults to `development`) |
 
@@ -155,7 +155,7 @@ The app will be available at **http://127.0.0.1:3000**.
 
 Core features are implemented with PostgreSQL persistence and multi-tenant data isolation (all tables scoped by `user_id`). Authentication supports email/password and Google OAuth.
 
-Pending work:
+Preparing for official launch:
 
 - CI/CD pipeline
 - Production deployment
