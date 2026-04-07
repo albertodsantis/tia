@@ -85,7 +85,7 @@ Native mobile apps are explicitly not required for v1.
 ### 7.1 Authentication and Session
 
 - email/password registration and login
-- Google OAuth login (popup flow via Supabase)
+- Google OAuth login (Supabase-initiated full-page redirect; backend validates Supabase access_token and issues Express session)
 - persistent and secure session handling (PostgreSQL-backed sessions)
 - logout, change password, and account deletion
 - clear separation between app authentication and Google Calendar permission grants

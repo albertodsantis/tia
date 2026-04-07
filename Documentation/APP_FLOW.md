@@ -130,15 +130,23 @@ Landing
   -> Session set → redirect to WelcomeColorPicker (new user) or Dashboard (returning)
 ```
 
-### 6.3 Google OAuth Flow
+### 6.3 Google OAuth Flow (Supabase — primary)
 
 ```text
 Landing
   -> Tap "Sign in with Google"
-  -> GET /api/auth/google/login → OAuth URL
-  -> Supabase Google OAuth popup/redirect
-  -> Callback → session set → redirect to app
+  -> supabase.auth.signInWithOAuth({ provider: 'google' })
+  -> Full-page redirect to Google consent screen
+  -> Google redirects back to the app origin
+  -> App.tsx: supabase.auth.getSession() → access_token retrieved
+  -> POST /api/auth/google/supabase (access_token)
+  -> Backend validates token with Supabase Admin client
+  -> User upserted in users table → Express session set
+  -> supabase.auth.signOut() called (Supabase session no longer needed)
+  -> App continues with Express session
 ```
+
+Note: a direct googleapis popup path also exists in the backend (`GET /api/auth/google/login-url` + shared callback), but the primary UI uses the Supabase redirect flow above.
 
 ### 6.4 Session and Logout
 
@@ -460,13 +468,17 @@ Settings > Notifications
 
 ### 11.5 Google Calendar OAuth Flow
 
+This is a separate OAuth grant from the app login. It uses a direct `googleapis` popup (not Supabase) to request Calendar scopes.
+
 ```text
 Settings > Integrations
   -> Tap "Conectar Google Calendar"
-  -> GET /api/auth/google/url → OAuth URL
-  -> OAuth popup opens
-  -> User authorizes in popup
-  -> Popup closes automatically
+  -> GET /api/auth/google/url → URL with Calendar scopes (googleapis)
+  -> Popup window opens pointing to that URL
+  -> User grants Calendar access in popup
+  -> GET /api/auth/google/callback (intent = 'calendar')
+  -> Calendar tokens stored in server session
+  -> Popup posts OAUTH_AUTH_SUCCESS and closes
   -> Settings reflects "Connected" state
 ```
 

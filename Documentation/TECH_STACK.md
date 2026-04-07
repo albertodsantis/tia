@@ -113,7 +113,7 @@ Rules:
 
 ### 5.4 Auth and External Services
 
-- `@supabase/supabase-js` `^2.100.0` — Supabase client (used for Google OAuth redirect handling in browser)
+- `@supabase/supabase-js` `^2.100.0` — used in two places: (1) browser client (`supabase.ts`) initiates Google OAuth redirect via `signInWithOAuth`; (2) server-side Admin client in `routes/auth.ts` validates the Supabase `access_token` sent by the client after redirect
 
 ### 5.5 AI Integration (Client-Side, Experimental)
 
@@ -148,7 +148,7 @@ Rules:
 - `bcryptjs` `^3.0.3` — password hashing (email/password auth)
 - Authentication supports two providers:
   - email/password (bcrypt, 10 rounds)
-  - Google OAuth (popup flow via Supabase redirect; stored as `provider = 'google'`)
+  - Google OAuth: browser initiates a full-page redirect via `supabase.auth.signInWithOAuth`; after redirect, the backend validates the Supabase `access_token` using the Admin client and issues an Express session (stored as `provider = 'google'`)
 - Sessions stored in PostgreSQL via `connect-pg-simple`
 
 ### 6.3 Build and Tooling
@@ -201,10 +201,10 @@ The shared layer must not depend on:
 
 ## 9. External Integrations
 
-- **Google OAuth 2.0** — app login (popup flow via Supabase) and Google Calendar authorization
+- **Google OAuth 2.0** — two separate grants: (1) app login via Supabase redirect flow; (2) Google Calendar authorization via direct `googleapis` popup
 - **Google Calendar API** — task-to-calendar synchronization (sync up and sync down)
 - **Supabase Storage** — image storage for avatars and portfolio images
-- **Supabase Auth** — used only for the Google OAuth redirect flow in the browser
+- **Supabase Auth** — used for the Google OAuth redirect flow: browser-side to initiate sign-in, server-side Admin client to validate the returned access_token
 
 Rules:
 

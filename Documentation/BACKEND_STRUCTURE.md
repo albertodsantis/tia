@@ -64,7 +64,9 @@ All application state is persisted in PostgreSQL hosted on Supabase. The `Postgr
 Two authentication providers are supported:
 
 - **Email/password**: bcryptjs, 10 rounds. Stored as `provider = 'email'` in the `users` table.
-- **Google OAuth**: popup flow using Supabase redirect in browser; user created/updated server-side with `provider = 'google'`.
+- **Google OAuth**: Two paths exist:
+  - **Supabase redirect (primary, used by the UI)**: browser calls `supabase.auth.signInWithOAuth({ provider: 'google' })` → full-page redirect to Google → redirected back to the app → `App.tsx` detects the Supabase session → sends `access_token` to `POST /api/auth/google/supabase` → backend validates the token using the Supabase Admin client (`@supabase/supabase-js`) → upserts the user in the `users` table → sets the Express session → client clears the Supabase session.
+  - **Direct googleapis popup (alternative backend path, not the primary UI flow)**: `GET /api/auth/google/login-url` generates a URL using `googleapis` with `openid`/`userinfo` scopes → client opens a popup → `GET /api/auth/google/callback` handles code exchange and sets the session directly.
 
 ### 5.2 Session
 
@@ -422,9 +424,6 @@ Returns the full application state plus the Efisystem gamification snapshot in a
 - request: `UpdatePartnerRequest`
 - response 200: `Partner`
 
-#### `DELETE /api/v1/partners/:partnerId`
-- response 200: `{ "success": true }`
-
 ### 7.8 Contacts
 
 #### `POST /api/v1/partners/:partnerId/contacts`
@@ -447,10 +446,6 @@ Returns the full application state plus the Efisystem gamification snapshot in a
 - request: `UpdateProfileRequest` (any subset of profile fields)
 - behavior: `socialProfiles` and `mediaKit` are partial-merged; `goals` replaces the entire array; `handle` auto-prefixed with `@`
 - response 200: `UserProfile`; may include `EfisystemAward`
-
-#### `POST /api/v1/profile/avatar`
-- multipart form: `file` field
-- response 200: `{ "url": "string" }`
 
 ### 7.10 Strategic View
 
@@ -499,10 +494,6 @@ Returns aggregated metrics per goal plus unassigned totals.
 - request: `CreateTemplateRequest` (`{ name, body }`)
 - response 201: `Template`
 
-#### `PATCH /api/v1/templates/:templateId`
-- request: partial `Template`
-- response 200: updated `Template`
-
 #### `DELETE /api/v1/templates/:templateId`
 - response 200: `{ "success": true }`
 
@@ -511,7 +502,7 @@ Returns aggregated metrics per goal plus unassigned totals.
 #### `GET /api/v1/notifications`
 - response 200: `NotificationsResponse` — list of pending app notifications (task reminders, gamification)
 
-#### `POST /api/v1/notifications/mark-seen`
+#### `PATCH /api/v1/notifications/seen`
 - response 200: `{ "success": true }`
 
 ### 7.14 Auth (`/api/auth`)
@@ -536,31 +527,36 @@ Authenticates with email/password.
 Destroys the session.
 - response 200: `LogoutResponse` (`{ success: true }`)
 
-#### `POST /api/auth/change-password`
+#### `POST /api/auth/password`
+Change password for email users, or add a password to a Google account.
 - request: `ChangePasswordRequest` (`{ currentPassword?, newPassword }`)
 - response 200: `ChangePasswordResponse`
 
 #### `DELETE /api/auth/account`
-Deletes the user's account and all associated data.
+Deletes the user's account and all associated data (CASCADE on `users` table).
 - response 200: `DeleteAccountResponse`
 
+#### `GET /api/auth/google/login-url`
+Returns a Google OAuth URL (with `openid`, `userinfo.email`, `userinfo.profile` scopes) for use in the direct googleapis popup login path (alternative, not the primary UI flow).
+- response 200: `GoogleAuthUrlResponse` (`{ url }`)
+
 #### `GET /api/auth/google/url`
-Returns the Google OAuth URL for Calendar access.
+Returns a Google OAuth URL (with Calendar scopes) for the Calendar integration popup.
 - response 200: `GoogleAuthUrlResponse` (`{ url }`)
 
 #### `GET /api/auth/google/callback`
-OAuth callback — posts `OAUTH_AUTH_SUCCESS` to opener and closes popup.
+Shared OAuth callback. Routes by `oauthIntent` stored in session:
+- `intent = 'login'`: fetches user info from Google, upserts user, sets Express session, posts `GOOGLE_LOGIN_SUCCESS` to opener and closes popup.
+- `intent = 'calendar'`: stores Calendar tokens in session, posts `OAUTH_AUTH_SUCCESS` to opener and closes popup.
+
+#### `POST /api/auth/google/supabase`
+Primary Google login path used by the UI. Receives a Supabase `access_token` (obtained after `supabase.auth.signInWithOAuth` redirect), validates it using the Supabase Admin client, upserts the user in the `users` table, and sets the Express session.
+- request: `{ access_token: string }`
+- response 200: `MeResponse` (includes `isNew: true` for new accounts)
 
 #### `GET /api/auth/status`
 Returns Google Calendar connection status.
 - response 200: `AuthStatusResponse` (`{ connected: boolean }`)
-
-#### `GET /api/auth/google/login`
-Returns the Google OAuth URL for app login (Supabase redirect flow).
-- response 200: `{ url: string }`
-
-#### `GET /api/auth/google/login/callback`
-Handles Google app-login OAuth callback. Creates or updates user and session.
 
 ### 7.15 Calendar (`/api/calendar`)
 
@@ -576,15 +572,40 @@ Fetches updated dates from Google Calendar for previously synced events.
 - request: `{ eventIds: string[] }`
 - response 200: `{ success: true, updatedEvents: [{ eventId, dueDate }] }`
 
-### 7.16 Public Media Kit (`/mk`)
+### 7.16 File Uploads
+
+#### `GET /api/v1/uploads/status`
+Returns whether Supabase Storage is configured and available.
+- response 200: `{ "configured": boolean }`
+
+#### `POST /api/v1/uploads`
+Uploads a file (avatar, portfolio image) to Supabase Storage.
+- auth: session required
+- multipart form: `file` field (single file)
+- response 200: `{ "url": "string" }`
+
+#### `DELETE /api/v1/uploads`
+Deletes a previously uploaded file from Supabase Storage.
+- auth: session required
+- request: `{ "url": "string" }`
+- response 200: `{ "success": true }`
+
+### 7.17 Status History
+
+#### `GET /api/v1/tasks/:taskId/status-history`
+Returns the status transition history for a task.
+- response 200: `TaskStatusTransition[]`
+
+#### `GET /api/v1/partners/:partnerId/status-history`
+Returns the status transition history for a partner.
+- response 200: `PartnerStatusTransition[]`
+
+### 7.18 Public Media Kit (`/mk`)
 
 Server-rendered HTML — no authentication required.
 
 #### `GET /mk/:handle`
 Returns a full HTML page for the public profile matching the given handle.
-
-#### `GET /mk/:handle/card`
-Returns a compact HTML summary card for the profile.
 
 ## 8. Gamification — Efisystem
 
