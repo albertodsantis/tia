@@ -51,9 +51,9 @@ const professions = [
 
 const features = [
   {
-    icon: Kanban,
-    title: 'Dashboard',
-    description: 'Métricas, metas y actividad reciente en un solo vistazo.',
+    icon: ChartBar,
+    title: 'Perfil Público',
+    description: 'Tu vitrina profesional. Un enlace único con tus clientes.',
   },
   {
     icon: Kanban,
@@ -66,9 +66,9 @@ const features = [
     description: 'Organiza clientes y contactos con tus términos.',
   },
   {
-    icon: ChartBar,
-    title: 'Perfil Público',
-    description: 'Tu identidad profesional y materiales de presentación.',
+    icon: Kanban,
+    title: 'Dashboard',
+    description: 'Métricas, metas y actividad reciente en un solo vistazo.',
   },
   {
     icon: CalendarDots,
@@ -222,7 +222,7 @@ export default function Landing({
                   backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
                 }}
               >
-                freelancer.
+                freelance.
               </span>
             </h1>
 
@@ -239,8 +239,8 @@ export default function Landing({
             </div>
 
             <p className="mt-5 max-w-lg text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
-              Gestiona clientes, colaboraciones, entregables y contactos desde un workspace
-              compacto.
+              Workspace compacto diseñado para profesionales independientes. Organiza tareas,
+              clientes y crea tu página pública para compartir.
             </p>
 
             {/* Feature grid - visible on desktop below hero */}
