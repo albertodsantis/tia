@@ -26,3 +26,7 @@ export interface CalendarSyncDownResponse {
     dueDate: string;
   }>;
 }
+
+export interface CalendarStatusResponse {
+  connected: boolean;
+}

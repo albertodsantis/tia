@@ -1,6 +1,11 @@
 import type {
   AppBootstrapResponse,
   AppSettingsResponse,
+  CalendarStatusResponse,
+  CalendarSyncDownRequest,
+  CalendarSyncDownResponse,
+  CalendarSyncRequest,
+  CalendarSyncResponse,
   ChangePasswordRequest,
   ChangePasswordResponse,
   Contact,
@@ -184,4 +189,20 @@ export const appApi = {
   getNotifications: () => apiRequest<NotificationsResponse>('/api/v1/notifications'),
   markNotificationsSeen: () =>
     apiRequest<{ success: boolean }>('/api/v1/notifications/seen', { method: 'PATCH' }),
+};
+
+export const calendarApi = {
+  getStatus: () => apiRequest<CalendarStatusResponse>('/api/calendar/status'),
+  getConnectUrl: () => apiRequest<GoogleAuthUrlResponse>('/api/auth/google/url'),
+  disconnect: () => apiRequest<{ success: boolean }>('/api/calendar/disconnect', { method: 'DELETE' }),
+  syncTask: (payload: CalendarSyncRequest) =>
+    apiRequest<CalendarSyncResponse>('/api/calendar/sync', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  syncDown: (payload: CalendarSyncDownRequest) =>
+    apiRequest<CalendarSyncDownResponse>('/api/calendar/sync-down', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };

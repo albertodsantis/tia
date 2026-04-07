@@ -340,6 +340,22 @@ export function createAuthRouter(
       } else {
         (req.session as any).tokens = tokens;
 
+        // Persist tokens to DB so calendar connection survives session expiry
+        const sessionUser = (req.session as any).user;
+        if (sessionUser?.id && tokens.access_token) {
+          await pool.query(
+            `UPDATE users
+             SET gcal_access_token = $1, gcal_refresh_token = $2, gcal_token_expiry = $3
+             WHERE id = $4`,
+            [
+              tokens.access_token,
+              tokens.refresh_token ?? null,
+              tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+              sessionUser.id,
+            ],
+          );
+        }
+
         res.send(`
           <html>
             <body>
