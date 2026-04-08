@@ -145,9 +145,11 @@ export function generateEfiLinkHtml(params: {
   socialProfiles: SocialProfiles;
   efiProfile: EfiProfile;
   accentColor: string;
+  forceDark?: boolean;
 }): string {
-  const { name, handle, tagline, avatar, socialProfiles, efiProfile, accentColor } = params;
+  const { name, handle, tagline, avatar, socialProfiles, efiProfile, accentColor, forceDark = false } = params;
   const accent = resolveAccent(accentColor);
+  const isDark = accent.forceDark || forceDark;
 
   const displayHandle = handle.startsWith('@') ? handle : `@${handle}`;
 
@@ -199,14 +201,16 @@ export function generateEfiLinkHtml(params: {
     ? `background: ${accent.gradient};`
     : `background: ${accent.hex};`;
 
-  // Background glow derived from accent
+  // Background glow derived from accent — stronger for dark mode
   const glowColor = accent.hex;
   const bgGlow = accent.isRetro
-    ? `radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,176,0,0.12) 0%, transparent 70%)`
-    : `radial-gradient(ellipse 80% 50% at 50% -10%, ${glowColor}22 0%, transparent 65%)`;
+    ? `radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,176,0,0.18) 0%, transparent 70%)`
+    : isDark
+      ? `radial-gradient(ellipse 90% 60% at 50% -5%, ${glowColor}30 0%, transparent 65%)`
+      : `radial-gradient(ellipse 80% 50% at 50% -10%, ${glowColor}28 0%, transparent 65%)`;
 
   return `<!DOCTYPE html>
-<html lang="es"${accent.forceDark ? ' data-theme="dark"' : ''}>
+<html lang="es"${isDark ? ' data-theme="dark"' : ''}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -245,7 +249,7 @@ export function generateEfiLinkHtml(params: {
     ` : ''}
 
     @media (prefers-color-scheme: light) {
-      ${accent.forceDark ? '' : `
+      ${isDark ? '' : `
       :root {
         --bg: #f7f7f7;
         --surface: rgba(0,0,0,0.04);
@@ -371,7 +375,8 @@ export function generateEfiLinkHtml(params: {
     .divider {
       width: 100%;
       height: 1px;
-      background: var(--border);
+      background: ${escapeHtml(accent.gradient)};
+      opacity: 0.35;
       margin: 4px 0 20px;
     }
 
@@ -401,10 +406,11 @@ export function generateEfiLinkHtml(params: {
     }
 
     .social-icon:hover {
-      color: var(--text);
+      color: var(--accent);
       border-color: var(--accent);
-      background: var(--surface-hover);
+      background: ${escapeHtml(accent.hex)}18;
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px -4px ${escapeHtml(accent.hex)}44;
     }
 
     /* ── Link buttons ─────────────────────────────── */
@@ -422,46 +428,47 @@ export function generateEfiLinkHtml(params: {
       gap: 14px;
       width: 100%;
       padding: 15px 18px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: ${escapeHtml(accent.gradient)};
+      border: none;
       border-radius: var(--radius);
-      color: var(--text);
+      color: #fff;
       text-decoration: none;
-      transition: background 0.18s, border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+      transition: filter 0.18s, transform 0.15s, box-shadow 0.18s;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 4px 18px -4px ${escapeHtml(accent.hex)}66;
     }
 
-    .link-btn::before {
+    .link-btn::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: ${escapeHtml(accent.gradient)};
-      opacity: 0;
-      transition: opacity 0.18s;
+      background: rgba(0,0,0,0);
+      transition: background 0.18s;
     }
 
     .link-btn:hover {
-      border-color: var(--border-hover);
-      background: var(--surface-hover);
+      filter: brightness(1.08);
       transform: translateY(-2px);
-      box-shadow: var(--shadow);
+      box-shadow: 0 8px 28px -6px ${escapeHtml(accent.hex)}80;
     }
 
-    .link-btn:hover::before {
-      opacity: 0.04;
+    .link-btn:hover::after {
+      background: rgba(255,255,255,0.06);
     }
 
     .link-btn:active {
       transform: translateY(0);
+      filter: brightness(0.96);
     }
 
     .link-icon {
-      color: var(--text-secondary);
+      color: rgba(255,255,255,0.75);
       display: flex;
       align-items: center;
       flex-shrink: 0;
       position: relative;
+      z-index: 1;
     }
 
     .link-label {
@@ -472,14 +479,16 @@ export function generateEfiLinkHtml(params: {
       text-overflow: ellipsis;
       white-space: nowrap;
       position: relative;
+      z-index: 1;
       letter-spacing: -0.01em;
     }
 
     .link-arrow {
       font-size: 0.85rem;
-      color: var(--text-secondary);
+      color: rgba(255,255,255,0.65);
       flex-shrink: 0;
       position: relative;
+      z-index: 1;
       transition: transform 0.15s;
     }
 
@@ -488,11 +497,22 @@ export function generateEfiLinkHtml(params: {
     }
 
     .link-btn--pdf {
-      border-style: dashed;
+      background: var(--surface);
+      border: 1.5px dashed var(--accent);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .link-btn--pdf .link-icon,
+    .link-btn--pdf .link-arrow {
+      color: var(--text-secondary);
     }
 
     .link-btn--pdf:hover {
       border-style: solid;
+      background: var(--surface-hover);
+      filter: none;
+      box-shadow: none;
     }
 
     /* ── CRT overlay ──────────────────────────────── */

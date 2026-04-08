@@ -24,7 +24,7 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
       );
 
       const { rows: settingsRows } = await pool.query(
-        `SELECT us.accent_color
+        `SELECT us.accent_color, us.profile_accent_color, us.profile_force_dark
          FROM user_settings us
          JOIN user_profile up ON up.user_id = us.user_id
          WHERE LOWER(up.handle) = LOWER($1)`,
@@ -48,6 +48,7 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
         ...(row.efi_profile || {}),
       };
 
+      const profileAccent = settingsRow?.profile_accent_color ?? settingsRow?.accent_color ?? '#C96F5B';
       const html = generateEfiLinkHtml({
         name: row.name || '',
         handle: row.handle || handle,
@@ -55,7 +56,8 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
         avatar: row.avatar || '',
         socialProfiles,
         efiProfile,
-        accentColor: settingsRow?.accent_color || '#C96F5B',
+        accentColor: profileAccent,
+        forceDark: settingsRow?.profile_force_dark ?? false,
       });
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');

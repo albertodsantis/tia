@@ -99,11 +99,15 @@ export interface UpdateProfileRequest extends Partial<Omit<UserProfile, 'socialP
 export interface UpdateSettingsRequest {
   accentColor?: string;
   theme?: AppTheme;
+  profileAccentColor?: string;
+  profileForceDark?: boolean;
 }
 
 export interface AppSettingsResponse {
   accentColor: string;
   theme: AppTheme;
+  profileAccentColor: string;
+  profileForceDark: boolean;
 }
 
 export interface CreateTemplateRequest {

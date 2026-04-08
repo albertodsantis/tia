@@ -69,6 +69,8 @@ interface AppContextType extends AppState {
   updateProfile: (profile: UpdateProfileRequest) => Promise<UserProfile>;
   setAccentColor: (color: string) => Promise<void>;
   setTheme: (theme: AppTheme) => Promise<void>;
+  setProfileAccentColor: (color: string) => Promise<void>;
+  setProfileForceDark: (force: boolean) => Promise<void>;
   addTemplate: (template: Omit<Template, 'id'>) => Promise<void>;
   deleteTemplate: (templateId: string) => Promise<void>;
 }
@@ -89,6 +91,8 @@ const emptyState: AppState = {
   accentColor: '#C96F5B',
   theme: 'light',
   templates: [],
+  profileAccentColor: '#C96F5B',
+  profileForceDark: false,
 };
 
 function normalizeProfile(profile: UserProfile): UserProfile {
@@ -588,6 +592,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     }
   };
 
+  const setProfileAccentColor = async (color: string) => {
+    setActionError(null);
+    // Optimistic update so the preview iframe refreshes immediately
+    setState((current) => ({ ...current, profileAccentColor: color }));
+    try {
+      const settings = await appApi.updateSettings({ profileAccentColor: color });
+      setState((current) => ({
+        ...current,
+        profileAccentColor: settings.profileAccentColor,
+        profileForceDark: settings.profileForceDark,
+      }));
+    } catch (error) {
+      trackError(error);
+    }
+  };
+
+  const setProfileForceDark = async (force: boolean) => {
+    setActionError(null);
+    setState((current) => ({ ...current, profileForceDark: force }));
+    try {
+      const settings = await appApi.updateSettings({ profileForceDark: force });
+      setState((current) => ({
+        ...current,
+        profileAccentColor: settings.profileAccentColor,
+        profileForceDark: settings.profileForceDark,
+      }));
+    } catch (error) {
+      trackError(error);
+    }
+  };
+
   const addTemplate = async (template: Omit<Template, 'id'>) => {
     setActionError(null);
 
@@ -652,6 +687,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         updateProfile,
         setAccentColor,
         setTheme,
+        setProfileAccentColor,
+        setProfileForceDark,
         addTemplate,
         deleteTemplate,
       }}

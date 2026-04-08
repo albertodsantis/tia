@@ -257,6 +257,8 @@ export class PostgresAppStore {
       accentColor: settings.accentColor,
       templates,
       theme: settings.theme,
+      profileAccentColor: settings.profileAccentColor,
+      profileForceDark: settings.profileForceDark,
     };
   }
 
@@ -1008,11 +1010,13 @@ export class PostgresAppStore {
       [userId],
     );
     if (rows.length === 0) {
-      return { accentColor: '#C96F5B', theme: 'light' };
+      return { accentColor: '#C96F5B', theme: 'light', profileAccentColor: '#C96F5B', profileForceDark: false };
     }
     return {
       accentColor: rows[0].accent_color,
       theme: rows[0].theme as any,
+      profileAccentColor: rows[0].profile_accent_color ?? rows[0].accent_color,
+      profileForceDark: rows[0].profile_force_dark ?? false,
     };
   }
 
@@ -1031,6 +1035,14 @@ export class PostgresAppStore {
       }
       setClauses.push(`theme = $${idx++}`);
       values.push(updates.theme);
+    }
+    if (updates.profileAccentColor !== undefined) {
+      setClauses.push(`profile_accent_color = $${idx++}`);
+      values.push(normalizeAccentColor(updates.profileAccentColor));
+    }
+    if (updates.profileForceDark !== undefined) {
+      setClauses.push(`profile_force_dark = $${idx++}`);
+      values.push(updates.profileForceDark);
     }
 
     if (setClauses.length > 0) {

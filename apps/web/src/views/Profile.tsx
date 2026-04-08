@@ -13,6 +13,7 @@ import {
   GlobeSimple,
   InstagramLogo,
   Link,
+  Moon,
   Plus,
   Trash,
   TiktokLogo,
@@ -32,6 +33,7 @@ import {
   getAccessibleAccentForeground,
   getRepresentativeHex,
   getSwatchCss,
+  isRetroAccent,
 } from '../lib/accent';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -79,10 +81,12 @@ const sectionLabel =
 function ProfilePreview({
   form,
   accentColor,
+  forceDark,
   device,
 }: {
   form: ProfileForm;
   accentColor: string;
+  forceDark: boolean;
   device: PreviewDevice;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -96,7 +100,7 @@ function ProfilePreview({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ ...form, accentColor }),
+          body: JSON.stringify({ ...form, accentColor, forceDark }),
         });
         if (!res.ok) return;
         const html = await res.text();
@@ -105,7 +109,7 @@ function ProfilePreview({
         // silent — preview is best-effort
       }
     }, 400);
-  }, [form, accentColor]);
+  }, [form, accentColor, forceDark]);
 
   useEffect(() => {
     refresh();
@@ -154,7 +158,8 @@ function Section({ title, children, action }: { title: string; children: React.R
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Profile() {
-  const { profile, accentColor, accentHex, setAccentColor, updateProfile } = useAppContext();
+  const { profile, profileAccentColor, profileForceDark, setProfileAccentColor, setProfileForceDark, updateProfile } = useAppContext();
+  const accentHex = getRepresentativeHex(profileAccentColor);
 
   const [form, setForm] = useState<ProfileForm>({
     name: profile.name,
@@ -299,7 +304,7 @@ export default function Profile() {
   const editorPanel = (
     <div className="flex flex-col h-full">
       {/* Scrollable sections */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-24 lg:pb-8">
 
         {/* ── Identity ──────────────────────────────────────────────── */}
         <Section title="Identidad">
@@ -372,9 +377,9 @@ export default function Profile() {
 
         {/* ── Tema / Accent ──────────────────────────────────────────── */}
         <Section title="Tema">
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-6 gap-2 mb-4">
             {ACCENT_OPTIONS.map((option) => {
-              const isSelected = accentColor === option.value;
+              const isSelected = profileAccentColor === option.value;
               const displayHex = getRepresentativeHex(option.value);
               const fg = getAccessibleAccentForeground(option.value);
               const bg = getSwatchCss(option.value);
@@ -382,7 +387,7 @@ export default function Profile() {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setAccentColor(option.value)}
+                  onClick={() => setProfileAccentColor(option.value)}
                   title={option.name}
                   className="group flex flex-col items-center gap-1.5"
                 >
@@ -410,6 +415,45 @@ export default function Profile() {
               );
             })}
           </div>
+
+          {/* Dark mode toggle — disabled for retro themes (they force dark automatically) */}
+          <button
+            type="button"
+            onClick={() => setProfileForceDark(!profileForceDark)}
+            disabled={isRetroAccent(profileAccentColor)}
+            className={cx(
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all',
+              profileForceDark || isRetroAccent(profileAccentColor)
+                ? 'border-[color:var(--line-soft)] bg-[var(--surface-card-strong)]'
+                : 'border-[color:var(--line-soft)] bg-[var(--surface-muted)]',
+              isRetroAccent(profileAccentColor) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-[var(--surface-card-strong)]',
+            )}
+          >
+            <Moon size={16} className="text-[var(--text-secondary)] shrink-0" />
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-[var(--text-primary)]">Forzar modo oscuro</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                {isRetroAccent(profileAccentColor)
+                  ? 'Activo automáticamente con este tema'
+                  : 'La página pública siempre se mostrará en oscuro'}
+              </p>
+            </div>
+            <div
+              className={cx(
+                'w-9 h-5 rounded-full transition-colors shrink-0 relative',
+                profileForceDark || isRetroAccent(profileAccentColor)
+                  ? 'bg-[var(--accent-color)]'
+                  : 'bg-[var(--line-soft)]',
+              )}
+            >
+              <div
+                className={cx(
+                  'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                  profileForceDark || isRetroAccent(profileAccentColor) ? 'translate-x-4' : 'translate-x-0.5',
+                )}
+              />
+            </div>
+          </button>
         </Section>
 
         {/* ── Redes sociales ────────────────────────────────────────── */}
@@ -654,7 +698,7 @@ export default function Profile() {
           'transition-all duration-300 h-full',
           device === 'mobile' ? 'w-[375px]' : 'w-full',
         )}>
-          <ProfilePreview form={form} accentColor={accentColor} device={device} />
+          <ProfilePreview form={form} accentColor={profileAccentColor} forceDark={profileForceDark} device={device} />
         </div>
       </div>
     </div>

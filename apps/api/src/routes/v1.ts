@@ -86,6 +86,7 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
         socialProfiles,
         efiProfile,
         accentColor: String(body.accentColor ?? '#C96F5B'),
+        forceDark: body.forceDark === true,
       });
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(html);

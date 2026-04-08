@@ -178,6 +178,8 @@ export interface AppState {
   accentColor: string;
   templates: Template[];
   theme: AppTheme;
+  profileAccentColor: string;
+  profileForceDark: boolean;
 }
 
 // ────────────────────────────────────────────────────────────
