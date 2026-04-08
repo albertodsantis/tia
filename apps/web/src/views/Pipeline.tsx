@@ -870,6 +870,7 @@ export default function Pipeline() {
               options={STATUSES.map(s => ({ value: s, label: s }))}
               buttonStyle={getStatusSelectStyle(task.status, accentHex)}
               buttonClassName="py-2.5 px-3 rounded-[0.8rem]"
+              useBottomSheet
             />
 
             <div className="flex items-center justify-between gap-3 border-t pt-3 [border-color:var(--line-soft)]">
@@ -992,6 +993,7 @@ export default function Pipeline() {
             buttonStyle={getStatusSelectStyle(task.status, accentHex)}
             buttonClassName="py-2.5 px-3 rounded-[0.8rem]"
             className="w-full xl:w-[10.5rem]"
+            useBottomSheet
           />
 
           <div className="flex items-center gap-2">
