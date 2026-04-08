@@ -404,6 +404,7 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
       }
 
       const row = rows[0];
+      console.log('[mediakit] efi_profile from DB:', JSON.stringify(row.efi_profile));
       const settingsRow = settingsRows[0];
 
       const socialProfiles: SocialProfiles = {
