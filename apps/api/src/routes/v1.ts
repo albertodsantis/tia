@@ -271,7 +271,9 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
     try {
       const userId = getUserId(req);
       const body = req.body as UpdateProfileRequest;
+      console.log('[PATCH /profile] efiProfile received:', JSON.stringify(body.efiProfile));
       const profile = await appStore.updateProfile(userId, body);
+      console.log('[PATCH /profile] efiProfile saved:', JSON.stringify(profile.efiProfile));
 
       let efisystem = null;
       const awards = [];
