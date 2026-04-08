@@ -693,7 +693,7 @@ export default function Profile() {
       </div>
 
       {/* iframe */}
-      <div className="flex-1 overflow-hidden p-4 flex items-start justify-center">
+      <div className="flex-1 overflow-hidden p-4 flex items-start justify-center min-h-[680px] lg:min-h-0">
         <div className={cx(
           'transition-all duration-300 h-full',
           device === 'mobile' ? 'w-[375px]' : 'w-full',
