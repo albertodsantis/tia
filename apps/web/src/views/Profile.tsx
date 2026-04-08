@@ -400,20 +400,23 @@ export default function Profile() {
                     </button>
                   </div>
 
-                  <input
-                    type="text"
-                    value={link.label}
-                    onChange={(e) => updateLink(link.id, 'label', e.target.value)}
-                    placeholder="Etiqueta"
-                    className={cx(inputClass, 'w-32 shrink-0')}
-                  />
-                  <input
-                    type="url"
-                    value={link.url}
-                    onChange={(e) => updateLink(link.id, 'url', e.target.value)}
-                    placeholder="https://…"
-                    className={cx(inputClass, 'flex-1 min-w-0')}
-                  />
+                  <div className="flex flex-col gap-1.5 flex-1 min-w-0 sm:flex-row sm:gap-2">
+                    <input
+                      type="text"
+                      value={link.label}
+                      onChange={(e) => updateLink(link.id, 'label', e.target.value)}
+                      placeholder="Etiqueta"
+                      className={cx(inputClass, 'sm:w-32 sm:shrink-0')}
+                    />
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={(e) => updateLink(link.id, 'url', e.target.value)}
+                      placeholder="https://…"
+                      className={cx(inputClass, 'sm:flex-1')}
+                    />
+                  </div>
+
                   <button
                     onClick={() => removeLink(link.id)}
                     className="shrink-0 p-1 text-[var(--text-secondary)] hover:text-red-500 transition-colors"
