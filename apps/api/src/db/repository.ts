@@ -41,7 +41,7 @@ import type {
    Validation helpers
    ================================================================ */
 
-const SOCIAL_PROFILE_KEYS = ['instagram', 'tiktok', 'x', 'threads', 'youtube'] as const;
+const SOCIAL_PROFILE_KEYS = ['instagram', 'tiktok', 'x', 'threads', 'youtube', 'linkedin'] as const;
 
 function normalizeRequiredText(value: string | undefined, label: string) {
   const normalized = value?.trim();
