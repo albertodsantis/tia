@@ -405,6 +405,8 @@ export default function Pipeline() {
   const [newItemText, setNewItemText] = useState('');
   const [poppingId, setPoppingId] = useState<string | null>(null);
   const [expandedChecklists, setExpandedChecklists] = useState<Set<string>>(new Set());
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemText, setEditingItemText] = useState('');
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
   const sortedTasks = useMemo(
@@ -517,6 +519,8 @@ export default function Pipeline() {
     setIsPartnerPickerOpen(false);
     setChecklistItems([]);
     setNewItemText('');
+    setEditingItemId(null);
+    setEditingItemText('');
   };
 
   const requestTaskDeletion = (task: Task) => {
@@ -626,6 +630,30 @@ export default function Pipeline() {
     const updated = checklistItems.filter((item) => item.id !== id);
     setChecklistItems(updated);
     void saveChecklist(updated);
+  };
+
+  const startEditingItem = (item: ChecklistItem) => {
+    setEditingItemId(item.id);
+    setEditingItemText(item.text);
+  };
+
+  const commitEditingItem = () => {
+    if (!editingItemId) return;
+    const text = editingItemText.trim();
+    if (!text) {
+      // Empty text: delete the item
+      const updated = checklistItems.filter((item) => item.id !== editingItemId);
+      setChecklistItems(updated);
+      void saveChecklist(updated);
+    } else {
+      const updated = checklistItems.map((item) =>
+        item.id === editingItemId ? { ...item, text } : item,
+      );
+      setChecklistItems(updated);
+      void saveChecklist(updated);
+    }
+    setEditingItemId(null);
+    setEditingItemText('');
   };
 
   const toggleExpandedChecklist = (taskId: string) => {
@@ -1654,16 +1682,35 @@ export default function Pipeline() {
                       </span>
                     </button>
 
-                    <span
-                      className={cx(
-                        'flex-1 text-sm leading-5 transition-all duration-200',
-                        item.done
-                          ? 'text-[var(--text-secondary)]/40 line-through'
-                          : 'text-[var(--text-primary)]',
-                      )}
-                    >
-                      {item.text}
-                    </span>
+                    {editingItemId === item.id ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editingItemText}
+                        onChange={(e) => setEditingItemText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); commitEditingItem(); }
+                          if (e.key === 'Escape') { setEditingItemId(null); setEditingItemText(''); }
+                        }}
+                        onBlur={commitEditingItem}
+                        className="flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+                      />
+                    ) : (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => !item.done && startEditingItem(item)}
+                        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !item.done) startEditingItem(item); }}
+                        className={cx(
+                          'flex-1 text-sm leading-5 transition-all duration-200',
+                          item.done
+                            ? 'text-[var(--text-secondary)]/40 line-through cursor-default'
+                            : 'text-[var(--text-primary)] cursor-text',
+                        )}
+                      >
+                        {item.text}
+                      </span>
+                    )}
 
                     <button
                       type="button"
@@ -1689,10 +1736,20 @@ export default function Pipeline() {
                         addChecklistItem();
                       }
                     }}
-                    onBlur={addChecklistItem}
                     placeholder="Añadir elemento..."
                     className="flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]/40"
                   />
+                  {newItemText.trim() && (
+                    <button
+                      type="button"
+                      onClick={addChecklistItem}
+                      className="shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold text-white transition-opacity"
+                      style={{ backgroundColor: accentHex }}
+                      aria-label="Añadir sub-tarea"
+                    >
+                      Añadir
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
