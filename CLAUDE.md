@@ -13,15 +13,15 @@
 
 Efi is a compact CRM for independent professionals — content creators, podcasters, streamers, photographers, copywriters, DJs, speakers, coaches, and more. It provides a personal operational workspace to manage partnerships, track deliverables, and maintain a professional profile — all from a single responsive web app. Each user has their own isolated data (tasks, partners, profile, settings, templates). No collaborative workspaces — each account is a personal workspace.
 
-Features: Dashboard (Inicio), Pipeline (Kanban/List/Calendar + Google Calendar sync), Directory (Directorio), Strategy (Estrategia), Public Profile (Perfil Público — modular block composer), Settings (Ajustes), AI Assistant (Gemini), Onboarding.
+Features: Dashboard (Inicio), Pipeline (Kanban/List/Calendar + Google Calendar sync), Directory (Directorio), Strategy (Estrategia), Public Profile (EfiLink — linktree-style hub at `/@handle`), Settings (Ajustes), AI Assistant (Gemini), Onboarding.
 
 Monorepo structure:
 
 - `apps/web/src/` — React 19 SPA (Vite, Tailwind CSS 4, TypeScript)
-  - `components/` — ui.tsx, AIAssistant, BlockPickerDrawer, Confetti, ConfirmDialog, CustomSelect, EfisystemWidget, ErrorBoundary, ImageUpload, LegalModal, MoreOptionsMenu, NotificationBell, OnboardingTour, OverlayModal, TemplatePickerDrawer, Toaster, profile-blocks/
+  - `components/` — ui.tsx, AIAssistant, Confetti, ConfirmDialog, CustomSelect, EfisystemWidget, ErrorBoundary, ImageUpload, LegalModal, MoreOptionsMenu, NotificationBell, OnboardingTour, OverlayModal, Toaster
   - `views/` — Dashboard, Directory, Landing, Pipeline, Profile, Settings, StrategicView, WelcomeColorPicker, WelcomeOnboarding
   - `context/AppContext.tsx` — global app state
-  - `lib/` — api.ts, accent.ts, blockTemplates.ts, date.ts, professions.ts, supabase.ts, toast.ts
+  - `lib/` — api.ts, accent.ts, date.ts, professions.ts, supabase.ts, toast.ts
 - `apps/api/src/` — Express backend (auth, business logic, integrations)
   - `server.ts`, `app.ts` — entry points
   - `config/` — env.ts (environment config)
@@ -29,7 +29,6 @@ Monorepo structure:
   - `db/` — connection.ts, repository.ts, migrate.ts, migrations/
   - `lib/` — storage.ts
   - `services/` — gamification.ts
-  - `store/` — appStore.ts
 - `packages/shared/src/` — domain types and API contracts (no framework deps)
   - `domain.ts`, `contracts/` (appData.ts, auth.ts, googleCalendar.ts)
 - `api/index.js` — legacy Vercel serverless entry point (unused)
