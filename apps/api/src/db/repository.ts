@@ -306,11 +306,11 @@ export class PostgresAppStore {
   async createTask(userId: string, input: CreateTaskRequest): Promise<Task> {
     const id = randomUUID();
     const title = normalizeRequiredText(input.title, 'El titulo');
-    const description = normalizeRequiredText(input.description, 'La descripcion');
+    const description = normalizeOptionalText(input.description) ?? '';
     const partnerId = normalizeRequiredText(input.partnerId, 'La marca');
     const status = normalizeRequiredText(input.status, 'El estado');
     const dueDate = normalizeDate(input.dueDate);
-    const value = normalizeMoney(input.value);
+    const value = input.value !== undefined ? normalizeMoney(input.value) : 0;
     const gcalEventId = normalizeOptionalText(input.gcalEventId) || null;
     const actualPayment = input.actualPayment !== undefined ? normalizeMoney(input.actualPayment) : null;
     const goalId = normalizeOptionalText(input.goalId) || null;
@@ -382,7 +382,7 @@ export class PostgresAppStore {
     }
     if (updates.description !== undefined) {
       setClauses.push(`description = $${idx++}`);
-      values.push(normalizeRequiredText(updates.description, 'La descripcion'));
+      values.push(normalizeOptionalText(updates.description) ?? '');
     }
     if (updates.partnerId !== undefined) {
       const pid = normalizeRequiredText(updates.partnerId, 'La marca');

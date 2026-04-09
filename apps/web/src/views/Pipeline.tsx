@@ -1484,7 +1484,6 @@ export default function Pipeline() {
                 Descripción
               </label>
               <textarea
-                required
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
                 className={cx(fieldClass, 'min-h-[56px]')}
@@ -1578,7 +1577,6 @@ export default function Pipeline() {
                 <input
                   type="number"
                   min="0"
-                  required
                   value={form.value}
                   onChange={(event) => setForm({ ...form, value: event.target.value })}
                   className={cx(fieldClass, 'bg-[var(--surface-card)]')}

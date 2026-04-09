@@ -52,12 +52,12 @@ export interface DashboardSummaryResponse {
 
 export interface CreateTaskRequest {
   title: string;
-  description: string;
+  description?: string;
   partnerId: string;
   goalId?: string;
   status: TaskStatus;
   dueDate: string;
-  value: number;
+  value?: number;
   gcalEventId?: string;
   actualPayment?: number;
   checklistItems?: ChecklistItem[];
