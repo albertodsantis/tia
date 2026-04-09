@@ -481,24 +481,6 @@ const MainLayout = () => {
     mainRegion.scrollBy({ top: event.deltaY, behavior: 'auto' });
   };
 
-  if (isBootstrapping) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--surface-app)] px-6">
-        <SurfaceCard className="w-full max-w-lg p-8 text-center">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            Efi
-          </p>
-          <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-            Cargando workspace
-          </h1>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Estamos preparando tus datos y tus vistas de trabajo.
-          </p>
-        </SurfaceCard>
-      </div>
-    );
-  }
-
   if (bootstrapError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--surface-app)] px-6">
@@ -650,6 +632,17 @@ const MainLayout = () => {
   );
 };
 
+const AppSplash = () => (
+  <div className="flex min-h-dvh items-center justify-center bg-(--surface-app)">
+    <div className="text-center">
+      <p className="text-[11px] font-bold tracking-[0.18em] text-(--text-secondary) uppercase">
+        Efi
+      </p>
+      <p className="mt-2 text-sm text-(--text-secondary)">Cargando…</p>
+    </div>
+  </div>
+);
+
 const DEFAULT_ACCENT = '#C96F5B';
 
 const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
@@ -659,6 +652,10 @@ const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
   const [onboardingDone, setOnboardingDone] = useState(false);
   const [colorPicked, setColorPicked] = useState(false);
   const [forceOnboarding, setForceOnboarding] = useState(false);
+
+  if (isBootstrapping && !bootstrapError) {
+    return <AppSplash />;
+  }
 
   const needsOnboarding = isNewRegistration && !isBootstrapping && !bootstrapError && !onboardingDone;
   const needsColorPicker = isNewRegistration && !isBootstrapping && !bootstrapError && onboardingDone && !colorPicked && accentColor === DEFAULT_ACCENT;
@@ -771,16 +768,7 @@ export default function App() {
   }, [authPhase]);
 
   if (authPhase === 'checking') {
-    return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--surface-app)]">
-        <div className="text-center">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-[var(--text-secondary)] uppercase">
-            Efi
-          </p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">Cargando…</p>
-        </div>
-      </div>
-    );
+    return <AppSplash />;
   }
 
   if (authPhase === 'unauthenticated') {
