@@ -47,3 +47,21 @@ export interface ChangePasswordResponse {
   success: boolean;
   updatedProvider: 'email' | 'google';
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ChangeEmailRequest {
+  newEmail: string;
+  currentPassword?: string;
+}
+
+export interface SimpleSuccessResponse {
+  success: boolean;
+}

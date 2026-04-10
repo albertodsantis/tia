@@ -6,12 +6,12 @@ import {
   CaretDown,
   SignOut,
   Chat,
+  Envelope,
   LockKey,
   Moon,
   PencilLine,
   Plus,
   ArrowCounterClockwise,
-  ShieldCheck,
   Sun,
   Trash,
   TextT,
@@ -74,6 +74,11 @@ export default function Settings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailForm, setEmailForm] = useState({ newEmail: '', currentPassword: '' });
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -96,6 +101,30 @@ export default function Settings() {
     setIsPasswordModalOpen(false);
     setPasswordError(null);
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  };
+
+  const closeEmailModal = () => {
+    setIsEmailModalOpen(false);
+    setEmailError(null);
+    setEmailSent(false);
+    setEmailForm({ newEmail: '', currentPassword: '' });
+  };
+
+  const handleChangeEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setEmailError(null);
+    setSavingEmail(true);
+    try {
+      await authApi.changeEmail({
+        newEmail: emailForm.newEmail,
+        ...(provider === 'email' ? { currentPassword: emailForm.currentPassword } : {}),
+      });
+      setEmailSent(true);
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : 'No se pudo solicitar el cambio de correo.');
+    } finally {
+      setSavingEmail(false);
+    }
   };
 
   const handleChangePassword = async (event: React.FormEvent) => {
@@ -435,17 +464,14 @@ export default function Settings() {
             />
             <SettingRow
               icon={CalendarBlank}
-              title="Sincronizacion con Google Calendar"
-              description="Proximamente. Podras sincronizar entregas y fechas con tu Google Calendar."
-              trailing={<ToggleSwitch checked={false} accentColor={accentGradient} disabled />}
-              className="cursor-not-allowed px-0 py-3 opacity-60"
-            />
-            <SettingRow
-              icon={ShieldCheck}
-              title="Privacidad y seguridad"
-              description="Controla sesiones, permisos y preferencias sensibles."
-              trailing={<ToggleSwitch checked={false} accentColor={accentGradient} disabled />}
-              className="cursor-not-allowed px-0 py-3"
+              title="Google Calendar"
+              description="Sincroniza entregas y fechas con tu calendario."
+              trailing={
+                <span className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-bold tracking-[0.14em] text-slate-400 uppercase dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500">
+                  Próximamente
+                </span>
+              }
+              className="px-0 py-3 opacity-60"
             />
           </div>
         </div>
@@ -481,6 +507,18 @@ export default function Settings() {
           </div>
           <div className="border-t border-slate-200/70 pt-4 dark:border-slate-700/60" />
           <div className="space-y-1">
+            <SettingRow
+              icon={Envelope}
+              title="Cambiar correo electrónico"
+              description="Actualiza el correo asociado a tu cuenta."
+              onClick={() => setIsEmailModalOpen(true)}
+              trailing={
+                <span className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase dark:text-slate-500">
+                  Cambiar
+                </span>
+              }
+              className="px-0 py-3"
+            />
             <SettingRow
               icon={LockKey}
               title={provider === 'google' ? 'Agregar contraseña' : 'Cambiar contraseña'}
@@ -650,6 +688,81 @@ export default function Settings() {
               </div>
             </div>
             </form>
+          </ModalPanel>
+        </OverlayModal>
+      ) : null}
+
+      {isEmailModalOpen ? (
+        <OverlayModal onClose={closeEmailModal}>
+          <ModalPanel
+            title="Cambiar correo electrónico"
+            description="Te enviaremos un enlace de confirmación al nuevo correo."
+            onClose={closeEmailModal}
+            footer={
+              emailSent ? (
+                <Button tone="secondary" onClick={closeEmailModal} className="flex-1 justify-center">
+                  Cerrar
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form="email-form"
+                  accentColor={accentGradient}
+                  className="flex-1 justify-center"
+                  disabled={savingEmail}
+                >
+                  Enviar confirmación
+                </Button>
+              )
+            }
+          >
+            {emailSent ? (
+              <div className="rounded-[1rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+                Enviamos un enlace de confirmación a <strong>{emailForm.newEmail}</strong>. Haz clic en él para completar el cambio.
+              </div>
+            ) : (
+              <form id="email-form" onSubmit={(e: React.FormEvent) => void handleChangeEmail(e)} className="space-y-4">
+                {emailError ? (
+                  <div className="rounded-[1rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-400">
+                    {emailError}
+                  </div>
+                ) : null}
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                    Nuevo correo
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={emailForm.newEmail}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailForm({ ...emailForm, newEmail: e.target.value })}
+                    className={fieldClass}
+                    style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                    placeholder="nuevo@email.com"
+                    autoComplete="email"
+                  />
+                </div>
+
+                {provider === 'email' && (
+                  <div>
+                    <label className="mb-2 block text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
+                      Confirmar con contraseña actual
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={emailForm.currentPassword}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailForm({ ...emailForm, currentPassword: e.target.value })}
+                      className={fieldClass}
+                      style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                      placeholder="Tu contraseña actual"
+                      autoComplete="current-password"
+                    />
+                  </div>
+                )}
+              </form>
+            )}
           </ModalPanel>
         </OverlayModal>
       ) : null}

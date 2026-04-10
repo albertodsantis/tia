@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { google } from 'googleapis';
@@ -8,14 +8,19 @@ import type {
   AuthStatusResponse,
   ChangePasswordRequest,
   ChangePasswordResponse,
+  ChangeEmailRequest,
   DeleteAccountResponse,
+  ForgotPasswordRequest,
   GoogleAuthUrlResponse,
   LoginRequest,
   LogoutResponse,
   MeResponse,
   RegisterRequest,
+  ResetPasswordRequest,
   SessionUser,
+  SimpleSuccessResponse,
 } from '@shared';
+import { sendPasswordResetEmail, sendEmailChangeVerification } from '../lib/email';
 import type { GoogleCreds } from './calendar';
 
 /** Create a fresh OAuth2 client — safe to mutate per-request. */
@@ -542,6 +547,213 @@ export function createAuthRouter(
       connected: Boolean((req.session as any).tokens),
     };
     res.json(response);
+  });
+
+  // ── POST /forgot-password ─────────────────────────────────────
+  // Always returns 200 to avoid email enumeration.
+
+  router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body as ForgotPasswordRequest;
+    const response: SimpleSuccessResponse = { success: true };
+
+    if (!email?.trim()) {
+      return res.json(response);
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    try {
+      const { rows } = await pool.query(
+        'SELECT id FROM users WHERE LOWER(email) = $1 AND password_hash != $2',
+        [trimmedEmail, ''],
+      );
+
+      if (rows.length === 0) {
+        return res.json(response);
+      }
+
+      const userId = rows[0].id;
+      const token = randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Invalidate any existing reset tokens for this user
+      await pool.query(
+        `DELETE FROM auth_tokens WHERE user_id = $1 AND type = 'password_reset'`,
+        [userId],
+      );
+
+      await pool.query(
+        `INSERT INTO auth_tokens (user_id, token, type, expires_at)
+         VALUES ($1, $2, 'password_reset', $3)`,
+        [userId, token, expiresAt],
+      );
+
+      await sendPasswordResetEmail(trimmedEmail, token);
+    } catch (err) {
+      console.error('Forgot password error:', err);
+    }
+
+    res.json(response);
+  });
+
+  // ── POST /reset-password ──────────────────────────────────────
+
+  router.post('/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body as ResetPasswordRequest;
+
+    if (!token || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Token y contraseña (mín. 8 caracteres) son obligatorios.' });
+    }
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, user_id FROM auth_tokens
+         WHERE token = $1 AND type = 'password_reset'
+           AND expires_at > NOW() AND used_at IS NULL`,
+        [token],
+      );
+
+      if (rows.length === 0) {
+        return res.status(400).json({ error: 'El enlace no es válido o ha expirado.' });
+      }
+
+      const { id: tokenId, user_id: userId } = rows[0];
+      const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+      await pool.query(
+        `UPDATE users SET password_hash = $1, provider = 'email', updated_at = NOW() WHERE id = $2`,
+        [newHash, userId],
+      );
+
+      await pool.query(
+        `UPDATE auth_tokens SET used_at = NOW() WHERE id = $1`,
+        [tokenId],
+      );
+
+      const response: SimpleSuccessResponse = { success: true };
+      res.json(response);
+    } catch (err) {
+      console.error('Reset password error:', err);
+      res.status(500).json({ error: 'No se pudo restablecer la contraseña.' });
+    }
+  });
+
+  // ── POST /change-email ────────────────────────────────────────
+
+  router.post('/change-email', async (req, res) => {
+    const sessionUser = getSessionUser(req);
+    if (!sessionUser) {
+      return res.status(401).json({ error: 'No autenticado.' });
+    }
+
+    const { newEmail, currentPassword } = req.body as ChangeEmailRequest;
+
+    if (!newEmail?.trim()) {
+      return res.status(400).json({ error: 'El nuevo correo es obligatorio.' });
+    }
+
+    const trimmedNew = newEmail.trim().toLowerCase();
+
+    // Basic email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedNew)) {
+      return res.status(400).json({ error: 'El correo no tiene un formato válido.' });
+    }
+
+    try {
+      // Check not already taken
+      const { rows: existing } = await pool.query(
+        'SELECT id FROM users WHERE LOWER(email) = $1 AND id != $2',
+        [trimmedNew, sessionUser.id],
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ error: 'Ya existe una cuenta con ese correo.' });
+      }
+
+      // Email-provider users must confirm current password
+      const { rows } = await pool.query(
+        'SELECT password_hash, provider FROM users WHERE id = $1',
+        [sessionUser.id],
+      );
+      const dbUser = rows[0];
+
+      if (dbUser.provider === 'email') {
+        if (!currentPassword) {
+          return res.status(400).json({ error: 'Confirma tu contraseña actual para cambiar el correo.' });
+        }
+        const valid = await bcrypt.compare(currentPassword, dbUser.password_hash);
+        if (!valid) {
+          return res.status(401).json({ error: 'La contraseña actual es incorrecta.' });
+        }
+      }
+
+      const token = randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await pool.query(
+        `DELETE FROM auth_tokens WHERE user_id = $1 AND type = 'email_change'`,
+        [sessionUser.id],
+      );
+
+      await pool.query(
+        `INSERT INTO auth_tokens (user_id, token, type, new_email, expires_at)
+         VALUES ($1, $2, 'email_change', $3, $4)`,
+        [sessionUser.id, token, trimmedNew, expiresAt],
+      );
+
+      await sendEmailChangeVerification(trimmedNew, token);
+
+      const response: SimpleSuccessResponse = { success: true };
+      res.json(response);
+    } catch (err) {
+      console.error('Change email error:', err);
+      res.status(500).json({ error: 'No se pudo solicitar el cambio de correo.' });
+    }
+  });
+
+  // ── GET /confirm-email ────────────────────────────────────────
+
+  router.get('/confirm-email', async (req, res) => {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.redirect(`${appUrl}/?email_confirm=invalid`);
+    }
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, user_id, new_email FROM auth_tokens
+         WHERE token = $1 AND type = 'email_change'
+           AND expires_at > NOW() AND used_at IS NULL`,
+        [token],
+      );
+
+      if (rows.length === 0) {
+        return res.redirect(`${appUrl}/?email_confirm=invalid`);
+      }
+
+      const { id: tokenId, user_id: userId, new_email: newEmail } = rows[0];
+
+      await pool.query(
+        `UPDATE users SET email = $1, updated_at = NOW() WHERE id = $2`,
+        [newEmail, userId],
+      );
+
+      await pool.query(
+        `UPDATE auth_tokens SET used_at = NOW() WHERE id = $1`,
+        [tokenId],
+      );
+
+      // Update session if the user is currently logged in
+      const sessionUser = getSessionUser(req);
+      if (sessionUser?.id === userId) {
+        setSessionUser(req, { ...sessionUser, email: newEmail });
+      }
+
+      res.redirect(`${appUrl}/?email_confirm=success`);
+    } catch (err) {
+      console.error('Confirm email error:', err);
+      res.redirect(`${appUrl}/?email_confirm=invalid`);
+    }
   });
 
   return router;

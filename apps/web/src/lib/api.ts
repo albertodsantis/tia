@@ -6,6 +6,7 @@ import type {
   CalendarSyncDownResponse,
   CalendarSyncRequest,
   CalendarSyncResponse,
+  ChangeEmailRequest,
   ChangePasswordRequest,
   ChangePasswordResponse,
   Contact,
@@ -101,6 +102,21 @@ export const authApi = {
     }),
   changePassword: (payload: ChangePasswordRequest) =>
     apiRequest<ChangePasswordResponse>('/api/auth/password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  forgotPassword: (email: string) =>
+    apiRequest<{ success: boolean }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, newPassword: string) =>
+    apiRequest<{ success: boolean }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    }),
+  changeEmail: (payload: ChangeEmailRequest) =>
+    apiRequest<{ success: boolean }>('/api/auth/change-email', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

@@ -9,6 +9,7 @@ export interface AppEnv {
   GEMINI_API_KEY?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_KEY?: string;
+  RESEND_API_KEY?: string;
 }
 
 function requireEnv(name: string): string {
@@ -42,5 +43,6 @@ export function loadEnv(): AppEnv {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || undefined,
     SUPABASE_URL: process.env.SUPABASE_URL || undefined,
     SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || undefined,
+    RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
   };
 }

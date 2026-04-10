@@ -4,6 +4,7 @@
  */
 
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+const ResetPassword = lazy(() => import('./views/ResetPassword'));
 import {
   HouseLine,
   CircleNotch,
@@ -725,6 +726,19 @@ export default function App() {
   const [authPhase, setAuthPhase] = useState<AuthPhase>('checking');
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [isNewRegistration, setIsNewRegistration] = useState(false);
+
+  // Handle password reset token in URL before any auth check
+  const resetToken = new URLSearchParams(window.location.search).get('token');
+  if (resetToken && window.location.pathname === '/reset-password') {
+    const clearToken = () => {
+      window.history.replaceState({}, '', '/');
+    };
+    return (
+      <Suspense fallback={<AppSplash />}>
+        <ResetPassword token={resetToken} onDone={clearToken} />
+      </Suspense>
+    );
+  }
 
   useEffect(() => {
     async function checkAuth() {

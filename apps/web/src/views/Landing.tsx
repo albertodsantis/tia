@@ -27,7 +27,7 @@ import { authApi, ApiError } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { cx } from '../components/ui';
 
-type AuthMode = 'login' | 'register';
+type AuthMode = 'login' | 'register' | 'forgot';
 
 // Brand colors — Instagram-style gradient palette
 const BRAND_GOLD = '#FCAF45';
@@ -96,6 +96,7 @@ export default function Landing({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [serverUnreachable, setServerUnreachable] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const pillsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -196,6 +197,22 @@ export default function Landing({
         return;
       }
       setError(err instanceof Error ? err.message : 'Ocurrio un error. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      await authApi.forgotPassword(email.trim());
+      setForgotSent(true);
+    } catch {
+      // Always show success to avoid email enumeration
+      setForgotSent(true);
     } finally {
       setLoading(false);
     }
@@ -353,163 +370,250 @@ export default function Landing({
               />
 
               <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pt-8">
-                {/* Mode tabs */}
-                <div className="flex gap-1 rounded-[0.85rem] border bg-[var(--surface-card)] p-1 [border-color:var(--line-soft)]">
-                  <button
-                    type="button"
-                    onClick={() => switchMode('login')}
-                    className={cx(
-                      'flex-1 rounded-[0.7rem] py-2.5 text-sm font-bold transition-all',
-                      isLogin
-                        ? 'bg-[var(--surface-card-strong)] shadow-sm text-[var(--text-primary)]'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
-                    )}
-                  >
-                    Iniciar sesion
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => switchMode('register')}
-                    className={cx(
-                      'flex-1 rounded-[0.7rem] py-2.5 text-sm font-bold transition-all',
-                      !isLogin
-                        ? 'bg-[var(--surface-card-strong)] shadow-sm text-[var(--text-primary)]'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
-                    )}
-                  >
-                    Crear cuenta
-                  </button>
-                </div>
-
-                <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
-                  {isLogin
-                    ? 'Ingresa con tu cuenta existente.'
-                    : 'Crea tu workspace en segundos.'}
-                </p>
-
-                {serverUnreachable && (
-                  <div className="mt-4 rounded-[0.85rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
-                    No se pudo contactar el servidor. Verifica tu conexión e intenta de nuevo.
+                {/* Mode tabs — hidden in forgot mode */}
+                {mode !== 'forgot' && (
+                  <div className="flex gap-1 rounded-[0.85rem] border bg-[var(--surface-card)] p-1 [border-color:var(--line-soft)]">
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      className={cx(
+                        'flex-1 rounded-[0.7rem] py-2.5 text-sm font-bold transition-all',
+                        isLogin
+                          ? 'bg-[var(--surface-card-strong)] shadow-sm text-[var(--text-primary)]'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+                      )}
+                    >
+                      Iniciar sesion
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => switchMode('register')}
+                      className={cx(
+                        'flex-1 rounded-[0.7rem] py-2.5 text-sm font-bold transition-all',
+                        !isLogin
+                          ? 'bg-[var(--surface-card-strong)] shadow-sm text-[var(--text-primary)]'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+                      )}
+                    >
+                      Crear cuenta
+                    </button>
                   </div>
                 )}
 
-                {/* Google login */}
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  className="mt-5 flex w-full items-center justify-center gap-3 rounded-[1rem] border bg-[var(--surface-card)] px-4 py-3.5 text-sm font-bold transition-all hover:shadow-[var(--shadow-soft)] active:scale-[0.98] [border-color:var(--line-soft)]"
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-                    <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-                  </svg>
-                  Continuar con Google
-                </button>
-
-                {/* Divider */}
-                <div className="my-5 flex items-center gap-4">
-                  <div className="h-px flex-1 bg-[var(--line-soft)]" />
-                  <span className="text-[11px] font-bold tracking-[0.14em] text-[var(--text-secondary)]/60 uppercase">
-                    o con email
-                  </span>
-                  <div className="h-px flex-1 bg-[var(--line-soft)]" />
-                </div>
-
-                {/* Email form */}
-                <form onSubmit={handleSubmit} className="space-y-3.5">
-                  {!isLogin ? (
+                {mode === 'forgot' ? (
+                  /* ── Forgot password panel ── */
+                  <div className="space-y-4">
                     <div>
-                      <label
-                        htmlFor="auth-name"
-                        className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]"
-                      >
-                        Nombre
-                      </label>
-                      <input
-                        id="auth-name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Tu nombre"
-                        required={!isLogin}
-                        autoComplete="name"
-                        className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div>
-                    <label
-                      htmlFor="auth-email"
-                      className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="auth-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="tu@email.com"
-                      required
-                      autoComplete="email"
-                      className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="auth-password"
-                      className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]"
-                    >
-                      Contraseña
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="auth-password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder={isLogin ? 'Tu contraseña' : 'Mínimo 8 caracteres'}
-                        required
-                        minLength={isLogin ? undefined : 8}
-                        autoComplete={isLogin ? 'current-password' : 'new-password'}
-                        className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 pr-12 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
-                      />
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 p-1 text-[var(--text-secondary)]/50 transition-colors hover:text-[var(--text-secondary)]"
+                        onClick={() => { switchMode('login'); setForgotSent(false); }}
+                        className="mb-4 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                       >
-                        {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                        ← Volver
                       </button>
+                      <h3 className="text-base font-bold text-[var(--text-primary)]">
+                        Recuperar contraseña
+                      </h3>
+                      <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                        Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                      </p>
                     </div>
+
+                    {forgotSent ? (
+                      <div className="rounded-[0.85rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+                        Si existe una cuenta con ese email, recibirás un enlace en los próximos minutos.
+                      </div>
+                    ) : (
+                      <form onSubmit={(e) => void handleForgotPassword(e)} className="space-y-3.5">
+                        <div>
+                          <label className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="tu@email.com"
+                            required
+                            autoComplete="email"
+                            className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={loading || !email.trim()}
+                          className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})` }}
+                        >
+                          {loading ? 'Enviando…' : 'Enviar enlace'}
+                          {!loading ? <ArrowRight size={16} /> : null}
+                        </button>
+                      </form>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
+                      {isLogin
+                        ? 'Ingresa con tu cuenta existente.'
+                        : 'Crea tu workspace en segundos.'}
+                    </p>
 
-                  {error ? (
-                    <p className="text-xs font-medium text-rose-500">{error}</p>
-                  ) : null}
+                    {serverUnreachable && (
+                      <div className="mt-4 rounded-[0.85rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+                        No se pudo contactar el servidor. Verifica tu conexión e intenta de nuevo.
+                      </div>
+                    )}
 
-                  <button
-                    type="submit"
-                    disabled={loading || !email.trim() || !password || (!isLogin && !name.trim())}
-                    className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{
-                      backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
-                      boxShadow: `0 12px 30px -16px ${BRAND_PINK}80`,
-                    }}
-                  >
-                    {loading
-                      ? (isLogin ? 'Ingresando…' : 'Creando cuenta…')
-                      : (isLogin ? 'Iniciar sesion' : 'Crear cuenta')}
-                    {!loading ? <ArrowRight size={16} /> : null}
-                  </button>
-                </form>
+                    {/* Google login */}
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      className="mt-5 flex w-full items-center justify-center gap-3 rounded-[1rem] border bg-[var(--surface-card)] px-4 py-3.5 text-sm font-bold transition-all hover:shadow-[var(--shadow-soft)] active:scale-[0.98] [border-color:var(--line-soft)]"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                        <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                      </svg>
+                      Continuar con Google
+                    </button>
 
+                    {/* Divider */}
+                    <div className="my-5 flex items-center gap-4">
+                      <div className="h-px flex-1 bg-[var(--line-soft)]" />
+                      <span className="text-[11px] font-bold tracking-[0.14em] text-[var(--text-secondary)]/60 uppercase">
+                        o con email
+                      </span>
+                      <div className="h-px flex-1 bg-[var(--line-soft)]" />
+                    </div>
+
+                    {/* Email form */}
+                    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3.5">
+                      {!isLogin ? (
+                        <div>
+                          <label
+                            htmlFor="auth-name"
+                            className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]"
+                          >
+                            Nombre
+                          </label>
+                          <input
+                            id="auth-name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Tu nombre"
+                            required={!isLogin}
+                            autoComplete="name"
+                            className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
+                          />
+                        </div>
+                      ) : null}
+
+                      <div>
+                        <label
+                          htmlFor="auth-email"
+                          className="mb-1.5 block text-xs font-bold text-[var(--text-secondary)]"
+                        >
+                          Email
+                        </label>
+                        <input
+                          id="auth-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="tu@email.com"
+                          required
+                          autoComplete="email"
+                          className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
+                        />
+                      </div>
+                      <div>
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <label
+                            htmlFor="auth-password"
+                            className="text-xs font-bold text-[var(--text-secondary)]"
+                          >
+                            Contraseña
+                          </label>
+                          {isLogin && (
+                            <button
+                              type="button"
+                              onClick={() => switchMode('forgot')}
+                              className="text-[11px] font-bold text-[var(--text-secondary)]/60 hover:text-[var(--text-secondary)] transition-colors"
+                            >
+                              ¿Olvidaste tu contraseña?
+                            </button>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <input
+                            id="auth-password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={isLogin ? 'Tu contraseña' : 'Mínimo 8 caracteres'}
+                            required
+                            minLength={isLogin ? undefined : 8}
+                            autoComplete={isLogin ? 'current-password' : 'new-password'}
+                            className="w-full rounded-[0.85rem] border bg-[var(--surface-card)] px-4 py-3 pr-12 text-base sm:text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/40 transition-colors focus:bg-[var(--surface-card-strong)] [border-color:var(--line-soft)]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 p-1 text-[var(--text-secondary)]/50 transition-colors hover:text-[var(--text-secondary)]"
+                          >
+                            {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Legal consent — register only */}
+                      {!isLogin && (
+                        <label className="flex items-start gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            required
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[color:var(--line-soft)] accent-[var(--accent)]"
+                          />
+                          <span className="text-[11px] leading-5 text-[var(--text-secondary)]/70">
+                            Acepto los{' '}
+                            <span className="font-bold text-[var(--text-secondary)]">términos de servicio</span>
+                            {' '}y la{' '}
+                            <span className="font-bold text-[var(--text-secondary)]">política de privacidad</span>
+                          </span>
+                        </label>
+                      )}
+
+                      {error ? (
+                        <p className="text-xs font-medium text-rose-500">{error}</p>
+                      ) : null}
+
+                      <button
+                        type="submit"
+                        disabled={loading || !email.trim() || !password || (!isLogin && !name.trim())}
+                        className="flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{
+                          backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
+                          boxShadow: `0 12px 30px -16px ${BRAND_PINK}80`,
+                        }}
+                      >
+                        {loading
+                          ? (isLogin ? 'Ingresando…' : 'Creando cuenta…')
+                          : (isLogin ? 'Iniciar sesion' : 'Crear cuenta')}
+                        {!loading ? <ArrowRight size={16} /> : null}
+                      </button>
+                    </form>
+                  </>
+                )}
+
+                {mode !== 'forgot' && (
                 <p className="mt-5 text-center text-[11px] leading-5 text-[var(--text-secondary)]/60">
                   Al continuar, aceptas nuestros términos de servicio y política de privacidad.
                 </p>
+                )}
               </div>
             </div>
           </div>
