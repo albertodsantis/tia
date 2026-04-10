@@ -11,6 +11,8 @@ export default function OverlayModal({
   onClose?: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Restore focus to the element that was focused before the modal opened
   useEffect(() => {
@@ -18,6 +20,16 @@ export default function OverlayModal({
     return () => {
       previouslyFocused?.focus();
     };
+  }, []);
+
+  // Move initial focus into the modal (once on mount)
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusableSelectors =
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const firstFocusable = dialog.querySelector<HTMLElement>(focusableSelectors);
+    firstFocusable?.focus();
   }, []);
 
   // Focus trap: constrain Tab/Shift+Tab to focusable elements inside the modal
@@ -28,13 +40,9 @@ export default function OverlayModal({
     const focusableSelectors =
       'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-    // Move initial focus into the modal
-    const firstFocusable = dialog.querySelector<HTMLElement>(focusableSelectors);
-    firstFocusable?.focus();
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -62,7 +70,7 @@ export default function OverlayModal({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, []);
 
   if (typeof document === 'undefined') {
     return null;
