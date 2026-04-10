@@ -11,6 +11,35 @@ export function escapeHtml(value: string) {
     .replace(/'/g, '&#39;');
 }
 
+// ─── WCAG contrast helper ─────────────────────────────────────────────────────
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const normalized = hex.replace('#', '');
+  if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) return null;
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+function getLuminance(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function getAccessibleForeground(bgHex: string): string {
+  const lum = getLuminance(bgHex);
+  const contrastWithWhite = (1.05) / (lum + 0.05);
+  const contrastWithDark  = (lum + 0.05) / (0.0 + 0.05);
+  return contrastWithWhite >= contrastWithDark ? '#ffffff' : '#0f172a';
+}
+
 // ─── Accent resolution ────────────────────────────────────────────────────────
 
 const GRADIENT_PRESETS: Record<string, { gradient: string; representative: string }> = {
@@ -151,6 +180,8 @@ export function generateEfiLinkHtml(params: {
   const { name, handle, tagline, avatar, socialProfiles, efiProfile, accentColor, forceDark = false, publicUrl = '' } = params;
   const accent = resolveAccent(accentColor);
   const isDark = accent.forceDark || forceDark;
+  const linkFg = getAccessibleForeground(accent.hex);
+  const linkFgSubtle = linkFg === '#ffffff' ? 'rgba(255,255,255,0.75)' : 'rgba(15,23,42,0.60)';
 
   const displayHandle = handle.startsWith('@') ? handle : `@${handle}`;
 
@@ -428,7 +459,7 @@ export function generateEfiLinkHtml(params: {
       background: ${escapeHtml(accent.gradient)};
       border: none;
       border-radius: var(--radius);
-      color: #fff;
+      color: ${linkFg};
       text-decoration: none;
       transition: filter 0.18s, transform 0.15s, box-shadow 0.18s;
       position: relative;
@@ -460,7 +491,7 @@ export function generateEfiLinkHtml(params: {
     }
 
     .link-icon {
-      color: rgba(255,255,255,0.75);
+      color: ${linkFgSubtle};
       display: flex;
       align-items: center;
       flex-shrink: 0;
@@ -482,7 +513,7 @@ export function generateEfiLinkHtml(params: {
 
     .link-arrow {
       font-size: 0.85rem;
-      color: rgba(255,255,255,0.65);
+      color: ${linkFgSubtle};
       flex-shrink: 0;
       position: relative;
       z-index: 1;
