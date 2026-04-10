@@ -247,6 +247,7 @@ export function generateEfiLinkHtml(params: {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(name)} — Efi</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(accent.hex)}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 10V3L4 14h7v7l9-11h-7z'/%3E%3C/svg%3E" />
   <meta name="description" content="${escapeHtml(tagline || name)}" />
   <meta property="og:type" content="profile" />
   <meta property="og:title" content="${escapeHtml(name)}" />
@@ -600,7 +601,7 @@ export function generateEfiLinkHtml(params: {
 
     ${activeSocials.length > 0 ? socialsHtml : ''}
 
-    <div class="divider"></div>
+    ${activeLinks.length > 0 || pdfHtml ? `<div class="divider"></div>` : ''}
 
     <div class="links">
       ${linksHtml}

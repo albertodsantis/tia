@@ -124,12 +124,14 @@ function ProfilePreview({
 
   const isMobile = device === 'mobile';
 
+  const sizeClass = isMobile ? 'w-[375px] h-[667px]' : 'w-full h-full';
+
   if (previewState === 'error') {
     return (
       <div
         className={cx(
           'transition-all duration-300 mx-auto flex items-center justify-center rounded-2xl border border-[color:var(--line-soft)] bg-[var(--surface-muted)]',
-          isMobile ? 'w-[375px] h-[667px]' : 'w-full h-full',
+          sizeClass,
         )}
       >
         <div className="text-center px-6">
@@ -148,18 +150,42 @@ function ProfilePreview({
 
   return (
     <div
-      className={cx(
-        'transition-all duration-300 mx-auto',
-        isMobile ? 'w-[375px]' : 'w-full',
-      )}
-      style={{ height: isMobile ? '667px' : '100%' }}
+      className={cx('transition-all duration-300 mx-auto relative', sizeClass)}
     >
+      {/* Skeleton overlay — visible while loading, fades out when ready */}
+      {previewState === 'loading' && (
+        <div className={cx(
+          'absolute inset-0 z-10 rounded-2xl bg-[var(--surface-muted)] overflow-hidden',
+          isMobile && 'shadow-2xl ring-1 ring-white/10',
+        )}>
+          <div className="flex flex-col items-center pt-14 px-8 gap-4 animate-pulse">
+            {/* Avatar placeholder */}
+            <div className="w-20 h-20 rounded-full bg-[var(--line-soft)]" />
+            {/* Name */}
+            <div className="h-4 w-32 rounded-full bg-[var(--line-soft)]" />
+            {/* Tagline */}
+            <div className="h-3 w-48 rounded-full bg-[var(--line-soft)]" />
+            {/* Socials row */}
+            <div className="flex gap-2 mt-1">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="w-10 h-10 rounded-xl bg-[var(--line-soft)]" />
+              ))}
+            </div>
+            {/* Link buttons */}
+            <div className="w-full flex flex-col gap-3 mt-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-12 w-full rounded-2xl bg-[var(--line-soft)]" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <iframe
         ref={iframeRef}
         title="Vista previa del perfil público"
         className={cx(
-          'w-full border-0 bg-transparent rounded-2xl overflow-hidden',
-          isMobile ? 'h-[667px]' : 'h-full',
+          'w-full h-full border-0 bg-transparent rounded-2xl overflow-hidden',
           isMobile && 'shadow-2xl ring-1 ring-white/10',
         )}
         sandbox="allow-same-origin"
@@ -391,7 +417,15 @@ export default function Profile() {
                 )}
               </div>
               <div>
-                <label className="block mb-1.5 text-xs font-medium text-[var(--text-secondary)]">Bio corta</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-[var(--text-secondary)]">Bio corta</label>
+                  <span className={cx(
+                    'text-[10px] tabular-nums',
+                    form.tagline.length >= 110 ? 'text-red-400' : 'text-[var(--text-secondary)]/50',
+                  )}>
+                    {form.tagline.length}/120
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={form.tagline}
