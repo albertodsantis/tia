@@ -21,6 +21,7 @@ import { appApi } from '../lib/api';
 import { getAccentCssVariables, getGradientCss, getRepresentativeHex, getSurfaceOverrides, isGradientAccent, isRetroAccent } from '../lib/accent';
 import { addLocalDays, formatLocalDateISO } from '../lib/date';
 import { toast } from '../lib/toast';
+import { updateStatusBarColor } from '../lib/statusBar';
 
 // ── Badge display labels ──────────────────────────────────────
 const BADGE_LABELS: Record<BadgeKey, string> = {
@@ -574,6 +575,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         accentColor: res.accentColor,
         theme: res.theme,
       }));
+
+      const accentHexColor = getRepresentativeHex(res.accentColor);
+      await updateStatusBarColor(accentHexColor);
+
       applyAward((res as any).efisystem);
     } catch (error) {
       trackError(error);

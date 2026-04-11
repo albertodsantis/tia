@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import { IconContext } from '@phosphor-icons/react';
 import App from './App.tsx';
 import './index.css';
+import { initializeStatusBar } from './lib/statusBar';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -11,6 +12,8 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+initializeStatusBar();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
