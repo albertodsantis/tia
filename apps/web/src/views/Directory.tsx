@@ -37,6 +37,7 @@ import {
 import CustomSelect from '../components/CustomSelect';
 import { parseLocalDate } from '../lib/date';
 import { toast } from '../lib/toast';
+import { copyToClipboard } from '../lib/share';
 
 const PARTNER_STATUSES = [
   'Prospecto',
@@ -348,9 +349,13 @@ export default function Directory() {
     toast.info('Contacto eliminado');
   };
 
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado al portapapeles`);
+  const handleCopy = async (text: string, label: string) => {
+    const result = await copyToClipboard(text);
+    if (result.success && !result.isNative) {
+      toast.success(`${label} copiado al portapapeles`);
+    } else if (!result.success) {
+      toast.error(`No se pudo copiar ${label}`);
+    }
   };
 
   return (

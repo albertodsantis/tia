@@ -27,6 +27,7 @@ import { useAppContext } from '../context/AppContext';
 import { cx } from '../components/ui';
 import { appApi } from '../lib/api';
 import { toast } from '../lib/toast';
+import { shareEfiLink } from '../lib/share';
 import ImageUpload from '../components/ImageUpload';
 import {
   ACCENT_OPTIONS,
@@ -388,9 +389,14 @@ export default function Profile() {
   const publicHandle = form.handle.replace(/^@/, '');
   const publicUrl = publicHandle ? `${window.location.origin}/@${publicHandle}` : null;
 
-  const copyPublicUrl = () => {
-    if (!publicUrl) return;
-    navigator.clipboard.writeText(publicUrl).then(() => toast.success('Enlace copiado'));
+  const copyPublicUrl = async () => {
+    if (!publicHandle) return;
+    const result = await shareEfiLink(publicHandle);
+    if (result.success && !result.isNative) {
+      toast.success('Enlace copiado');
+    } else if (!result.success) {
+      toast.error('Error al copiar el enlace');
+    }
   };
 
   // ─── Editor panel ─────────────────────────────────────────────────────────
