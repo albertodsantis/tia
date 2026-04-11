@@ -23,6 +23,10 @@ import { addLocalDays, formatLocalDateISO } from '../lib/date';
 import { toast } from '../lib/toast';
 import { updateStatusBarColor } from '../lib/statusBar';
 import { hideSplashScreen } from '../lib/splashScreen';
+import {
+  requestNotificationPermission,
+  scheduleDueDateReminders,
+} from '../lib/localNotifications';
 
 // ── Badge display labels ──────────────────────────────────────
 const BADGE_LABELS: Record<BadgeKey, string> = {
@@ -138,6 +142,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const splashHiddenRef = React.useRef(false);
+  const notifPermissionRef = React.useRef<boolean | null>(null);
 
   // ── Award processing ──────────────────────────────────────────
   const applyAward = useCallback((award: EfisystemAward | undefined, toastMsg?: string) => {
@@ -185,6 +190,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
       if (!splashHiddenRef.current) {
         splashHiddenRef.current = true;
         void hideSplashScreen();
+
+        const remindersEnabled = localStorage.getItem('efi_task_reminders_enabled') !== 'false';
+        if (remindersEnabled) {
+          requestNotificationPermission().then((granted) => {
+            notifPermissionRef.current = granted;
+            if (granted) {
+              void scheduleDueDateReminders(appState.tasks);
+            }
+          });
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo cargar la app.';
@@ -205,6 +220,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
   useEffect(() => {
     void refreshAppData();
   }, []);
+
+  useEffect(() => {
+    if (notifPermissionRef.current && localStorage.getItem('efi_task_reminders_enabled') !== 'false') {
+      void scheduleDueDateReminders(state.tasks);
+    }
+  }, [state.tasks]);
 
   useEffect(() => {
     const variables = getAccentCssVariables(state.accentColor);

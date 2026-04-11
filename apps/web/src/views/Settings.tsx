@@ -16,7 +16,13 @@ import {
   Trash,
   TextT,
   UserMinus,
+  Alarm,
 } from '@phosphor-icons/react';
+import {
+  requestNotificationPermission,
+  scheduleDueDateReminders,
+  cancelAllReminders,
+} from '../lib/localNotifications';
 import { useAppContext } from '../context/AppContext';
 import OverlayModal from '../components/OverlayModal';
 import {
@@ -62,8 +68,12 @@ export default function Settings() {
     setTheme,
     reportActionError,
     onLogout,
+    tasks,
   } = useAppContext();
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+  const [taskRemindersEnabled, setTaskRemindersEnabled] = useState(
+    () => localStorage.getItem('efi_task_reminders_enabled') !== 'false',
+  );
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [isAccentPaletteOpen, setIsAccentPaletteOpen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({ name: '', body: '' });
@@ -201,6 +211,25 @@ export default function Settings() {
 
     await updateProfile({ notificationsEnabled: false });
     toast.info('Notificaciones desactivadas');
+  };
+
+  const toggleTaskReminders = async () => {
+    if (taskRemindersEnabled) {
+      await cancelAllReminders();
+      localStorage.setItem('efi_task_reminders_enabled', 'false');
+      setTaskRemindersEnabled(false);
+      toast.info('Recordatorios de tareas desactivados');
+    } else {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        reportActionError('Activa los permisos de notificaciones en los ajustes del dispositivo.');
+        return;
+      }
+      localStorage.setItem('efi_task_reminders_enabled', 'true');
+      setTaskRemindersEnabled(true);
+      await scheduleDueDateReminders(tasks);
+      toast.success('Recordatorios de tareas activados');
+    }
   };
 
   const handleAddTemplate = async (event: React.FormEvent) => {
@@ -460,6 +489,14 @@ export default function Settings() {
               description="Recibe avisos cuando haya entregas cercanas o cambios relevantes."
               onClick={() => void toggleNotifications()}
               trailing={<ToggleSwitch checked={profile.notificationsEnabled} accentColor={accentGradient} />}
+              className="px-0 py-3"
+            />
+            <SettingRow
+              icon={Alarm}
+              title="Recordatorios de tareas"
+              description="Recibe avisos nativos un día antes y el día que vence cada entrega."
+              onClick={() => void toggleTaskReminders()}
+              trailing={<ToggleSwitch checked={taskRemindersEnabled} accentColor={accentGradient} />}
               className="px-0 py-3"
             />
             <SettingRow
