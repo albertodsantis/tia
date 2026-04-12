@@ -1241,7 +1241,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
               </button>
 
               {isFilterOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-72 rounded-[1.1rem] border bg-[var(--surface-card)] shadow-[var(--shadow-strong)] [border-color:var(--line-soft)]">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-72 rounded-[1.1rem] border bg-[var(--surface-card)] shadow-[var(--shadow-strong)] [border-color:var(--line-soft)] sm:left-auto sm:right-0">
                   <div className="flex items-center justify-between border-b px-4 py-3 [border-color:var(--line-soft)]">
                     <span className="text-sm font-extrabold text-[var(--text-primary)]">Filtros</span>
                     {(filterPartnerIds.length > 0 || filterStatuses.length > 0) && (
