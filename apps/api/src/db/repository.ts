@@ -180,7 +180,6 @@ function mapRowToPartner(row: any): Partner {
   return {
     id: row.id,
     name: row.name,
-    ...(row.emoji ? { emoji: row.emoji } : {}),
     status: row.status,
     ...(row.logo ? { logo: row.logo } : {}),
     contacts: [],
@@ -531,7 +530,6 @@ export class PostgresAppStore {
 
     const id = randomUUID();
     const status = normalizeRequiredText(input.status, 'El estado');
-    const emoji = normalizeOptionalText((input as any).emoji) || null;
     const logo = normalizeOptionalText(input.logo) || null;
     const partnershipType = normalizeOptionalText((input as any).partnershipType) || 'Por definir';
     const keyTerms = normalizeText((input as any).keyTerms);
@@ -554,11 +552,11 @@ export class PostgresAppStore {
     }
 
     const { rows } = await this.pool.query(
-      `INSERT INTO partners (id, user_id, name, name_lookup, status, emoji, logo, partnership_type,
+      `INSERT INTO partners (id, user_id, name, name_lookup, status, logo, partnership_type,
          key_terms, start_date, end_date, monthly_revenue, annual_revenue, main_channel, source, goal_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING created_at`,
-      [id, userId, normalizedName, lookupKey, status, emoji, logo, partnershipType,
+      [id, userId, normalizedName, lookupKey, status, logo, partnershipType,
        keyTerms, startDate, endDate, monthlyRevenue, annualRevenue, mainChannel, source, goalId],
     );
 
@@ -573,7 +571,6 @@ export class PostgresAppStore {
     return {
       id,
       name: normalizedName,
-      ...(emoji ? { emoji } : {}),
       status: status as Partner['status'],
       ...(logo ? { logo } : {}),
       contacts: [],
@@ -623,10 +620,6 @@ export class PostgresAppStore {
     if (updates.status !== undefined) {
       setClauses.push(`status = $${idx++}`);
       values.push(normalizeRequiredText(updates.status, 'El estado'));
-    }
-    if ((updates as any).emoji !== undefined) {
-      setClauses.push(`emoji = $${idx++}`);
-      values.push(normalizeOptionalText((updates as any).emoji) || null);
     }
     if (updates.logo !== undefined) {
       setClauses.push(`logo = $${idx++}`);

@@ -869,11 +869,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                {partner?.emoji ? (
-                  <span className="text-sm leading-none">{partner.emoji}</span>
-                ) : (
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: accentGradient }} />
-                )}
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: accentGradient }} />
                 <p className="truncate text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
                   {partner?.name || 'Sin marca'}
                 </p>

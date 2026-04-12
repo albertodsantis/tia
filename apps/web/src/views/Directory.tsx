@@ -35,7 +35,6 @@ import {
   cx,
 } from '../components/ui';
 import CustomSelect from '../components/CustomSelect';
-import EmojiPicker from '../components/EmojiPicker';
 import { parseLocalDate } from '../lib/date';
 import { toast } from '../lib/toast';
 import { copyToClipboard } from '../lib/share';
@@ -133,7 +132,6 @@ export default function Directory() {
   } | null>(null);
   const [newPartner, setNewPartner] = useState({
     name: '',
-    emoji: '',
     status: 'Prospecto' as Partner['status'],
     partnershipType: 'Por definir' as PartnershipType,
     keyTerms: '',
@@ -266,7 +264,6 @@ export default function Directory() {
     try {
       const partnerId = await addPartner({
         name,
-        emoji: newPartner.emoji || '',
         status: newPartner.status,
         partnershipType: newPartner.partnershipType,
         keyTerms: newPartner.keyTerms,
@@ -279,7 +276,7 @@ export default function Directory() {
       } as any);
       setSelectedPartnerId(partnerId);
       setIsAddingPartner(false);
-      setNewPartner({ name: '', emoji: '', status: 'Prospecto', partnershipType: 'Por definir', keyTerms: '', startDate: '', endDate: '', monthlyRevenue: '', annualRevenue: '', mainChannel: '' });
+      setNewPartner({ name: '', status: 'Prospecto', partnershipType: 'Por definir', keyTerms: '', startDate: '', endDate: '', monthlyRevenue: '', annualRevenue: '', mainChannel: '' });
       toast.success(`Cliente ${name} añadido al directorio`);
     } finally { setSaving(false); }
   };
@@ -291,7 +288,6 @@ export default function Directory() {
     try {
       await updatePartner(editingPartner.id, {
         name: editingPartner.name,
-        emoji: editingPartner.emoji || '',
         partnershipType: editingPartner.partnershipType,
         keyTerms: editingPartner.keyTerms,
         startDate: editingPartner.startDate,
@@ -435,11 +431,7 @@ export default function Directory() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-3">
                           <div className={cx('flex h-11 w-11 items-center justify-center rounded-[0.95rem] text-sm font-black', isActive ? 'bg-white/85 text-[var(--text-primary)]' : 'bg-[var(--surface-muted)] text-[var(--text-secondary)]')}>
-                            {partner.emoji ? (
-                              <span className="text-xl leading-none">{partner.emoji}</span>
-                            ) : (
-                              <Buildings size={20} />
-                            )}
+                            <Buildings size={20} />
                           </div>
                           <div className="min-w-0">
                             <h3 className="truncate text-base font-bold leading-tight text-[var(--text-primary)]">{partner.name}</h3>
@@ -483,7 +475,6 @@ export default function Directory() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
-                      {activePartner.emoji && <span className="text-2xl leading-none">{activePartner.emoji}</span>}
                       <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{activePartner.name}</h2>
                       <IconButton
                         icon={PencilLine}
@@ -718,10 +709,7 @@ export default function Directory() {
                       <Buildings size={14} />
                       Nombre
                     </label>
-                    <div className="flex items-center gap-2">
-                      <EmojiPicker value={editingPartner.emoji || ''} onChange={(e) => setEditingPartner({ ...editingPartner, emoji: e })} accentHex={accentHex} />
-                      <input required value={editingPartner.name} onChange={(event) => setEditingPartner({ ...editingPartner, name: event.target.value })} className={cx(fieldClass, 'flex-1')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
-                    </div>
+                    <input required value={editingPartner.name} onChange={(event) => setEditingPartner({ ...editingPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
@@ -815,10 +803,7 @@ export default function Directory() {
                       <Buildings size={14} />
                       Nombre
                     </label>
-                    <div className="flex items-center gap-2">
-                      <EmojiPicker value={newPartner.emoji} onChange={(e) => setNewPartner({ ...newPartner, emoji: e })} accentHex={accentHex} />
-                      <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={cx(fieldClass, 'flex-1')} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
-                    </div>
+                    <input required value={newPartner.name} onChange={(event) => setNewPartner({ ...newPartner, name: event.target.value })} className={fieldClass} style={{ '--tw-ring-color': accentHex } as React.CSSProperties} placeholder="" />
                   </div>
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]/70">
