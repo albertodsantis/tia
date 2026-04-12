@@ -471,10 +471,14 @@ export default function StrategicView() {
 
   const professionSuggestions = useMemo(() => {
     const labels: string[] = [];
-    if (profile.primaryProfession) labels.push(PROFESSION_LABELS[profile.primaryProfession]);
-    for (const s of profile.secondaryProfessions ?? []) labels.push(PROFESSION_LABELS[s]);
+    const resolveLabel = (key: string) =>
+      key === 'other' && profile.customProfession
+        ? profile.customProfession
+        : PROFESSION_LABELS[key as keyof typeof PROFESSION_LABELS];
+    if (profile.primaryProfession) labels.push(resolveLabel(profile.primaryProfession));
+    for (const s of profile.secondaryProfessions ?? []) labels.push(resolveLabel(s));
     return labels;
-  }, [profile.primaryProfession, profile.secondaryProfessions]);
+  }, [profile.primaryProfession, profile.secondaryProfessions, profile.customProfession]);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [modalGoal, setModalGoal] = useState<ReturnType<typeof emptyGoalForm> | null>(null);
   const [saving, setSaving] = useState(false);

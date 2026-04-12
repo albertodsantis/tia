@@ -8,6 +8,7 @@ import {
   Camera,
   ChatsCircle,
   Compass,
+  DotsThreeCircle,
   Headphones,
   Microphone,
   MonitorPlay,
@@ -35,6 +36,7 @@ const PROFESSIONS: { value: FreelancerType; Icon: React.ElementType }[] = [
   { value: 'dj',                Icon: Headphones },
   { value: 'recruiter',         Icon: Briefcase },
   { value: 'coach',             Icon: Compass },
+  { value: 'other',             Icon: DotsThreeCircle },
 ];
 
 // ─── Background decoration ───────────────────────────────────────────────────
@@ -89,6 +91,7 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
   // Profession step
   const [primary, setPrimary] = useState<FreelancerType | null>(null);
   const [secondaries, setSecondaries] = useState<FreelancerType[]>([]);
+  const [customProfession, setCustomProfession] = useState('');
 
   // Partner / goal steps
   const [step, setStep] = useState<Step>('profession');
@@ -107,13 +110,18 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
     );
   };
 
+  const needsCustomLabel =
+    primary === 'other' || secondaries.includes('other');
+
   const handleProfessionNext = async () => {
     if (!primary) return;
+    if (needsCustomLabel && !customProfession.trim()) return;
     setSaving(true);
     try {
       await updateProfile({
         primaryProfession: primary,
         secondaryProfessions: secondaries,
+        customProfession: needsCustomLabel ? customProfession.trim() : '',
       });
     } catch {
       // Don't block on failure
@@ -186,6 +194,8 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
             primary={primary}
             secondaries={secondaries}
             saving={saving}
+            customProfession={customProfession}
+            onCustomProfessionChange={setCustomProfession}
             onSelectPrimary={setPrimary}
             onToggleSecondary={toggleSecondary}
             onNext={handleProfessionNext}
@@ -231,6 +241,8 @@ function ProfessionStep({
   primary,
   secondaries,
   saving,
+  customProfession,
+  onCustomProfessionChange,
   onSelectPrimary,
   onToggleSecondary,
   onNext,
@@ -238,10 +250,14 @@ function ProfessionStep({
   primary: FreelancerType | null;
   secondaries: FreelancerType[];
   saving: boolean;
+  customProfession: string;
+  onCustomProfessionChange: (v: string) => void;
   onSelectPrimary: (v: FreelancerType) => void;
   onToggleSecondary: (v: FreelancerType) => void;
   onNext: () => void;
 }) {
+  const needsCustomLabel = primary === 'other' || secondaries.includes('other');
+  const canContinue = primary && (!needsCustomLabel || customProfession.trim());
   return (
     <div>
       <h2 className="mb-1 text-center text-xl font-bold text-(--text-primary)">
@@ -315,9 +331,27 @@ function ProfessionStep({
         </div>
       )}
 
+      {/* Custom profession input — appears when "other" is selected */}
+      {needsCustomLabel && (
+        <div className="mt-5">
+          <p className="mb-2.5 text-xs font-medium text-(--text-secondary)">
+            ¿Cuál es tu profesión?
+          </p>
+          <input
+            type="text"
+            value={customProfession}
+            onChange={(e) => onCustomProfessionChange(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && canContinue && !saving && onNext()}
+            placeholder="Ej. Diseñador gráfico, Productor musical…"
+            className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 transition-all"
+            autoFocus
+          />
+        </div>
+      )}
+
       <button
         type="button"
-        disabled={!primary || saving}
+        disabled={!canContinue || saving}
         onClick={onNext}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--accent) py-4 text-sm font-bold text-(--accent-foreground) transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
       >

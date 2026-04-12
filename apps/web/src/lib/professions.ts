@@ -13,4 +13,5 @@ export const PROFESSION_LABELS: Record<FreelancerType, string> = {
   dj:                'DJ',
   recruiter:         'Reclutador',
   coach:             'Asesoría / Consultoría',
+  other:             'Otro',
 };

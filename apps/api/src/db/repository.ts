@@ -799,7 +799,8 @@ export class PostgresAppStore {
     const [profileResult, goalsResult] = await Promise.all([
       this.pool.query(
         `SELECT name, avatar, handle, tagline, social_profiles, efi_profile,
-                notifications_enabled, primary_profession, secondary_professions
+                notifications_enabled, primary_profession, secondary_professions,
+                custom_profession
          FROM user_profile WHERE user_id = $1`,
         [userId],
       ),
@@ -844,6 +845,7 @@ export class PostgresAppStore {
       notificationsEnabled: row.notifications_enabled,
       primaryProfession: row.primary_profession ?? undefined,
       secondaryProfessions: row.secondary_professions ?? [],
+      customProfession: row.custom_profession ?? undefined,
     };
   }
 
@@ -908,6 +910,10 @@ export class PostgresAppStore {
       if (updates.secondaryProfessions !== undefined) {
         setClauses.push(`secondary_professions = $${idx++}`);
         values.push(JSON.stringify(updates.secondaryProfessions));
+      }
+      if (updates.customProfession !== undefined) {
+        setClauses.push(`custom_profession = $${idx++}`);
+        values.push(updates.customProfession || null);
       }
 
       if (updates.socialProfiles !== undefined) {

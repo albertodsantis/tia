@@ -23,7 +23,8 @@ export type FreelancerType =
   | 'speaker'
   | 'dj'
   | 'recruiter'
-  | 'coach';
+  | 'coach'
+  | 'other';
 
 export interface Contact {
   id: string;
@@ -169,6 +170,7 @@ export interface UserProfile {
   notificationsEnabled: boolean;
   primaryProfession?: FreelancerType;
   secondaryProfessions?: FreelancerType[];
+  customProfession?: string;
 }
 
 export interface AppState {
