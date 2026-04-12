@@ -78,31 +78,37 @@ function ProgressDots({ current }: { current: Step }) {
             <div
               className="flex items-center justify-center rounded-full transition-all duration-300"
               style={{
-                width: completed || active ? '2rem' : '0.625rem',
-                height: completed || active ? '2rem' : '0.625rem',
+                width: '2rem',
+                height: '2rem',
                 backgroundColor: completed
                   ? 'var(--accent)'
                   : active
                     ? 'color-mix(in srgb, var(--accent) 15%, transparent)'
+                    : 'var(--surface-card)',
+                borderWidth: '2px',
+                borderColor: completed
+                  ? 'var(--accent)'
+                  : active
+                    ? 'var(--accent)'
                     : 'var(--border-subtle)',
-                borderWidth: active ? '2px' : '0',
-                borderColor: active ? 'var(--accent)' : 'transparent',
                 borderStyle: 'solid',
                 animation: completed ? 'check-pop 0.22s ease-out' : 'none',
               }}
             >
               {completed && <Check size={14} weight="bold" color="var(--accent-foreground)" />}
             </div>
-            {(completed || active) && (
-              <span
-                className="text-[0.625rem] font-semibold transition-opacity duration-300"
-                style={{
-                  color: completed ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
-              >
-                {STEP_LABELS[i]}
-              </span>
-            )}
+            <span
+              className="text-[0.625rem] font-semibold transition-colors duration-300"
+              style={{
+                color: completed
+                  ? 'var(--accent)'
+                  : active
+                    ? 'var(--text-secondary)'
+                    : 'var(--text-tertiary)',
+              }}
+            >
+              {STEP_LABELS[i]}
+            </span>
           </div>
         );
       })}
