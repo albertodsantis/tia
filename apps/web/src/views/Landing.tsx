@@ -53,7 +53,7 @@ const professions = [
 
 const features = [
   {
-    icon: ChartBar,
+    icon: Eye,
     title: 'EfiLink',
     description: 'Tu vitrina profesional. Un enlace único para tus clientes.',
   },
@@ -68,7 +68,7 @@ const features = [
     description: 'Organiza clientes y contactos con tus términos.',
   },
   {
-    icon: Kanban,
+    icon: ChartBar,
     title: 'Dashboard',
     description: 'Métricas, metas y actividad reciente en un solo vistazo.',
   },
