@@ -20,6 +20,7 @@ import {
   Kanban,
   TextT,
   X,
+  Funnel,
 } from '@phosphor-icons/react';
 import {
   DndContext,
@@ -406,11 +407,26 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
     () => typeof window !== 'undefined' && window.innerWidth >= 1536,
   );
   const [searchQuery, setMagnifyingGlassQuery] = useState('');
+  const [filterPartnerIds, setFilterPartnerIds] = useState<string[]>([]);
+  const [filterStatuses, setFilterStatuses] = useState<TaskStatus[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
   const [gcalConnected, setGcalConnected] = useState(false);
 
   useEffect(() => {
     calendarApi.getStatus().then((res) => setGcalConnected(res.connected)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isFilterOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isFilterOpen]);
 
   useEffect(() => {
     if (!pendingPartnerName) return;
@@ -434,17 +450,30 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
   );
 
   const filteredSortedTasks = useMemo(() => {
-    if (!searchQuery.trim()) return sortedTasks;
-    const query = searchQuery.toLowerCase().trim();
-    return sortedTasks.filter((task) => {
-      const partner = partners.find((p) => p.id === task.partnerId);
-      return (
-        task.title.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query) ||
-        (partner?.name.toLowerCase().includes(query))
-      );
-    });
-  }, [sortedTasks, searchQuery, partners]);
+    let result = sortedTasks;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((task) => {
+        const partner = partners.find((p) => p.id === task.partnerId);
+        return (
+          task.title.toLowerCase().includes(query) ||
+          task.description.toLowerCase().includes(query) ||
+          (partner?.name.toLowerCase().includes(query))
+        );
+      });
+    }
+
+    if (filterPartnerIds.length > 0) {
+      result = result.filter((task) => task.partnerId && filterPartnerIds.includes(task.partnerId));
+    }
+
+    if (filterStatuses.length > 0) {
+      result = result.filter((task) => filterStatuses.includes(task.status));
+    }
+
+    return result;
+  }, [sortedTasks, searchQuery, partners, filterPartnerIds, filterStatuses]);
 
   const listTasks = useMemo(
     () =>
@@ -1186,7 +1215,119 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
             />
           </div>
 
-          <div className="flex flex-wrap gap-2 xl:justify-end">
+          <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+            {/* Filter button + dropdown */}
+            <div className="relative" ref={filterRef}>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen((v) => !v)}
+                className={cx(
+                  'flex h-[46px] items-center gap-2 rounded-[1rem] border px-4 text-sm font-bold transition-all',
+                  (filterPartnerIds.length > 0 || filterStatuses.length > 0)
+                    ? 'bg-[var(--surface-card-strong)] text-[var(--text-primary)] shadow-sm [border-color:var(--line-soft)]'
+                    : 'border-transparent bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:bg-[var(--surface-card)] hover:text-[var(--text-primary)]',
+                )}
+              >
+                <Funnel size={16} weight={(filterPartnerIds.length > 0 || filterStatuses.length > 0) ? 'fill' : 'regular'} />
+                <span>Filtros</span>
+                {(filterPartnerIds.length + filterStatuses.length) > 0 && (
+                  <span
+                    className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-black text-white"
+                    style={{ backgroundColor: accentHex }}
+                  >
+                    {filterPartnerIds.length + filterStatuses.length}
+                  </span>
+                )}
+              </button>
+
+              {isFilterOpen && (
+                <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-72 rounded-[1.1rem] border bg-[var(--surface-card)] shadow-[var(--shadow-strong)] [border-color:var(--line-soft)]">
+                  <div className="flex items-center justify-between border-b px-4 py-3 [border-color:var(--line-soft)]">
+                    <span className="text-sm font-extrabold text-[var(--text-primary)]">Filtros</span>
+                    {(filterPartnerIds.length > 0 || filterStatuses.length > 0) && (
+                      <button
+                        type="button"
+                        onClick={() => { setFilterPartnerIds([]); setFilterStatuses([]); }}
+                        className="text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        Limpiar todo
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Estado */}
+                  <div className="px-4 py-3">
+                    <p className="mb-2 text-[11px] font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">Estado</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {STATUSES.map((status) => {
+                        const active = filterStatuses.includes(status);
+                        return (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() =>
+                              setFilterStatuses((prev) =>
+                                active ? prev.filter((s) => s !== status) : [...prev, status],
+                              )
+                            }
+                            className={cx(
+                              'rounded-[0.75rem] border px-3 py-1 text-xs font-bold transition-all',
+                              active
+                                ? 'text-white [border-color:transparent]'
+                                : 'bg-[var(--surface-muted)] text-[var(--text-secondary)] [border-color:var(--line-soft)] hover:text-[var(--text-primary)]',
+                            )}
+                            style={active ? { backgroundColor: accentHex } : undefined}
+                          >
+                            {status}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Cliente */}
+                  {partners.length > 0 && (
+                    <div className="border-t px-4 py-3 [border-color:var(--line-soft)]">
+                      <p className="mb-2 text-[11px] font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">Cliente</p>
+                      <div className="max-h-44 space-y-0.5 overflow-y-auto">
+                        {[...partners].sort((a, b) => a.name.localeCompare(b.name, 'es-ES')).map((partner) => {
+                          const active = filterPartnerIds.includes(partner.id);
+                          return (
+                            <button
+                              key={partner.id}
+                              type="button"
+                              onClick={() =>
+                                setFilterPartnerIds((prev) =>
+                                  active ? prev.filter((id) => id !== partner.id) : [...prev, partner.id],
+                                )
+                              }
+                              className={cx(
+                                'flex w-full items-center gap-2.5 rounded-[0.75rem] px-2.5 py-2 text-left text-sm font-medium transition-colors',
+                                active
+                                  ? 'bg-[var(--accent-soft)] text-[var(--text-primary)]'
+                                  : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]',
+                              )}
+                            >
+                              <span
+                                className={cx(
+                                  'flex h-4 w-4 shrink-0 items-center justify-center rounded-[0.35rem] border transition-colors',
+                                  active ? 'border-transparent' : '[border-color:var(--line-soft)]',
+                                )}
+                                style={active ? { backgroundColor: accentHex } : undefined}
+                              >
+                                {active && <X size={9} weight="bold" className="text-white" />}
+                              </span>
+                              <span className="truncate">{partner.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Button accentColor={accentGradient} onClick={openCreate} className="flex-1 sm:flex-none">
               <Plus size={16} weight="regular" />
               Nueva tarea
