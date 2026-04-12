@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import ReactDOM from 'react-dom';
-import { CaretDown, X } from '@phosphor-icons/react';
+import { CaretDown, X, ArrowClockwise } from '@phosphor-icons/react';
 import { cx } from './ui';
 
 interface Option {
@@ -207,7 +207,9 @@ export default function CustomSelect({
         style={buttonStyle}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
-        {!useBottomSheet && (
+        {disabled ? (
+          <ArrowClockwise size={14} className="shrink-0 animate-spin text-(--text-secondary)/50" />
+        ) : !useBottomSheet ? (
           <CaretDown
             size={16}
             className={cx(
@@ -215,7 +217,7 @@ export default function CustomSelect({
               isOpen && 'rotate-180',
             )}
           />
-        )}
+        ) : null}
       </button>
 
       {/* Inline dropdown (non-mobile) */}

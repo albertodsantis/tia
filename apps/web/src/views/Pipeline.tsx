@@ -849,16 +849,23 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
       startOfLocalDay(parseLocalDate(task.dueDate)) < startOfLocalDay(new Date()) && task.status !== 'Cobrado';
     const relativeTime = getRelativeTimeLabel(task.dueDate);
 
+    const isUpdating = updatingTaskId === task.id;
+
     return (
         <SurfaceCard
           tone="inset"
           className={cx(
-            'group border p-4 transition-all duration-200',
+            'group relative border p-4 transition-all duration-200',
             !isOverlay && 'border-transparent hover:border-[var(--line-soft)] hover:shadow-[0_20px_40px_-30px_rgba(59,43,34,0.18)]',
             variant === 'kanban' && !isOverlay && 'hover:-translate-y-0.5',
             isOverlay && 'rotate-2 scale-[1.03] shadow-[0_30px_60px_-20px_rgba(15,23,42,0.3)] border-[color:var(--line-soft)] cursor-grabbing'
           )}
         >
+          {isUpdating && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[inherit] bg-[var(--surface-card)]/60 backdrop-blur-[2px]">
+              <ArrowClockwise size={20} className="animate-spin text-[var(--accent)]" weight="bold" />
+            </div>
+          )}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
