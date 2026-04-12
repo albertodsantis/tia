@@ -1101,15 +1101,6 @@ export default function Pipeline() {
               >
                 +{dayTasks.length - 2} más
             </p>
-          ) : dayTasks.length === 0 ? (
-              <p
-                className={cx(
-                  'hidden pt-1 text-[11px] font-medium lg:block',
-                  'text-[var(--text-secondary)]/70',
-                )}
-              >
-                Sin tareas
-            </p>
           ) : null}
         </div>
       </button>
