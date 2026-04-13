@@ -115,13 +115,20 @@ function GoalListItem({
       <div className="flex items-center gap-3">
         <div
           className={cx(
-            'flex h-11 w-11 items-center justify-center rounded-[0.95rem] text-sm font-black',
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.95rem]',
             isActive
-              ? 'bg-white/85 text-(--text-primary)'
-              : 'bg-(--surface-muted) text-(--text-secondary)',
+              ? 'bg-white/85'
+              : 'bg-(--surface-muted)',
           )}
         >
-          <Target size={20} />
+          <span className={cx(
+            'h-3 w-3 rounded-full',
+            goal.priority === 'Alta'
+              ? 'bg-rose-500'
+              : goal.priority === 'Media'
+              ? 'bg-amber-500'
+              : 'bg-sky-500',
+          )} />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-bold leading-tight text-(--text-primary)">
