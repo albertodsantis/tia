@@ -8,6 +8,21 @@ import {
   PencilLine,
   Trash,
   FloppyDisk,
+  Article,
+  Broadcast,
+  Briefcase,
+  Buildings,
+  Camera,
+  ChatsCircle,
+  Check,
+  Compass,
+  DotsThreeCircle,
+  Headphones,
+  Microphone,
+  MonitorPlay,
+  Presentation,
+  Radio,
+  Star,
 } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import {
@@ -23,7 +38,7 @@ import OverlayModal from '../components/OverlayModal';
 import CustomSelect from '../components/CustomSelect';
 import { toast } from '../lib/toast';
 import { PROFESSION_LABELS } from '../lib/professions';
-import type { Goal, GoalAggregation, GoalPriority, GoalStatus, StrategicViewResponse } from '@shared';
+import type { FreelancerType, Goal, GoalAggregation, GoalPriority, GoalStatus, StrategicViewResponse } from '@shared';
 
 const formatCurrency = (v: number) => `$${v.toLocaleString('es-ES')}`;
 
@@ -464,6 +479,237 @@ function GoalFormModal({
   );
 }
 
+/* ── Profession catalogue (mirrors WelcomeOnboarding) ─────── */
+
+const PROFESSIONS: { value: FreelancerType; Icon: React.ElementType }[] = [
+  { value: 'content_creator',   Icon: Star },
+  { value: 'podcaster',         Icon: Microphone },
+  { value: 'streamer',          Icon: MonitorPlay },
+  { value: 'radio',             Icon: Radio },
+  { value: 'photographer',      Icon: Camera },
+  { value: 'copywriter',        Icon: Article },
+  { value: 'community_manager', Icon: ChatsCircle },
+  { value: 'host_mc',           Icon: Broadcast },
+  { value: 'speaker',           Icon: Presentation },
+  { value: 'dj',                Icon: Headphones },
+  { value: 'recruiter',         Icon: Briefcase },
+  { value: 'coach',             Icon: Compass },
+  { value: 'other',             Icon: DotsThreeCircle },
+];
+
+/* ── ProfessionBanner ──────────────────────────────────────── */
+
+function ProfessionBanner({
+  primaryProfession,
+  secondaryProfessions,
+  customProfession,
+  accentHex,
+  onEdit,
+}: {
+  primaryProfession?: FreelancerType;
+  secondaryProfessions?: FreelancerType[];
+  customProfession?: string;
+  accentHex: string;
+  onEdit: () => void;
+}) {
+  const resolveLabel = (key: FreelancerType) =>
+    key === 'other' && customProfession ? customProfession : PROFESSION_LABELS[key];
+
+  const primaryLabel = primaryProfession ? resolveLabel(primaryProfession) : null;
+  const secondaryLabels = (secondaryProfessions ?? []).map(resolveLabel);
+
+  if (!primaryLabel) {
+    return (
+      <button
+        type="button"
+        onClick={onEdit}
+        className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-(--line-soft) bg-(--surface-card)/60 px-4 py-3 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--surface-muted)/60"
+      >
+        <Buildings size={16} />
+        Configura tu actividad profesional
+        <PencilLine size={14} className="ml-auto" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Primary pill */}
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+        style={{ backgroundColor: `color-mix(in srgb, ${accentHex} 12%, transparent)`, color: accentHex }}
+      >
+        {primaryLabel}
+        <span
+          className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider"
+          style={{ backgroundColor: `color-mix(in srgb, ${accentHex} 18%, transparent)` }}
+        >
+          Principal
+        </span>
+      </span>
+
+      {/* Secondary pills */}
+      {secondaryLabels.map((label) => (
+        <span
+          key={label}
+          className="inline-flex items-center rounded-full border border-(--line-soft) px-3 py-1 text-xs font-medium text-(--text-secondary)"
+        >
+          {label}
+        </span>
+      ))}
+
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label="Editar actividad profesional"
+        className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-(--text-secondary) transition-colors hover:bg-(--surface-muted) hover:text-(--text-primary)"
+      >
+        <PencilLine size={13} />
+      </button>
+    </div>
+  );
+}
+
+/* ── ProfessionEditModal ───────────────────────────────────── */
+
+function ProfessionEditModal({
+  initial,
+  accentHex,
+  accentGradient,
+  onClose,
+  onSave,
+}: {
+  initial: { primary: FreelancerType | null; secondaries: FreelancerType[]; custom: string };
+  accentHex: string;
+  accentGradient: string;
+  onClose: () => void;
+  onSave: (primary: FreelancerType, secondaries: FreelancerType[], custom: string) => void;
+}) {
+  const [primary, setPrimary] = useState<FreelancerType | null>(initial.primary);
+  const [secondaries, setSecondaries] = useState<FreelancerType[]>(initial.secondaries);
+  const [custom, setCustom] = useState(initial.custom);
+
+  const needsCustom = primary === 'other' || secondaries.includes('other');
+  const canSave = !!primary && (!needsCustom || custom.trim());
+
+  const toggleSecondary = (value: FreelancerType) => {
+    setSecondaries((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  const handleSave = () => {
+    if (!primary || !canSave) return;
+    onSave(primary, secondaries, needsCustom ? custom.trim() : '');
+  };
+
+  return (
+    <OverlayModal onClose={onClose}>
+      <ModalPanel
+        title="Actividad profesional"
+        description="Actualiza tu profesión principal y las actividades complementarias."
+        onClose={onClose}
+        size="lg"
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-2xl border border-(--line-soft) bg-transparent px-4 py-3 text-sm font-bold text-(--text-primary) transition-colors hover:bg-(--surface-muted)/50"
+            >
+              Cancelar
+            </button>
+            <Button accentColor={accentGradient} onClick={handleSave} className="flex-1" disabled={!canSave}>
+              <FloppyDisk size={16} />
+              Guardar
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          {/* Primary */}
+          <div>
+            <p className={labelClass}>Actividad principal</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {PROFESSIONS.map(({ value, Icon }) => {
+                const selected = primary === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setPrimary(value)}
+                    className="flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left text-xs font-semibold transition-all"
+                    style={{
+                      borderColor: selected ? accentHex : 'var(--line-soft)',
+                      backgroundColor: selected ? `color-mix(in srgb, ${accentHex} 10%, transparent)` : 'var(--surface-muted)',
+                      color: selected ? accentHex : 'var(--text-primary)',
+                    }}
+                  >
+                    <Icon size={16} weight="duotone" style={{ color: selected ? accentHex : 'var(--text-secondary)', flexShrink: 0 }} />
+                    {PROFESSION_LABELS[value]}
+                    {selected && <Check size={12} weight="bold" className="ml-auto shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Secondary */}
+          {primary && (
+            <div>
+              <p className={labelClass}>
+                También hago{' '}
+                <span className="normal-case font-normal tracking-normal text-(--text-secondary)">
+                  (opcional)
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PROFESSIONS.map(({ value }) => {
+                  const isPrimary = value === primary;
+                  const active = secondaries.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => !isPrimary && toggleSecondary(value)}
+                      disabled={isPrimary}
+                      className="rounded-full border px-3 py-1 text-xs font-medium transition-all disabled:cursor-not-allowed"
+                      style={{
+                        borderColor: isPrimary || active ? accentHex : 'var(--line-soft)',
+                        backgroundColor: isPrimary || active ? `color-mix(in srgb, ${accentHex} 10%, transparent)` : 'transparent',
+                        color: isPrimary || active ? accentHex : 'var(--text-secondary)',
+                        opacity: isPrimary ? 0.4 : 1,
+                      }}
+                    >
+                      {PROFESSION_LABELS[value]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Custom label */}
+          {needsCustom && (
+            <div>
+              <p className={labelClass}>¿Cuál es tu profesión?</p>
+              <input
+                type="text"
+                value={custom}
+                onChange={(e) => setCustom(e.target.value)}
+                placeholder="Ej. Diseñador gráfico, Productor musical…"
+                className={cx(fieldClass, 'bg-(--surface-muted)')}
+                style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
+                autoFocus
+              />
+            </div>
+          )}
+        </div>
+      </ModalPanel>
+    </OverlayModal>
+  );
+}
+
 /* ── StrategicView ─────────────────────────────────────────── */
 
 export default function StrategicView() {
@@ -481,6 +727,7 @@ export default function StrategicView() {
   }, [profile.primaryProfession, profile.secondaryProfessions, profile.customProfession]);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [modalGoal, setModalGoal] = useState<ReturnType<typeof emptyGoalForm> | null>(null);
+  const [showProfessionModal, setShowProfessionModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const data = useMemo((): StrategicViewResponse => {
@@ -533,6 +780,25 @@ export default function StrategicView() {
       toast.error(`Error al guardar: ${msg}`);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveProfession = async (
+    primary: FreelancerType,
+    secondaries: FreelancerType[],
+    custom: string,
+  ) => {
+    try {
+      await updateProfile({
+        primaryProfession: primary,
+        secondaryProfessions: secondaries,
+        customProfession: custom,
+      });
+      setShowProfessionModal(false);
+      toast.success('Actividad profesional actualizada');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error desconocido';
+      toast.error(`Error al guardar: ${msg}`);
     }
   };
 
@@ -592,6 +858,15 @@ export default function StrategicView() {
 
   return (
     <div className="space-y-5 p-4 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 lg:px-8 lg:pt-4 lg:pb-8">
+      {/* Profession identity banner */}
+      <ProfessionBanner
+        primaryProfession={profile.primaryProfession}
+        secondaryProfessions={profile.secondaryProfessions}
+        customProfession={profile.customProfession}
+        accentHex={accentHex}
+        onEdit={() => setShowProfessionModal(true)}
+      />
+
       {/* Main 2-col grid */}
       <div className="grid gap-4 xl:grid-cols-[minmax(310px,0.92fr)_minmax(0,1.08fr)]">
         {/* Left: goal list */}
@@ -671,7 +946,7 @@ export default function StrategicView() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Goal modal */}
       {modalGoal && (
         <GoalFormModal
           initial={modalGoal}
@@ -681,6 +956,21 @@ export default function StrategicView() {
           onClose={() => setModalGoal(null)}
           onSave={handleSaveModal}
           onDelete={modalGoal.id ? () => { setModalGoal(null); handleDeleteGoal(); } : undefined}
+        />
+      )}
+
+      {/* Profession edit modal */}
+      {showProfessionModal && (
+        <ProfessionEditModal
+          initial={{
+            primary: profile.primaryProfession ?? null,
+            secondaries: profile.secondaryProfessions ?? [],
+            custom: profile.customProfession ?? '',
+          }}
+          accentHex={accentHex}
+          accentGradient={accentGradient}
+          onClose={() => setShowProfessionModal(false)}
+          onSave={handleSaveProfession}
         />
       )}
     </div>
