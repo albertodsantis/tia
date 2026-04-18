@@ -279,8 +279,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
         const today = formatLocalDateISO(new Date());
         const tomorrow = formatLocalDateISO(addLocalDays(new Date(), 1));
 
-        const tasksDueToday = state.tasks.filter((task) => task.dueDate === today);
-        const tasksDueTomorrow = state.tasks.filter((task) => task.dueDate === tomorrow);
+        const isActive = (task: typeof state.tasks[number]) =>
+          task.status !== 'Completada' && task.status !== 'Cobrado';
+
+        const tasksDueToday = state.tasks.filter((task) => task.dueDate === today && isActive(task));
+        const tasksDueTomorrow = state.tasks.filter((task) => task.dueDate === tomorrow && isActive(task));
 
         if (tasksDueToday.length > 0) {
           new Notification('Tareas para hoy', {
