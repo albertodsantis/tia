@@ -53,7 +53,18 @@ export async function createApp(): Promise<{
   app.set('trust proxy', 1);
 
   // Security headers
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      // Force HTTPS for a year in prod; include subdomains and allow preload list.
+      strictTransportSecurity: env.NODE_ENV === 'production'
+        ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+        : false,
+      // Don't leak full URL on cross-origin navigations.
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  );
 
   app.use(
     pinoHttp({
@@ -83,7 +94,7 @@ export async function createApp(): Promise<{
     }),
   );
 
-  app.use(express.json());
+  app.use(express.json({ limit: '1mb' }));
 
   app.use(
     session({
