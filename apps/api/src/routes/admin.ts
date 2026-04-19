@@ -49,6 +49,8 @@ export function createAdminRouter(pool: pg.Pool, adminKey: string | undefined) {
         partnersTotal,
         partnersNew7d,
         sessionsActive,
+        dbSize,
+        tableSizes,
       ] = await Promise.all([
         pool.query(`SELECT COUNT(*)::int AS n FROM users`),
         pool.query(
@@ -74,11 +76,27 @@ export function createAdminRouter(pool: pg.Pool, adminKey: string | undefined) {
            WHERE created_at > NOW() - INTERVAL '7 days'`,
         ),
         pool.query(`SELECT COUNT(*)::int AS n FROM session WHERE expire > NOW()`),
+        pool.query(`SELECT pg_database_size(current_database())::bigint AS bytes`),
+        pool.query(
+          `SELECT
+             schemaname || '.' || relname AS table,
+             pg_total_relation_size(schemaname || '.' || relname)::bigint AS bytes
+           FROM pg_stat_user_tables
+           ORDER BY bytes DESC
+           LIMIT 5`,
+        ),
       ]);
+
+      const dbBytes = Number(dbSize.rows[0].bytes);
+      const supabaseDbLimitBytes = 500 * 1024 * 1024; // 500 MB free plan
 
       res.json({
         timestamp: new Date().toISOString(),
         uptime: Math.round(process.uptime()),
+        memory: {
+          rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+          heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        },
         users: {
           total: usersTotal.rows[0].n,
           active7d: usersActive7d.rows[0].n,
@@ -95,6 +113,15 @@ export function createAdminRouter(pool: pg.Pool, adminKey: string | undefined) {
         },
         sessions: {
           active: sessionsActive.rows[0].n,
+        },
+        database: {
+          sizeMb: Math.round((dbBytes / 1024 / 1024) * 10) / 10,
+          usagePct: Math.round((dbBytes / supabaseDbLimitBytes) * 1000) / 10,
+          limitMb: supabaseDbLimitBytes / 1024 / 1024,
+          topTables: tableSizes.rows.map((r: { table: string; bytes: string }) => ({
+            name: r.table,
+            sizeMb: Math.round((Number(r.bytes) / 1024 / 1024) * 10) / 10,
+          })),
         },
       });
     } catch (err) {
