@@ -104,7 +104,7 @@ export async function createApp(): Promise<{
     }),
   );
 
-  // Rate limiting for auth endpoints
+  // Rate limiting for auth endpoints (stricter — protects against brute force)
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 20,
@@ -113,11 +113,25 @@ export async function createApp(): Promise<{
     legacyHeaders: false,
   });
 
+  // General API rate limiter — prevents abuse and runaway clients.
+  // Generous enough for normal usage (dashboard polls, rapid edits).
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 300,
+    message: { error: 'Demasiadas solicitudes. Espera un momento.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/health' || req.path === '/health/deep',
+  });
+
   const googleCreds = {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
     redirectUri: `${env.APP_URL}/api/auth/google/callback`,
   };
+
+  // Rate limit API routes (health checks are exempted via the skip fn above)
+  app.use('/api', apiLimiter);
 
   app.get('/api/health', async (_req, res) => {
     res.json({ ok: true });

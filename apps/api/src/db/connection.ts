@@ -15,9 +15,11 @@ export function getPool(): pg.Pool {
 export async function initPool(databaseUrl: string): Promise<pg.Pool> {
   pool = new Pool({
     connectionString: databaseUrl,
-    max: 10, // GET /notifications fires 6 parallel queries; keep headroom for concurrent users
+    max: Number(process.env.DB_POOL_MAX) || 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
+    statement_timeout: 10000,
+    query_timeout: 10000,
   });
 
   const client = await pool.connect();
