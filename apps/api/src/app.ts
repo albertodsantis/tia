@@ -14,6 +14,9 @@ import connectPgSimple from 'connect-pg-simple';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as Sentry from '@sentry/node';
+import { pinoHttp } from 'pino-http';
+import { randomUUID } from 'crypto';
+import { logger } from './lib/logger';
 import { createAuthRouter } from './routes/auth';
 import { createCalendarRouter } from './routes/calendar';
 import { createV1Router } from './routes/v1';
@@ -51,6 +54,34 @@ export async function createApp(): Promise<{
 
   // Security headers
   app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+
+  app.use(
+    pinoHttp({
+      logger,
+      genReqId: (req, res) => {
+        const existing = req.headers['x-request-id'];
+        const id = typeof existing === 'string' && existing ? existing : randomUUID();
+        res.setHeader('x-request-id', id);
+        return id;
+      },
+      customLogLevel: (_req, res, err) => {
+        if (err || res.statusCode >= 500) return 'error';
+        if (res.statusCode >= 400) return 'warn';
+        return 'info';
+      },
+      serializers: {
+        req: (req) => ({
+          id: req.id,
+          method: req.method,
+          url: req.url,
+        }),
+        res: (res) => ({ statusCode: res.statusCode }),
+      },
+      autoLogging: {
+        ignore: (req) => req.url === '/api/health',
+      },
+    }),
+  );
 
   app.use(express.json());
 

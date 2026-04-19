@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type pg from 'pg';
+import { logger } from '../lib/logger';
 
 export async function runMigrations(pool: pg.Pool): Promise<void> {
   const client = await pool.connect();
@@ -27,7 +28,7 @@ export async function runMigrations(pool: pg.Pool): Promise<void> {
     }
 
     if (!fs.existsSync(migrationsDir)) {
-      console.log('No migrations directory found, skipping.');
+      logger.warn('No migrations directory found, skipping');
       return;
     }
 
@@ -45,7 +46,7 @@ export async function runMigrations(pool: pg.Pool): Promise<void> {
         continue;
       }
 
-      console.log(`Applying migration: ${file}`);
+      logger.info({ file }, 'Applying migration');
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
 
       await client.query('BEGIN');
@@ -56,7 +57,7 @@ export async function runMigrations(pool: pg.Pool): Promise<void> {
           [file],
         );
         await client.query('COMMIT');
-        console.log(`Migration applied: ${file}`);
+        logger.info({ file }, 'Migration applied');
       } catch (err) {
         await client.query('ROLLBACK');
         throw new Error(`Migration ${file} failed: ${err}`);

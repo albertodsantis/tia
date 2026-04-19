@@ -28,6 +28,7 @@ function requireEnv(name: string): string {
 function warnIfMissing(name: string): string {
   const value = process.env[name] || '';
   if (!value) {
+    // Logger not yet imported at config load time — keep console.warn here to avoid circular init
     console.warn(`Warning: ${name} is not set. Google Calendar integration will not work.`);
   }
   return value;

@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { logger } from '../lib/logger';
 
 const { Pool } = pg;
 
@@ -22,7 +23,7 @@ export async function initPool(databaseUrl: string): Promise<pg.Pool> {
   const client = await pool.connect();
   try {
     await client.query('SELECT 1');
-    console.log('Database connection verified.');
+    logger.info('Database connection verified');
   } finally {
     client.release();
   }
@@ -34,6 +35,6 @@ export async function closePool(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
-    console.log('Database pool closed.');
+    logger.info('Database pool closed');
   }
 }

@@ -9,6 +9,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { createApp } from './app';
 import { renderPrivacyPage, renderTermsPage } from './lib/legalRenderer';
+import { logger } from './lib/logger';
 
 const repoRoot = process.cwd();
 const webRoot = path.join(repoRoot, 'apps', 'web');
@@ -42,12 +43,12 @@ async function startServer() {
   }
 
   const server = app.listen(env.PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${env.PORT}`);
+    logger.info({ port: env.PORT, env: env.NODE_ENV }, 'Server started');
   });
 
   // Graceful shutdown
   const shutdown = async () => {
-    console.log('Shutting down...');
+    logger.info('Shutting down...');
     server.close();
     await closePool();
     process.exit(0);
@@ -58,6 +59,6 @@ async function startServer() {
 }
 
 startServer().catch((err) => {
-  console.error('Failed to start server:', err);
+  logger.fatal({ err }, 'Failed to start server');
   process.exit(1);
 });
