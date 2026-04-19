@@ -93,7 +93,7 @@ export default function Settings() {
       ? `Suscripción activa hasta ${new Date(planState.subscribedUntil).toLocaleDateString('es-AR')}.`
       : trialDays !== null && trialDays > 0
         ? `Te quedan ${trialDays} días de prueba Pro.`
-        : 'Estás en el plan Free. Pasate a Pro para desbloquear todo.';
+        : 'Estás en el plan Free. Pásate a Pro para desbloquear todo.';
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
   const [taskRemindersEnabled, setTaskRemindersEnabled] = useState(
     () => localStorage.getItem('efi_task_reminders_enabled') !== 'false',
