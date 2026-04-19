@@ -24,6 +24,7 @@ import { toast } from '../lib/toast';
 import type { BadgeKey, Task, TaskStatus } from '@shared/domain';
 import { formatLocalDateISO, parseLocalDate, startOfLocalDay } from '../lib/date';
 import EfisystemWidget from '../components/EfisystemWidget';
+import LevelsModal from '../components/LevelsModal';
 import { hapticSuccess } from '../lib/haptics';
 
 /* ── constants ──────────────────────────────────────────────── */
@@ -734,6 +735,7 @@ export default function Dashboard() {
   weekEnd.setDate(weekEnd.getDate() + 6);
 
   const [badgesOpen, setBadgesOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
   const [periodView, setPeriodView] = useState<'month' | 'year' | 'all'>('month');
   const [periodMonth, setPeriodMonth] = useState(today.getMonth());
   const [periodYear, setPeriodYear] = useState(today.getFullYear());
@@ -900,10 +902,18 @@ export default function Dashboard() {
 
       {/* Efisystem: level widget */}
       <div className="mb-4">
-        <EfisystemWidget efisystem={efisystem} accentHex={accentHex} onOpenBadges={() => setBadgesOpen(true)} />
+        <EfisystemWidget
+          efisystem={efisystem}
+          accentHex={accentHex}
+          onOpenBadges={() => setBadgesOpen(true)}
+          onOpenLevels={() => setLevelsOpen(true)}
+        />
       </div>
       {badgesOpen && (
         <BadgesDrawer unlockedBadges={efisystem.unlockedBadges} onClose={() => setBadgesOpen(false)} accentHex={accentHex} />
+      )}
+      {levelsOpen && (
+        <LevelsModal currentLevel={efisystem.currentLevel} accentHex={accentHex} onClose={() => setLevelsOpen(false)} />
       )}
 
       {/* Main 2-col grid */}

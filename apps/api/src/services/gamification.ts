@@ -7,21 +7,64 @@ import type { PostgresAppStore } from '../db/repository';
 
 const LEVEL_THRESHOLDS: Record<number, number> = {
   1: 0,
-  2: 200,
-  3: 600,
-  4: 1200,
-  5: 2500,
-  6: 4500,
-  7: 7000,
-  8: 10500,
-  9: 15000,
-  10: 20000,
+  2: 100,
+  3: 250,
+  4: 475,
+  5: 725,
+  6: 1000,
+  7: 1300,
+  8: 1625,
+  9: 1900,
+  10: 2200,
+  11: 2525,
+  12: 2875,
+  13: 3375,
+  14: 3900,
+  15: 4450,
+  16: 5025,
+  17: 5625,
+  18: 6250,
+  19: 7100,
+  20: 7975,
+  21: 8875,
+  22: 9800,
+  23: 10750,
+  24: 11725,
+  25: 12725,
+  26: 14100,
+  27: 15500,
+  28: 16925,
+  29: 18375,
+  30: 19850,
+  31: 21350,
+  32: 22875,
+  33: 24950,
+  34: 27050,
+  35: 29175,
+  36: 31325,
+  37: 33500,
+  38: 35700,
+  39: 37925,
+  40: 41000,
+  41: 44100,
+  42: 47225,
+  43: 50375,
+  44: 53550,
+  45: 58100,
+  46: 62675,
+  47: 67275,
+  48: 71900,
+  49: 78825,
+  50: 85775,
 };
+
+const MAX_LEVEL = 50;
 
 function computeLevel(totalPoints: number): number {
   let level = 1;
-  for (const [l, threshold] of Object.entries(LEVEL_THRESHOLDS)) {
-    if (totalPoints >= threshold) level = Number(l);
+  for (let l = 2; l <= MAX_LEVEL; l++) {
+    if (totalPoints >= LEVEL_THRESHOLDS[l]) level = l;
+    else break;
   }
   return level;
 }

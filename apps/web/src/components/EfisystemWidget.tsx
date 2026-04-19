@@ -3,36 +3,90 @@ import type { BadgeKey, EfisystemSnapshot } from '@shared';
 
 // ── Level config ──────────────────────────────────────────────
 
+const MAX_LEVEL = 50;
+
 const LEVEL_THRESHOLDS: Record<number, number> = {
   1: 0,
-  2: 200,
-  3: 600,
-  4: 1200,
-  5: 2500,
-  6: 4500,
-  7: 7000,
-  8: 10500,
-  9: 15000,
-  10: 20000,
+  2: 100,
+  3: 250,
+  4: 475,
+  5: 725,
+  6: 1000,
+  7: 1300,
+  8: 1625,
+  9: 1900,
+  10: 2200,
+  11: 2525,
+  12: 2875,
+  13: 3375,
+  14: 3900,
+  15: 4450,
+  16: 5025,
+  17: 5625,
+  18: 6250,
+  19: 7100,
+  20: 7975,
+  21: 8875,
+  22: 9800,
+  23: 10750,
+  24: 11725,
+  25: 12725,
+  26: 14100,
+  27: 15500,
+  28: 16925,
+  29: 18375,
+  30: 19850,
+  31: 21350,
+  32: 22875,
+  33: 24950,
+  34: 27050,
+  35: 29175,
+  36: 31325,
+  37: 33500,
+  38: 35700,
+  39: 37925,
+  40: 41000,
+  41: 44100,
+  42: 47225,
+  43: 50375,
+  44: 53550,
+  45: 58100,
+  46: 62675,
+  47: 67275,
+  48: 71900,
+  49: 78825,
+  50: 85775,
 };
 
-const LEVEL_LABELS: Record<number, string> = {
-  1: 'Emergente',
-  2: 'Explorer',
-  3: 'Vibing',
-  4: 'Máquina',
-  5: 'Crack',
-  6: 'Master',
-  7: 'Élite',
-  8: 'Authority',
-  9: 'Ícono',
-  10: 'Leyenda',
-};
+// Tier definitions: each tier spans a range of levels and maps to a display name.
+// Sub-level within the tier is rendered as a Roman numeral (I, II, III, ...).
+export const TIERS: { name: string; from: number; to: number }[] = [
+  { name: 'Emergente', from: 1,  to: 3  },
+  { name: 'Explorer',  from: 4,  to: 7  },
+  { name: 'Vibing',    from: 8,  to: 12 },
+  { name: 'Máquina',   from: 13, to: 18 },
+  { name: 'Crack',     from: 19, to: 25 },
+  { name: 'Master',    from: 26, to: 32 },
+  { name: 'Élite',     from: 33, to: 39 },
+  { name: 'Authority', from: 40, to: 44 },
+  { name: 'Ícono',     from: 45, to: 48 },
+  { name: 'Leyenda',   from: 49, to: 50 },
+];
+
+export const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+export const MAX_LEVEL_EXPORT = MAX_LEVEL;
+
+export function getLevelLabel(level: number): string {
+  const tier = TIERS.find(t => level >= t.from && level <= t.to);
+  if (!tier) return '';
+  const subIndex = level - tier.from;
+  return `${tier.name} ${ROMAN[subIndex] ?? ''}`.trim();
+}
 
 function getThresholds(level: number): { current: number; next: number } {
   const current = LEVEL_THRESHOLDS[level] ?? 0;
-  const nextLevel = Math.min(level + 1, 10);
-  const next = LEVEL_THRESHOLDS[nextLevel] ?? LEVEL_THRESHOLDS[10];
+  const nextLevel = Math.min(level + 1, MAX_LEVEL);
+  const next = LEVEL_THRESHOLDS[nextLevel] ?? LEVEL_THRESHOLDS[MAX_LEVEL];
   return { current, next };
 }
 
@@ -71,12 +125,13 @@ interface Props {
   efisystem: EfisystemSnapshot;
   accentHex: string;
   onOpenBadges?: () => void;
+  onOpenLevels?: () => void;
 }
 
-export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges }: Props) {
+export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges, onOpenLevels }: Props) {
   const { totalPoints, currentLevel, unlockedBadges } = efisystem;
   const { current: currentThreshold, next: nextThreshold } = getThresholds(currentLevel);
-  const isMaxLevel = currentLevel >= 10;
+  const isMaxLevel = currentLevel >= MAX_LEVEL;
 
   const progressPct = isMaxLevel
     ? 100
@@ -88,14 +143,14 @@ export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges }: 
   const unlockedCount = unlockedBadges.length;
   const totalBadges = BADGE_ORDER.length;
 
-  return (
-    <div>
+  const LevelBlock = (
+    <>
       {/* Header row */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Lightning size={18} weight="fill" style={{ color: 'var(--accent-color)', flexShrink: 0 }} />
           <span className="text-sm font-semibold text-(--text-primary) truncate">
-            Nivel {currentLevel} · {LEVEL_LABELS[currentLevel]}
+            Nivel {currentLevel} · {getLevelLabel(currentLevel)}
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -117,10 +172,27 @@ export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges }: 
         {!isMaxLevel && (
           <div className="mt-1 flex justify-between text-[11px] text-(--text-tertiary)">
             <span>{totalPoints.toLocaleString('es')} pts</span>
-            <span>{nextThreshold.toLocaleString('es')} pts · {LEVEL_LABELS[currentLevel + 1]}</span>
+            <span>{nextThreshold.toLocaleString('es')} pts · {getLevelLabel(currentLevel + 1)}</span>
           </div>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <div>
+      {onOpenLevels ? (
+        <button
+          type="button"
+          onClick={onOpenLevels}
+          className="block w-full text-left rounded-lg -m-1 p-1 transition-colors hover:bg-(--surface-muted)/40 active:bg-(--surface-muted)/60"
+          aria-label="Ver todos los niveles"
+        >
+          {LevelBlock}
+        </button>
+      ) : (
+        LevelBlock
+      )}
 
       {/* Badge preview row */}
       {onOpenBadges && (
