@@ -749,7 +749,7 @@ const AppShell = ({ isNewRegistration }: { isNewRegistration: boolean }) => {
 
 type AuthPhase = 'checking' | 'unauthenticated' | 'authenticated';
 
-export default function App() {
+function AppInner() {
   const [authPhase, setAuthPhase] = useState<AuthPhase>('checking');
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [isNewRegistration, setIsNewRegistration] = useState(false);
@@ -862,6 +862,14 @@ export default function App() {
       >
         <AppShell isNewRegistration={isNewRegistration} />
       </AppProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
     </ErrorBoundary>
   );
 }

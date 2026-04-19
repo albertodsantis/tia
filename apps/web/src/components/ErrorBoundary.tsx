@@ -4,10 +4,12 @@ import { Sentry } from '../lib/sentry';
 
 interface Props {
   children: ReactNode;
+  onReset?: () => void;
 }
 
 interface State {
   hasError: boolean;
+  eventId: string | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -16,20 +18,39 @@ class ErrorBoundary extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, eventId: null };
   }
 
-  static getDerivedStateFromError(): State {
+  static getDerivedStateFromError(): Partial<State> {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info.componentStack);
-    Sentry.withScope((scope) => {
-      scope.setExtra('componentStack', info.componentStack);
-      Sentry.captureException(error);
-    });
+    let eventId: string | null = null;
+    try {
+      Sentry.withScope((scope) => {
+        scope.setExtra('componentStack', info.componentStack);
+        eventId = Sentry.captureException(error) ?? null;
+      });
+    } catch {
+      // Sentry not initialized (dev or missing DSN) — ignore
+    }
+    this.setState({ eventId });
   }
+
+  handleReset = () => {
+    this.setState({ hasError: false, eventId: null });
+    this.props.onReset?.();
+  };
+
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  handleReload = () => {
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -43,15 +64,36 @@ class ErrorBoundary extends Component<Props, State> {
               Algo salio mal
             </h1>
             <p className="mt-2 text-sm text-(--text-secondary)">
-              Ha ocurrido un error inesperado. Recarga la pagina para continuar.
+              Ha ocurrido un error inesperado. Puedes intentar de nuevo o volver al inicio.
             </p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mt-6 w-full rounded-2xl bg-(--accent) py-3.5 text-sm font-bold text-white"
-            >
-              Recargar
-            </button>
+            {this.state.eventId && (
+              <p className="mt-4 rounded-lg bg-(--surface-card-strong) px-3 py-2 font-mono text-[10px] text-(--text-secondary)">
+                ID: {this.state.eventId}
+              </p>
+            )}
+            <div className="mt-6 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={this.handleReset}
+                className="w-full rounded-2xl bg-(--accent) py-3.5 text-sm font-bold text-white"
+              >
+                Reintentar
+              </button>
+              <button
+                type="button"
+                onClick={this.handleGoHome}
+                className="w-full rounded-2xl border border-(--line-soft) py-3.5 text-sm font-bold text-(--text-primary)"
+              >
+                Ir al inicio
+              </button>
+              <button
+                type="button"
+                onClick={this.handleReload}
+                className="w-full py-2 text-xs font-semibold text-(--text-secondary) hover:text-(--text-primary)"
+              >
+                Recargar la pagina
+              </button>
+            </div>
           </div>
         </div>
       );
