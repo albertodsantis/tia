@@ -146,7 +146,7 @@ function normalizeEfiProfile(
           url: normalizeText(l?.url),
         } as ProfileLink))
       : current.links,
-    pdf_url: incoming?.pdf_url !== undefined ? (normalizeText(incoming.pdf_url) || null) : current.pdf_url,
+    pdf_url: incoming?.pdf_url !== undefined ? (normalizeText(incoming.pdf_url ?? undefined) || null) : current.pdf_url,
     pdf_label: normalizeText(incoming?.pdf_label) || current.pdf_label || 'Ver mi media kit',
   };
 }

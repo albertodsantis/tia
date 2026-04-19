@@ -760,7 +760,7 @@ export function createAuthRouter(
 
       // Update session if the user is currently logged in
       const sessionUser = getSessionUser(req);
-      if (sessionUser?.id === userId) {
+      if (sessionUser && sessionUser.id === userId) {
         setSessionUser(req, { ...sessionUser, email: newEmail });
       }
 

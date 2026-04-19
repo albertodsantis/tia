@@ -81,7 +81,7 @@ export class GamificationService {
       case 'pipeline_task_moved': {
         const already = await this.appStore.hasTransaction(userId, eventType);
         if (!already) {
-          const pts = POINTS[eventType];
+          const pts = POINTS[eventType] ?? 0;
           pointsEarned = pts;
           await this.appStore.insertTransaction(userId, eventType, pts);
         }

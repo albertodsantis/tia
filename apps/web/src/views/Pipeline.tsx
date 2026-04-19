@@ -1180,8 +1180,8 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
         partnerId: partner.id,
         status: form.status,
         dueDate: form.dueDate,
-        startTime: form.startTime || null,
-        endTime: form.endTime || null,
+        startTime: form.startTime || undefined,
+        endTime: form.endTime || undefined,
         value: Number(form.value) || 0,
         goalId: form.goalId || undefined,
         checklistItems,
@@ -1359,8 +1359,8 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
 
     try {
       const partner = partners.find((item) => item.id === task.partnerId);
-      const data = await calendarApi.syncTask({ task: { ...task, partnerName: partner?.name } });
-      await updateTask(task.id, { gcalEventId: data.eventId });
+      const data = await calendarApi.syncTask({ task: { ...task, partnerName: partner?.name ?? '' } });
+      await updateTask(task.id, { gcalEventId: data.eventId ?? undefined });
       toast.success('Tarea sincronizada con Google Calendar.');
     } catch (error) {
       if (error instanceof Error && error.message.toLowerCase().includes('unauthorized')) {
@@ -2227,7 +2227,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
                     const partner = partners.find((p) => p.id === task.partnerId);
                     try {
                       await calendarApi.syncTask({
-                        task: { ...task, dueDate, startTime, endTime, partnerName: partner?.name },
+                        task: { ...task, dueDate, startTime, endTime, partnerName: partner?.name ?? '' },
                       });
                     } catch {
                       // Silent — user can re-sync manually
