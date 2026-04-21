@@ -14,7 +14,7 @@ export const ACCENT_OPTIONS = [
   { name: 'Fucsia', value: '#D946EF' },
 ] as const;
 
-export const DEFAULT_ACCENT = 'gradient:efi';
+export const DEFAULT_ACCENT = 'gradient:instagram';
 
 // Retro presets — stored as "retro:<key>" in the database
 const RETRO_PRESETS: Record<string, { representative: string; swatch: string }> = {

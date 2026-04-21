@@ -1075,7 +1075,7 @@ export class PostgresAppStore {
       [userId],
     );
     if (rows.length === 0) {
-      return { accentColor: 'gradient:efi', theme: 'light', profileAccentColor: 'gradient:efi', profileForceDark: false };
+      return { accentColor: 'gradient:instagram', theme: 'light', profileAccentColor: 'gradient:instagram', profileForceDark: false };
     }
     return {
       accentColor: rows[0].accent_color,

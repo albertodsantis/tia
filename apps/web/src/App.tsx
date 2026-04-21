@@ -684,7 +684,7 @@ const AppSplash = () => (
   </div>
 );
 
-const DEFAULT_ACCENT = 'gradient:efi';
+const DEFAULT_ACCENT = 'gradient:instagram';
 
 const ONBOARDING_STORAGE_KEY = 'hasSeenOnboardingTour';
 

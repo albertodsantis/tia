@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Eye, EyeSlash } from '@phosphor-icons/react';
 import { authApi } from '../lib/api';
 
-const BRAND_ORANGE = '#FF4D3D';
-const BRAND_PINK = '#FF1E7A';
-const BRAND_PURPLE = '#D61B6D';
+const BRAND_ORANGE = '#F56040';
+const BRAND_PINK = '#E1306C';
+const BRAND_PURPLE = '#833AB4';
 
 export default function ResetPassword({ token, onDone }: { token: string; onDone: () => void }) {
   const [newPassword, setNewPassword] = useState('');

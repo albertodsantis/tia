@@ -29,11 +29,11 @@ import LegalModal, { type LegalPage } from '../components/LegalModal';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
-// Brand colors — Efi logo palette (magenta → red-orange → orange)
-const BRAND_GOLD = '#FFA500';
-const BRAND_ORANGE = '#FF4D3D';
-const BRAND_PINK = '#FF1E7A';
-const BRAND_PURPLE = '#D61B6D';
+// Brand colors — Instagram-style gradient (gold → orange → pink → purple)
+const BRAND_GOLD = '#FCAF45';
+const BRAND_ORANGE = '#F56040';
+const BRAND_PINK = '#E1306C';
+const BRAND_PURPLE = '#833AB4';
 
 const professions = [
   { label: 'Creador de contenido', Icon: Star },

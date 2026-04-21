@@ -125,7 +125,7 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
         ...(row.efi_profile || {}),
       };
 
-      const profileAccent = settingsRow?.profile_accent_color ?? settingsRow?.accent_color ?? 'gradient:efi';
+      const profileAccent = settingsRow?.profile_accent_color ?? settingsRow?.accent_color ?? 'gradient:instagram';
       const publicUrl = `${req.protocol}://${req.get('host')}/@${row.handle.replace(/^@/, '')}`;
       const html = generateEfiLinkHtml({
         name: row.name || '',
