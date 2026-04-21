@@ -121,9 +121,8 @@ function ProgressDots({ current }: { current: Step }) {
 export default function WelcomeOnboarding({ onComplete }: { onComplete: () => void }) {
   const { addPartner, updateProfile, profile } = useAppContext();
 
-  // Profession step
-  const [primary, setPrimary] = useState<FreelancerType | null>(null);
-  const [secondaries, setSecondaries] = useState<FreelancerType[]>([]);
+  // Profession step — ordered list; index 0 is primary, rest are secondaries
+  const [selected, setSelected] = useState<FreelancerType[]>([]);
   const [customProfession, setCustomProfession] = useState('');
 
   // Partner / goal steps
@@ -137,18 +136,18 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
 
   // ── Profession handlers ──────────────────────────────────────────────────
 
-  const toggleSecondary = (value: FreelancerType) => {
-    setSecondaries((prev) =>
+  const toggleProfession = (value: FreelancerType) => {
+    setSelected((prev) =>
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
   };
 
-  const needsCustomLabel =
-    primary === 'other' || secondaries.includes('other');
+  const needsCustomLabel = selected.includes('other');
 
   const handleProfessionNext = async () => {
-    if (!primary) return;
+    if (selected.length === 0) return;
     if (needsCustomLabel && !customProfession.trim()) return;
+    const [primary, ...secondaries] = selected;
     setSaving(true);
     try {
       await updateProfile({
@@ -224,13 +223,11 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
 
         {step === 'profession' && (
           <ProfessionStep
-            primary={primary}
-            secondaries={secondaries}
+            selected={selected}
             saving={saving}
             customProfession={customProfession}
             onCustomProfessionChange={setCustomProfession}
-            onSelectPrimary={setPrimary}
-            onToggleSecondary={toggleSecondary}
+            onToggle={toggleProfession}
             onNext={handleProfessionNext}
           />
         )}
@@ -271,98 +268,76 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
 // ─── Profession step ─────────────────────────────────────────────────────────
 
 function ProfessionStep({
-  primary,
-  secondaries,
+  selected,
   saving,
   customProfession,
   onCustomProfessionChange,
-  onSelectPrimary,
-  onToggleSecondary,
+  onToggle,
   onNext,
 }: {
-  primary: FreelancerType | null;
-  secondaries: FreelancerType[];
+  selected: FreelancerType[];
   saving: boolean;
   customProfession: string;
   onCustomProfessionChange: (v: string) => void;
-  onSelectPrimary: (v: FreelancerType) => void;
-  onToggleSecondary: (v: FreelancerType) => void;
+  onToggle: (v: FreelancerType) => void;
   onNext: () => void;
 }) {
-  const needsCustomLabel = primary === 'other' || secondaries.includes('other');
-  const canContinue = primary && (!needsCustomLabel || customProfession.trim());
+  const needsCustomLabel = selected.includes('other');
+  const canContinue = selected.length > 0 && (!needsCustomLabel || customProfession.trim());
   return (
     <div>
       <h2 className="mb-1 text-center text-xl font-bold text-(--text-primary)">
-        ¿Cuál es tu actividad principal?
+        ¿Qué actividades te definen?
       </h2>
       <p className="mb-6 text-center text-sm text-(--text-secondary)">
-        Selecciona la que mejor te define.
+        Toca las que practiques. La primera será tu actividad principal.
       </p>
 
-      {/* Primary grid — 2 columns */}
       <div className="grid grid-cols-2 gap-2.5">
         {PROFESSIONS.map(({ value, Icon }) => {
-          const selected = primary === value;
+          const order = selected.indexOf(value);
+          const isSelected = order >= 0;
+          const isPrimary = order === 0;
           const label = PROFESSION_LABELS[value];
           return (
             <button
               key={value}
               type="button"
-              onClick={() => onSelectPrimary(value)}
-              className="flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-150 active:scale-[0.97]"
+              onClick={() => onToggle(value)}
+              className="relative flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-150 active:scale-[0.97]"
               style={{
-                borderColor: selected ? 'var(--accent-color)' : 'var(--border-subtle)',
-                backgroundColor: selected ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : 'var(--surface-card)',
+                borderColor: isSelected ? 'var(--accent-color)' : 'var(--border-subtle)',
+                backgroundColor: isSelected ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : 'var(--surface-card)',
               }}
             >
               <Icon
                 size={20}
                 weight="duotone"
-                style={{ color: selected ? 'var(--accent-color)' : 'var(--text-secondary)', flexShrink: 0 }}
+                style={{ color: isSelected ? 'var(--accent-color)' : 'var(--text-secondary)', flexShrink: 0 }}
               />
               <span
                 className="text-xs font-semibold leading-tight"
-                style={{ color: selected ? 'var(--accent-color)' : 'var(--text-primary)' }}
+                style={{ color: isSelected ? 'var(--accent-color)' : 'var(--text-primary)' }}
               >
                 {label}
               </span>
+
+              {isSelected && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none shadow-sm"
+                  style={{
+                    background: 'var(--accent-gradient, var(--accent-color))',
+                    color: 'var(--accent-foreground)',
+                    minHeight: '18px',
+                  }}
+                >
+                  {isPrimary ? <>Principal</> : order + 1}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
-
-      {/* Secondary section — appears once primary is chosen */}
-      {primary && (
-        <div className="mt-5">
-          <p className="mb-2.5 text-xs font-medium text-(--text-secondary)">
-            ¿También haces alguna de estas? <span className="text-(--text-tertiary)">(opcional)</span>
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {PROFESSIONS.map(({ value }) => {
-              const isPrimary = value === primary;
-              const active = secondaries.includes(value);
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => !isPrimary && onToggleSecondary(value)}
-                  disabled={isPrimary}
-                  className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 disabled:cursor-not-allowed"
-                  style={{
-                    borderColor: isPrimary ? 'var(--accent-color)' : active ? 'var(--accent-color)' : 'var(--border-subtle)',
-                    backgroundColor: isPrimary ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : active ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : 'var(--surface-card)',
-                    color: isPrimary ? 'var(--accent-color)' : active ? 'var(--accent-color)' : 'var(--text-secondary)',
-                    opacity: isPrimary ? 0.45 : 1,
-                  }}
-                >
-                  {PROFESSION_LABELS[value]}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Custom profession input — appears when "other" is selected */}
       {needsCustomLabel && (

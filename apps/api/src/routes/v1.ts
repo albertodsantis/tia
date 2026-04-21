@@ -85,7 +85,10 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
     try {
       const userId = getUserId(req);
       const timezone = parseTimezoneHeader(req.get('X-Timezone'));
+      // daily_login awards points; daily_activity drives streak / pipeline-zen / perfect-week state.
       const dailyLoginAward = await gamification.processEvent(userId, 'daily_login', { timezone });
+      const dailyActivityAward = await gamification.processEvent(userId, 'daily_activity', { timezone });
+      const mergedAward = GamificationService.mergeAwards(dailyLoginAward, dailyActivityAward);
       const [appState, efisystem] = await Promise.all([
         appStore.getSnapshot(userId),
         appStore.getEfisystemSnapshot(userId),
@@ -93,7 +96,9 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
       const response: AppBootstrapResponse = {
         appState,
         efisystem,
-        ...(dailyLoginAward.pointsEarned > 0 ? { dailyLoginAward } : {}),
+        ...(mergedAward.pointsEarned > 0 || mergedAward.newBadges.length > 0
+          ? { dailyLoginAward: mergedAward }
+          : {}),
       };
       res.json(response);
     } catch (error) {
@@ -169,8 +174,9 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
   router.post('/tasks', async (req, res) => {
     try {
       const userId = getUserId(req);
+      const timezone = parseTimezoneHeader(req.get('X-Timezone'));
       const task = await appStore.createTask(userId, req.body as CreateTaskRequest);
-      const efisystem = await gamification.processEvent(userId, 'pipeline_first_task');
+      const efisystem = await gamification.processEvent(userId, 'pipeline_first_task', { timezone });
       res.status(201).json({ ...task, efisystem });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
@@ -195,6 +201,7 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
     if (rejectInvalidUUID(res, req.params.taskId)) return;
     try {
       const userId = getUserId(req);
+      const timezone = parseTimezoneHeader(req.get('X-Timezone'));
       const body = req.body as UpdateTaskRequest;
       const task = await appStore.updateTask(userId, req.params.taskId, body);
       if (!task) {
@@ -203,13 +210,13 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
 
       let efisystem = null;
       if (body.status === 'Cobrado') {
-        efisystem = await gamification.processEvent(userId, 'pipeline_task_paid', { taskId: req.params.taskId });
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_paid', { taskId: req.params.taskId, timezone });
       } else if (body.status === 'Completada') {
-        efisystem = await gamification.processEvent(userId, 'pipeline_task_completed', { taskId: req.params.taskId });
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_completed', { taskId: req.params.taskId, timezone });
       } else if (body.status !== undefined) {
-        efisystem = await gamification.processEvent(userId, 'pipeline_task_moved');
+        efisystem = await gamification.processEvent(userId, 'pipeline_task_moved', { timezone });
       } else if (Array.isArray(body.checklistItems) && body.checklistItems.length > 0) {
-        const award = await gamification.processEvent(userId, 'pipeline_first_checklist_item');
+        const award = await gamification.processEvent(userId, 'pipeline_first_checklist_item', { timezone });
         if (award.pointsEarned > 0) efisystem = award;
       }
 
@@ -354,11 +361,19 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
           }
         }
 
-        // vision_clara badge: 3+ goals
+        // Any goal in 'Alcanzado' → fire goal_achieved so visionario_cumplido can re-check.
+        // Event is idempotent at the badge layer (unlockBadge dedupes).
+        if (profile.goals.some(g => g.status === 'Alcanzado')) {
+          const award = await gamification.processEvent(userId, 'goal_achieved');
+          awards.push(award);
+        }
+
+        // vision_clara badge: 3+ goals. Handled inside the gamification service on
+        // config_first_goal / goal_achieved events, but we also cover the case where the
+        // user reaches 3 goals without either event firing (e.g. bulk edit keeping status unchanged).
         if (profile.goals.length >= 3) {
           const isNew = await appStore.unlockBadge(userId, 'vision_clara');
           if (isNew) {
-            // Attach the badge to the first award or create a synthetic one
             if (awards.length > 0) {
               awards[0].newBadges.push('vision_clara');
             } else {
@@ -406,8 +421,11 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
 
       let efisystem = null;
       if (body.accentColor) {
-        efisystem = await gamification.processEvent(userId, 'config_accent_change');
-        if (efisystem.pointsEarned === 0) efisystem = null; // don't noise up response if no points
+        const firstChange = await gamification.processEvent(userId, 'config_first_accent_change');
+        const award = await gamification.processEvent(userId, 'config_accent_change');
+        const merged = GamificationService.mergeAwards(firstChange, award);
+        // Only surface the award when it actually earned points or unlocked a badge.
+        if (merged.pointsEarned > 0 || merged.newBadges.length > 0) efisystem = merged;
       }
 
       res.json({ ...response, ...(efisystem ? { efisystem } : {}) });

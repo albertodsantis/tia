@@ -347,8 +347,8 @@ export class PostgresAppStore {
     }
 
     const { rows } = await this.pool.query(
-      `INSERT INTO tasks (id, user_id, title, description, partner_id, goal_id, status, due_date, start_time, end_time, value, gcal_event_id, actual_payment)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      `INSERT INTO tasks (id, user_id, title, description, partner_id, goal_id, status, due_date, original_due_date, start_time, end_time, value, gcal_event_id, actual_payment)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, $9, $10, $11, $12, $13)
        RETURNING created_at`,
       [id, userId, title, description, partnerId, goalId, status, dueDate, startTime, endTime, value, gcalEventId, actualPayment],
     );
@@ -1431,6 +1431,217 @@ export class PostgresAppStore {
        WHERE user_id = $1 AND status = 'Cobrado'`,
       [userId],
     );
+    return result.rows[0].cnt;
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // Badge-specific counters (sección 3 — Hábitos)
+  // ────────────────────────────────────────────────────────────
+
+  /** Distinct local days on which the user created a task strictly before the given hour (0–23). */
+  async countDistinctDaysWithTaskCreatedBeforeHour(userId: string, hour: number, timezone: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(DISTINCT (created_at AT TIME ZONE $2)::date)::int AS cnt
+       FROM tasks
+       WHERE user_id = $1
+         AND EXTRACT(HOUR FROM created_at AT TIME ZONE $2) < $3`,
+      [userId, timezone, hour],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Distinct local days on which the user created a task at or after the given hour (0–23). */
+  async countDistinctDaysWithTaskCreatedAtOrAfterHour(userId: string, hour: number, timezone: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(DISTINCT (created_at AT TIME ZONE $2)::date)::int AS cnt
+       FROM tasks
+       WHERE user_id = $1
+         AND EXTRACT(HOUR FROM created_at AT TIME ZONE $2) >= $3`,
+      [userId, timezone, hour],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Tasks completed (Completada/Cobrado) whose due_date was never moved from the original. */
+  async countTasksCompletedOnOriginalDate(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND status IN ('Completada', 'Cobrado')
+         AND completed_at IS NOT NULL
+         AND original_due_date IS NOT NULL
+         AND due_date = original_due_date`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Tasks that went from Completada to Cobrado within `maxDays` days. */
+  async countTasksPaidWithinDays(userId: string, maxDays: number): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND status = 'Cobrado'
+         AND completed_at IS NOT NULL
+         AND cobrado_at IS NOT NULL
+         AND cobrado_at - completed_at <= ($2 || ' days')::interval`,
+      [userId, String(maxDays)],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Count of goals in 'Alcanzado' status. */
+  async countGoalsAchieved(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM goals WHERE user_id = $1 AND status = 'Alcanzado'`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Partners contacted within the last N days. */
+  async countActivePartners(userId: string, withinDays: number): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM partners
+       WHERE user_id = $1
+         AND last_contacted_at IS NOT NULL
+         AND last_contacted_at >= NOW() - ($2 || ' days')::interval`,
+      [userId, String(withinDays)],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** True if any local day has ≥ N completed tasks for this user. */
+  async hasDayWithNCompletedTasks(userId: string, n: number, timezone: string): Promise<boolean> {
+    const result = await this.pool.query(
+      `SELECT 1 FROM tasks
+       WHERE user_id = $1
+         AND completed_at IS NOT NULL
+       GROUP BY (completed_at AT TIME ZONE $2)::date
+       HAVING COUNT(*) >= $3
+       LIMIT 1`,
+      [userId, timezone, n],
+    );
+    return result.rows.length > 0;
+  }
+
+  /** True if any task was paid on a Saturday or Sunday (in the user's timezone). */
+  async hasPaidOnWeekend(userId: string, timezone: string): Promise<boolean> {
+    const result = await this.pool.query(
+      `SELECT 1 FROM tasks
+       WHERE user_id = $1
+         AND cobrado_at IS NOT NULL
+         AND EXTRACT(DOW FROM cobrado_at AT TIME ZONE $2) IN (0, 6)
+       LIMIT 1`,
+      [userId, timezone],
+    );
+    return result.rows.length > 0;
+  }
+
+  /** Number of tasks overdue today (due_date < today, status Pendiente/En Progreso/En Revision). */
+  async countOverdueTasks(userId: string, todayIso: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND status IN ('Pendiente', 'En Progreso', 'En Revision')
+         AND due_date < $2`,
+      [userId, todayIso],
+    );
+    return result.rows[0].cnt;
+  }
+
+  /** Number of tasks completed on a specific local date (for weekly perfect-week calc). */
+  async countTasksCompletedOnDate(userId: string, dateIso: string, timezone: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND completed_at IS NOT NULL
+         AND (completed_at AT TIME ZONE $3)::date = $2::date`,
+      [userId, dateIso, timezone],
+    );
+    return result.rows[0].cnt;
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // Streak & pipeline-zen state (sección 4)
+  // ────────────────────────────────────────────────────────────
+
+  async getStreakState(userId: string): Promise<{
+    currentStreakDays: number;
+    longestStreakDays: number;
+    lastActiveDate: string | null;
+    cleanPipelineDays: number;
+    perfectWeeksCount: number;
+    perfectWeeksMonthKey: string | null;
+  }> {
+    const result = await this.pool.query(
+      `SELECT current_streak_days, longest_streak_days, last_active_date,
+              clean_pipeline_days, perfect_weeks_count, perfect_weeks_month_key
+       FROM efisystem_summary WHERE user_id = $1`,
+      [userId],
+    );
+    if (result.rows.length === 0) {
+      return {
+        currentStreakDays: 0,
+        longestStreakDays: 0,
+        lastActiveDate: null,
+        cleanPipelineDays: 0,
+        perfectWeeksCount: 0,
+        perfectWeeksMonthKey: null,
+      };
+    }
+    const row = result.rows[0];
+    const last = row.last_active_date;
+    return {
+      currentStreakDays: row.current_streak_days ?? 0,
+      longestStreakDays: row.longest_streak_days ?? 0,
+      lastActiveDate: last instanceof Date ? last.toISOString().slice(0, 10) : (last ?? null),
+      cleanPipelineDays: row.clean_pipeline_days ?? 0,
+      perfectWeeksCount: row.perfect_weeks_count ?? 0,
+      perfectWeeksMonthKey: row.perfect_weeks_month_key ?? null,
+    };
+  }
+
+  async updateStreakFields(
+    userId: string,
+    fields: {
+      currentStreakDays?: number;
+      longestStreakDays?: number;
+      lastActiveDate?: string | null;
+      cleanPipelineDays?: number;
+      perfectWeeksCount?: number;
+      perfectWeeksMonthKey?: string | null;
+    },
+  ): Promise<void> {
+    const sets: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+    if (fields.currentStreakDays !== undefined)   { sets.push(`current_streak_days = $${idx++}`);   values.push(fields.currentStreakDays); }
+    if (fields.longestStreakDays !== undefined)   { sets.push(`longest_streak_days = $${idx++}`);   values.push(fields.longestStreakDays); }
+    if (fields.lastActiveDate !== undefined)      { sets.push(`last_active_date = $${idx++}`);      values.push(fields.lastActiveDate); }
+    if (fields.cleanPipelineDays !== undefined)   { sets.push(`clean_pipeline_days = $${idx++}`);   values.push(fields.cleanPipelineDays); }
+    if (fields.perfectWeeksCount !== undefined)   { sets.push(`perfect_weeks_count = $${idx++}`);   values.push(fields.perfectWeeksCount); }
+    if (fields.perfectWeeksMonthKey !== undefined){ sets.push(`perfect_weeks_month_key = $${idx++}`); values.push(fields.perfectWeeksMonthKey); }
+    if (sets.length === 0) return;
+    values.push(userId);
+    // Ensure a row exists so the UPDATE lands somewhere.
+    await this.pool.query(
+      `INSERT INTO efisystem_summary (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`,
+      [userId],
+    );
+    await this.pool.query(
+      `UPDATE efisystem_summary SET ${sets.join(', ')}, updated_at = NOW() WHERE user_id = $${idx}`,
+      values,
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // Fundador (sección 5)
+  // ────────────────────────────────────────────────────────────
+
+  /** Total registered users — used to gate the 'fundador' badge at signup. */
+  async countUsers(): Promise<number> {
+    const result = await this.pool.query(`SELECT COUNT(*)::int AS cnt FROM users`);
     return result.rows[0].cnt;
   }
 }

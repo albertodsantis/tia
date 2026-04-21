@@ -205,10 +205,13 @@ export interface AppNotification {
 // ────────────────────────────────────────────────────────────
 
 export type PointEventType =
-  | 'daily_login'             // once per calendar day on first bootstrap
-  | 'config_accent_change'    // every accent change; service awards points only on 2nd
+  | 'daily_login'                  // once per calendar day on first bootstrap
+  | 'daily_activity'               // once per day on first meaningful action; drives streak + pipeline zen + perfect weeks
+  | 'config_accent_change'         // every accent change; service awards points only on 2nd
+  | 'config_first_accent_change'   // fires once on the 1st accent change; unlocks identidad_propia
   | 'config_profile_complete'
   | 'config_first_goal'
+  | 'goal_achieved'                // a strategic goal transitioned to 'Alcanzado'
   | 'network_first_partner'
   | 'network_partner_subsequent'
   | 'network_first_contact'
@@ -220,15 +223,41 @@ export type PointEventType =
   | 'pipeline_task_paid';
 
 export type BadgeKey =
-  | 'perfil_estelar'       // Empezaste a construir tu perfil público
-  | 'vision_clara'         // Definiste 3 objetivos estratégicos
-  | 'circulo_intimo'       // Agregaste 5 socios a tu red
-  | 'directorio_dorado'    // 10 Socios y 10 Contactos en tu red
-  | 'motor_de_ideas'       // Creaste 5 entregas en tu pipeline
-  | 'promesa_cumplida'     // Completaste 10 entregas
-  | 'creador_imparable'    // Completaste 25 entregas
-  | 'negocio_en_marcha'    // Cobraste 5 entregas
-  | 'lluvia_de_billetes';  // Cobraste 20 entregas
+  // ── Sección 1 — Primeros Pasos ─────────────────────────────
+  | 'perfil_estelar'         // EfiLink Activado
+  | 'primer_trazo'           // 1ª entrega creada
+  | 'red_inicial'            // 1º socio agregado
+  | 'rumbo_fijo'             // 1º objetivo definido
+  | 'vision_clara'           // 3 objetivos estratégicos
+  | 'identidad_propia'       // primer cambio de accent color
+  // ── Sección 2 — Hitos de Volumen ───────────────────────────
+  | 'motor_de_ideas'         // 5 entregas creadas
+  | 'fabrica_de_proyectos'   // 25 entregas creadas
+  | 'promesa_cumplida'       // 10 entregas completadas
+  | 'creador_imparable'      // 25 entregas completadas
+  | 'negocio_en_marcha'      // 5 entregas cobradas
+  | 'lluvia_de_billetes'     // 20 entregas cobradas
+  | 'circulo_intimo'         // 5 socios en la red
+  | 'directorio_dorado'      // 10 socios + 10 contactos
+  // ── Sección 3 — Hábitos ────────────────────────────────────
+  | 'madrugador'             // 5 días con task creada <8am
+  | 'noctambulo'             // 5 días con task creada ≥23hs
+  | 'cierre_limpio'          // 5 tasks completadas sin mover la fecha original
+  | 'cobrador_implacable'    // 5 tasks cobradas ≤7 días tras completarlas
+  | 'pipeline_zen'           // 7 días consecutivos sin tareas vencidas
+  | 'visionario_cumplido'    // 3 objetivos en status 'Alcanzado'
+  | 'conector'               // 10 socios con lastContactedAt en últimos 30 días
+  // ── Sección 4 — Rachas y Constancia ────────────────────────
+  | 'en_la_zona'             // racha 3 días
+  | 'racha_de_hierro'        // racha 7 días
+  | 'inamovible'             // racha 30 días
+  | 'semana_perfecta'        // 1 semana con 0 vencidas y ≥3 completadas
+  | 'mes_de_oro'             // 4 semanas perfectas en un mismo mes
+  // ── Sección 5 — Leyenda ────────────────────────────────────
+  | 'fundador'               // etapa beta (primeros 500 por created_at)
+  | 'tres_en_un_dia'         // secreta: 3 entregas completadas el mismo día
+  | 'cobro_finde'            // secreta: cobrar una entrega en sábado o domingo
+  | 'icono_efi';             // 25 placas desbloqueadas
 
 export interface EfisystemAward {
   pointsEarned: number;

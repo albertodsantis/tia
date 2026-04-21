@@ -29,17 +29,43 @@ import {
   scheduleDueDateReminders,
 } from '../lib/localNotifications';
 
-// ── Badge display labels ──────────────────────────────────────
+// ── Badge display labels (for unlock toast) ───────────────────
 const BADGE_LABELS: Record<BadgeKey, string> = {
+  // Sección 1 — Primeros Pasos
   perfil_estelar: 'EfiLink Activado',
+  primer_trazo: 'Primer Trazo',
+  red_inicial: 'Red Inicial',
+  rumbo_fijo: 'Rumbo Fijo',
   vision_clara: 'Visión Clara',
-  circulo_intimo: 'Círculo Íntimo',
-  directorio_dorado: 'Directorio Dorado',
+  identidad_propia: 'Identidad Propia',
+  // Sección 2 — Hitos
   motor_de_ideas: 'Motor de Ideas',
+  fabrica_de_proyectos: 'Fábrica de Proyectos',
   promesa_cumplida: 'Promesa Cumplida',
   creador_imparable: 'Creador Imparable',
   negocio_en_marcha: 'Negocio en Marcha',
   lluvia_de_billetes: 'Lluvia de Billetes',
+  circulo_intimo: 'Círculo Íntimo',
+  directorio_dorado: 'Directorio Dorado',
+  // Sección 3 — Hábitos
+  madrugador: 'Madrugador',
+  noctambulo: 'Noctámbulo',
+  cierre_limpio: 'Cierre Limpio',
+  cobrador_implacable: 'Cobrador Implacable',
+  pipeline_zen: 'Pipeline Zen',
+  visionario_cumplido: 'Visionario Cumplido',
+  conector: 'Conector',
+  // Sección 4 — Rachas
+  en_la_zona: 'En la Zona',
+  racha_de_hierro: 'Racha de Hierro',
+  inamovible: 'Inamovible',
+  semana_perfecta: 'Semana Perfecta',
+  mes_de_oro: 'Mes de Oro',
+  // Sección 5 — Leyenda (secretas se revelan al desbloquearse)
+  fundador: 'Fundador',
+  tres_en_un_dia: 'Triple Jornada',
+  cobro_finde: 'Fin de Semana',
+  icono_efi: 'Ícono Efi',
 };
 
 const emptyEfisystem: EfisystemSnapshot = {

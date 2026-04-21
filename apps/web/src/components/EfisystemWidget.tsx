@@ -90,34 +90,47 @@ function getThresholds(level: number): { current: number; next: number } {
   return { current, next };
 }
 
-// ── Badge preview config ──────────────────────────────────────
-// Ordered list of all badges — used to render the preview row in the same
-// canonical order regardless of unlock order.
+// ── Section preview config ────────────────────────────────────
+// With 30 placas, one dot per section is more legible than one per badge.
+// Each dot pulses when the user has ≥1 placa in that section.
 
-const BADGE_ORDER: BadgeKey[] = [
-  'perfil_estelar',
-  'vision_clara',
-  'motor_de_ideas',
-  'circulo_intimo',
-  'promesa_cumplida',
-  'negocio_en_marcha',
-  'directorio_dorado',
-  'creador_imparable',
-  'lluvia_de_billetes',
+interface SectionPreview {
+  id: string;
+  keys: BadgeKey[];
+  color: string;
+}
+
+const SECTION_PREVIEW: SectionPreview[] = [
+  {
+    id: 'primeros-pasos',
+    color: '#d49840',
+    keys: ['perfil_estelar', 'primer_trazo', 'red_inicial', 'rumbo_fijo', 'vision_clara', 'identidad_propia'],
+  },
+  {
+    id: 'hitos',
+    color: '#f8d040',
+    keys: ['motor_de_ideas', 'fabrica_de_proyectos', 'promesa_cumplida', 'creador_imparable',
+           'negocio_en_marcha', 'lluvia_de_billetes', 'circulo_intimo', 'directorio_dorado'],
+  },
+  {
+    id: 'habitos',
+    color: '#8b78ff',
+    keys: ['madrugador', 'noctambulo', 'cierre_limpio', 'cobrador_implacable',
+           'pipeline_zen', 'visionario_cumplido', 'conector'],
+  },
+  {
+    id: 'rachas',
+    color: '#ff6e48',
+    keys: ['en_la_zona', 'racha_de_hierro', 'inamovible', 'semana_perfecta', 'mes_de_oro'],
+  },
+  {
+    id: 'leyenda',
+    color: '#ffe44d',
+    keys: ['fundador', 'tres_en_un_dia', 'cobro_finde', 'icono_efi'],
+  },
 ];
 
-// A compact accent color per badge used for the preview dot glow.
-const BADGE_DOT_COLOR: Record<BadgeKey, string> = {
-  perfil_estelar:    '#d49840',
-  vision_clara:      '#c87848',
-  motor_de_ideas:    '#b8b8c8',
-  circulo_intimo:    '#f8d040',
-  promesa_cumplida:  '#f0c0b0',
-  negocio_en_marcha: '#e0e0f8',
-  directorio_dorado: '#687080',
-  creador_imparable: '#8b78ff',
-  lluvia_de_billetes:'#ff9548',
-};
+const ALL_BADGE_KEYS: BadgeKey[] = SECTION_PREVIEW.flatMap(s => s.keys);
 
 // ── Component ─────────────────────────────────────────────────
 
@@ -140,8 +153,9 @@ export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges, on
         ((totalPoints - currentThreshold) / (nextThreshold - currentThreshold)) * 100,
       );
 
+  const unlockedSet = new Set(unlockedBadges);
   const unlockedCount = unlockedBadges.length;
-  const totalBadges = BADGE_ORDER.length;
+  const totalBadges = ALL_BADGE_KEYS.length;
 
   const LevelBlock = (
     <>
@@ -206,20 +220,19 @@ export default function EfisystemWidget({ efisystem, accentHex, onOpenBadges, on
               border: `1px solid ${accentHex}30`,
             }}
           >
-            {/* Badge dots */}
-            <div className="flex items-center gap-1 flex-1 min-w-0">
-              {BADGE_ORDER.map((key) => {
-                const isUnlocked = unlockedBadges.includes(key);
-                const color = BADGE_DOT_COLOR[key];
+            {/* Section dots — one per section, filled if ≥1 placa desbloqueada */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              {SECTION_PREVIEW.map((section) => {
+                const hasAny = section.keys.some(k => unlockedSet.has(k));
                 return (
                   <div
-                    key={key}
+                    key={section.id}
                     className="h-3 w-3 rounded-full shrink-0 transition-all duration-300"
                     style={
-                      isUnlocked
+                      hasAny
                         ? {
-                            background: color,
-                            boxShadow: `0 0 5px ${color}cc`,
+                            background: section.color,
+                            boxShadow: `0 0 5px ${section.color}cc`,
                           }
                         : {
                             background: `${accentHex}20`,

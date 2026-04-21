@@ -52,6 +52,29 @@ async function ensureUserData(
   );
 }
 
+// Beta/founder badge cap. Not exposed to the user — copy speaks of "etapa beta".
+const FUNDADOR_CAP = 500;
+
+/**
+ * Grants the 'fundador' badge if the total user count is at or below the cap.
+ * Call only from signup flows, not login.
+ */
+async function maybeAwardFundador(pool: pg.Pool, userId: string) {
+  try {
+    const { rows } = await pool.query(`SELECT COUNT(*)::int AS cnt FROM users`);
+    const total = rows[0]?.cnt ?? 0;
+    if (total > FUNDADOR_CAP) return;
+    await pool.query(
+      `INSERT INTO efisystem_badges (user_id, badge_key)
+       VALUES ($1, 'fundador')
+       ON CONFLICT (user_id, badge_key) DO NOTHING`,
+      [userId],
+    );
+  } catch (err) {
+    console.error('Fundador badge error:', err);
+  }
+}
+
 export function createAuthRouter(
   googleCreds: GoogleCreds,
   appUrl: string,
@@ -164,6 +187,7 @@ export function createAuthRouter(
       );
 
       await ensureUserData(pool, userId, trimmedName, trimmedEmail);
+      await maybeAwardFundador(pool, userId);
       sendWelcomeEmail(trimmedEmail, trimmedName).catch((err) =>
         console.error('Welcome email error:', err),
       );
@@ -383,6 +407,7 @@ export function createAuthRouter(
 
         await ensureUserData(pool, userId, googleName, googleEmail, googleAvatar);
         if (isNewGoogleUser) {
+          await maybeAwardFundador(pool, userId);
           sendWelcomeEmail(googleEmail, googleName).catch((err) =>
             console.error('Welcome email error:', err),
           );
@@ -521,6 +546,7 @@ export function createAuthRouter(
 
       await ensureUserData(pool, userId, googleName, googleEmail, googleAvatar);
       if (isNewUser) {
+        await maybeAwardFundador(pool, userId);
         sendWelcomeEmail(googleEmail, googleName).catch((err) =>
           console.error('Welcome email error:', err),
         );

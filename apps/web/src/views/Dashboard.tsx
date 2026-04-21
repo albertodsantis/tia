@@ -17,6 +17,24 @@ import {
   Money,
   Target,
   X,
+  // Nuevos para placas
+  PencilSimpleLine,
+  UserPlus,
+  Compass,
+  Palette,
+  Stack,
+  Sun,
+  Moon,
+  CheckSquare,
+  Lightning,
+  Leaf,
+  UsersThree,
+  Flame,
+  CalendarCheck,
+  Crown,
+  SealCheck,
+  Question,
+  CalendarHeart,
 } from '@phosphor-icons/react';
 import { useAppContext } from '../context/AppContext';
 import { EmptyState, StatusBadge, SurfaceCard, cx } from '../components/ui';
@@ -468,20 +486,92 @@ interface BadgeDef {
   label: string;
   description: string;
   icon: React.ElementType;
+  secret?: boolean;           // cuando está bloqueada se muestra como "???"
+  secretHint?: string;        // descripción críptica mientras está bloqueada
 }
 
-// Ordered Bronze → Diamond so the drawer progresses smoothly through tiers.
-const ALL_BADGES: BadgeDef[] = [
-  { key: 'perfil_estelar',    label: 'EfiLink Activado',  description: 'Empezaste a construir tu EfiLink',   icon: Star },
-  { key: 'vision_clara',      label: 'Visión Clara',      description: 'Definiste 3 objetivos estratégicos', icon: Eye },
-  { key: 'motor_de_ideas',    label: 'Motor de Ideas',    description: 'Creaste 5 entregas en tu pipeline',  icon: Rocket },
-  { key: 'circulo_intimo',    label: 'Círculo Íntimo',    description: 'Agregaste 5 socios a tu red',        icon: Users },
-  { key: 'promesa_cumplida',  label: 'Promesa Cumplida',  description: 'Completaste 10 entregas',            icon: Medal },
-  { key: 'negocio_en_marcha', label: 'Negocio en Marcha', description: 'Cobraste 5 entregas',                icon: CurrencyDollar },
-  { key: 'directorio_dorado', label: 'Directorio Dorado', description: '10 socios y 10 contactos en tu red', icon: Trophy },
-  { key: 'creador_imparable', label: 'Creador Imparable', description: 'Completaste 25 entregas',            icon: Target },
-  { key: 'lluvia_de_billetes',label: 'Lluvia de Billetes',description: 'Cobraste 20 entregas',               icon: Money },
+interface BadgeSection {
+  id: string;
+  title: string;
+  subtitle: string;
+  badges: BadgeDef[];
+}
+
+const SECTIONS: BadgeSection[] = [
+  {
+    id: 'primeros-pasos',
+    title: 'Primeros Pasos',
+    subtitle: 'Los cimientos de tu operación',
+    badges: [
+      { key: 'perfil_estelar',    label: 'EfiLink Activado', description: 'Empezaste a construir tu EfiLink',     icon: Star },
+      { key: 'primer_trazo',      label: 'Primer Trazo',     description: 'Creaste tu primera entrega',           icon: PencilSimpleLine },
+      { key: 'red_inicial',       label: 'Red Inicial',      description: 'Agregaste tu primer socio',            icon: UserPlus },
+      { key: 'rumbo_fijo',        label: 'Rumbo Fijo',       description: 'Definiste tu primer objetivo',         icon: Compass },
+      { key: 'vision_clara',      label: 'Visión Clara',     description: 'Definiste 3 objetivos estratégicos',   icon: Eye },
+      { key: 'identidad_propia',  label: 'Identidad Propia', description: 'Elegiste tu color de acento',          icon: Palette },
+    ],
+  },
+  {
+    id: 'hitos',
+    title: 'Hitos',
+    subtitle: 'La huella de tu volumen',
+    badges: [
+      { key: 'motor_de_ideas',       label: 'Motor de Ideas',       description: 'Creaste 5 entregas',                     icon: Rocket },
+      { key: 'fabrica_de_proyectos', label: 'Fábrica de Proyectos', description: 'Creaste 25 entregas',                    icon: Stack },
+      { key: 'promesa_cumplida',     label: 'Promesa Cumplida',     description: 'Completaste 10 entregas',                icon: Medal },
+      { key: 'creador_imparable',    label: 'Creador Imparable',    description: 'Completaste 25 entregas',                icon: Target },
+      { key: 'negocio_en_marcha',    label: 'Negocio en Marcha',    description: 'Cobraste 5 entregas',                    icon: CurrencyDollar },
+      { key: 'lluvia_de_billetes',   label: 'Lluvia de Billetes',   description: 'Cobraste 20 entregas',                   icon: Money },
+      { key: 'circulo_intimo',       label: 'Círculo Íntimo',       description: 'Agregaste 5 socios a tu red',            icon: Users },
+      { key: 'directorio_dorado',    label: 'Directorio Dorado',    description: '10 socios y 10 contactos en tu red',     icon: Trophy },
+    ],
+  },
+  {
+    id: 'habitos',
+    title: 'Hábitos',
+    subtitle: 'Cómo trabajás, no cuánto',
+    badges: [
+      { key: 'madrugador',           label: 'Madrugador',           description: 'Creaste entregas antes de las 8am en 5 días distintos',      icon: Sun },
+      { key: 'noctambulo',           label: 'Noctámbulo',           description: 'Creaste entregas después de las 11pm en 5 días distintos',   icon: Moon },
+      { key: 'cierre_limpio',        label: 'Cierre Limpio',        description: 'Completaste 5 entregas sin mover la fecha original',         icon: CheckSquare },
+      { key: 'cobrador_implacable',  label: 'Cobrador Implacable',  description: 'Cobraste 5 entregas en menos de 7 días',                     icon: Lightning },
+      { key: 'pipeline_zen',         label: 'Pipeline Zen',         description: '7 días seguidos sin entregas vencidas',                      icon: Leaf },
+      { key: 'visionario_cumplido',  label: 'Visionario Cumplido',  description: 'Alcanzaste 3 objetivos estratégicos',                        icon: Eye },
+      { key: 'conector',             label: 'Conector',             description: 'Contactaste a 10 socios en los últimos 30 días',             icon: UsersThree },
+    ],
+  },
+  {
+    id: 'rachas',
+    title: 'Rachas y Constancia',
+    subtitle: 'Aparecer todos los días cuenta',
+    badges: [
+      { key: 'en_la_zona',         label: 'En la Zona',       description: '3 días seguidos activos',                         icon: Flame },
+      { key: 'racha_de_hierro',    label: 'Racha de Hierro',  description: '7 días seguidos activos',                         icon: Flame },
+      { key: 'inamovible',         label: 'Inamovible',       description: '30 días seguidos activos',                        icon: Flame },
+      { key: 'semana_perfecta',    label: 'Semana Perfecta',  description: '1 semana con ≥3 completadas y 0 vencidas',        icon: CalendarCheck },
+      { key: 'mes_de_oro',         label: 'Mes de Oro',       description: '4 semanas perfectas en un mismo mes',             icon: CalendarHeart },
+    ],
+  },
+  {
+    id: 'leyenda',
+    title: 'Leyenda',
+    subtitle: 'Las raras — algunas ni siquiera las ves venir',
+    badges: [
+      { key: 'fundador',       label: 'Fundador',  description: 'Formaste parte de la etapa beta de Efi', icon: SealCheck },
+      { key: 'tres_en_un_dia', label: 'Secreta',   description: 'Algunos logros no se anuncian',          icon: Question, secret: true, secretHint: 'Algunos logros no se anuncian' },
+      { key: 'cobro_finde',    label: 'Secreta',   description: 'Algunos logros no se anuncian',          icon: Question, secret: true, secretHint: 'Algunos logros no se anuncian' },
+      { key: 'icono_efi',      label: 'Ícono Efi', description: 'Desbloqueaste 25 placas',                icon: Crown },
+    ],
+  },
 ];
+
+// Labels reales de las placas secretas, mostrados sólo cuando ya están desbloqueadas.
+const SECRET_REVEALED: Partial<Record<BadgeKey, { label: string; description: string; icon: React.ElementType }>> = {
+  tres_en_un_dia: { label: 'Triple Jornada',  description: 'Completaste 3 entregas el mismo día', icon: Lightning },
+  cobro_finde:    { label: 'Fin de Semana ',  description: 'Cobraste una entrega un sábado o domingo', icon: Money },
+};
+
+const ALL_BADGES: BadgeDef[] = SECTIONS.flatMap(s => s.badges);
 
 // ── Material tier per badge (progression order: Bronze → Diamond) ─
 
@@ -493,73 +583,67 @@ interface MaterialStyle {
   tileGlowColor: string;
 }
 
-const BADGE_MATERIALS: Record<BadgeKey, MaterialStyle> = {
-  // Tier 1 — Bronze
-  perfil_estelar: {
+// Tiers definidos una vez, luego asignados a cada placa por rareza/dificultad.
+type Tier = 'bronce' | 'cobre' | 'plata' | 'oro' | 'oro_rosa' | 'platino' | 'titanio' | 'obsidiana' | 'diamante';
+
+const TIER_STYLES: Record<Tier, MaterialStyle> = {
+  bronce: {
     medallionBg: 'linear-gradient(145deg, #8c5a28 0%, #b87830 15%, #d49840 28%, #f0c060 42%, #e8b048 55%, #c07828 70%, #8c5828 85%, #6a4020 100%)',
     medallionShadow: '0 6px 20px -4px rgba(160,100,30,0.75), inset 0 1px 0 rgba(255,215,120,0.5), inset 0 -1px 0 rgba(0,0,0,0.3)',
     iconColor: '#fff8e8',
     tileBorderColor: 'rgba(180,120,50,0.45)',
     tileGlowColor: 'rgba(180,120,50,0.08)',
   },
-  // Tier 2 — Copper
-  vision_clara: {
+  cobre: {
     medallionBg: 'linear-gradient(145deg, #7c3818 0%, #a85830 15%, #c87848 28%, #e09868 42%, #cc8050 55%, #aa5828 70%, #7c3818 100%)',
     medallionShadow: '0 6px 20px -4px rgba(160,80,40,0.75), inset 0 1px 0 rgba(255,175,130,0.5), inset 0 -1px 0 rgba(0,0,0,0.3)',
     iconColor: '#fff0e8',
     tileBorderColor: 'rgba(170,90,40,0.45)',
     tileGlowColor: 'rgba(170,90,40,0.08)',
   },
-  // Tier 3 — Silver
-  motor_de_ideas: {
+  plata: {
     medallionBg: 'linear-gradient(145deg, #7a7a8a 0%, #9898a8 15%, #b8b8c8 28%, #e0e0f0 42%, #f4f4ff 50%, #d0d0e0 60%, #a8a8b8 75%, #808090 100%)',
     medallionShadow: '0 6px 20px -4px rgba(140,140,170,0.6), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.2)',
     iconColor: '#1a1a2a',
     tileBorderColor: 'rgba(160,160,190,0.4)',
     tileGlowColor: 'rgba(160,160,190,0.07)',
   },
-  // Tier 4 — Gold
-  circulo_intimo: {
+  oro: {
     medallionBg: 'linear-gradient(145deg, #7a5c10 0%, #a88020 15%, #d4a828 28%, #f8d040 40%, #ffe040 48%, #f8c830 58%, #c89020 72%, #906800 87%, #6a4e08 100%)',
     medallionShadow: '0 6px 24px -4px rgba(200,160,20,0.8), inset 0 1px 0 rgba(255,245,150,0.6), inset 0 -1px 0 rgba(0,0,0,0.25)',
     iconColor: '#2a1800',
     tileBorderColor: 'rgba(200,158,20,0.5)',
     tileGlowColor: 'rgba(200,158,20,0.1)',
   },
-  // Tier 5 — Rose Gold
-  promesa_cumplida: {
+  oro_rosa: {
     medallionBg: 'linear-gradient(145deg, #8a5858 0%, #b07878 15%, #d0a090 28%, #f0c0b0 42%, #f8c8b8 50%, #e0a898 60%, #c08080 75%, #8a5858 100%)',
     medallionShadow: '0 6px 20px -4px rgba(200,130,130,0.65), inset 0 1px 0 rgba(255,225,215,0.5), inset 0 -1px 0 rgba(0,0,0,0.2)',
     iconColor: '#2a1010',
     tileBorderColor: 'rgba(200,130,130,0.4)',
     tileGlowColor: 'rgba(200,130,130,0.08)',
   },
-  // Tier 6 — Platinum
-  negocio_en_marcha: {
+  platino: {
     medallionBg: 'linear-gradient(145deg, #a0a0b4 0%, #c0c0d4 15%, #d8d8ec 28%, #f0f0fc 40%, #ffffff 50%, #e8e8f8 60%, #ccccde 75%, #a8a8bc 87%, #909098 100%)',
     medallionShadow: '0 6px 24px -4px rgba(180,180,220,0.7), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.15)',
     iconColor: '#18182a',
     tileBorderColor: 'rgba(190,190,230,0.45)',
     tileGlowColor: 'rgba(190,190,230,0.08)',
   },
-  // Tier 7 — Titanium
-  directorio_dorado: {
+  titanio: {
     medallionBg: 'linear-gradient(145deg, #2a2f3c 0%, #3c4454 15%, #505a6c 28%, #687080 40%, #747e90 50%, #60686e 62%, #484e5a 75%, #333844 87%, #252830 100%)',
     medallionShadow: '0 6px 20px -4px rgba(60,80,120,0.65), inset 0 1px 0 rgba(200,210,240,0.25), inset 0 -1px 0 rgba(0,0,0,0.4)',
     iconColor: '#d0d8f0',
     tileBorderColor: 'rgba(80,100,150,0.4)',
     tileGlowColor: 'rgba(80,100,150,0.07)',
   },
-  // Tier 8 — Obsidian
-  creador_imparable: {
+  obsidiana: {
     medallionBg: 'linear-gradient(220deg, rgba(120,80,240,0.5) 0%, rgba(60,100,255,0.3) 35%, transparent 65%, rgba(160,60,200,0.3) 100%), linear-gradient(145deg, #0c0810 0%, #1c1228 20%, #2e1e42 40%, #22163a 60%, #140c22 80%, #080510 100%)',
     medallionShadow: '0 6px 24px -4px rgba(100,60,220,0.8), inset 0 1px 0 rgba(180,140,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.5)',
     iconColor: '#c8b8ff',
     tileBorderColor: 'rgba(100,60,200,0.5)',
     tileGlowColor: 'rgba(100,60,200,0.1)',
   },
-  // Tier 9 — Diamond / Prismatic
-  lluvia_de_billetes: {
+  diamante: {
     medallionBg: 'linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.2) 30%, transparent 55%), linear-gradient(125deg, #ff6eb4 0%, #ff9548 14%, #ffe44d 28%, #72ed6a 42%, #4dc8ff 56%, #8b78ff 70%, #ff6eb4 84%, #ff9548 100%)',
     medallionShadow: '0 6px 28px -4px rgba(160,80,255,0.85), 0 0 20px rgba(255,200,50,0.45), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.1)',
     iconColor: '#ffffff',
@@ -568,18 +652,67 @@ const BADGE_MATERIALS: Record<BadgeKey, MaterialStyle> = {
   },
 };
 
+const BADGE_TIER: Record<BadgeKey, Tier> = {
+  // ── Sección 1 — Primeros Pasos (bronce/cobre, salvo identidad_propia)
+  perfil_estelar:        'bronce',
+  primer_trazo:          'bronce',
+  red_inicial:           'bronce',
+  rumbo_fijo:            'bronce',
+  vision_clara:          'cobre',
+  identidad_propia:      'bronce',
+  // ── Sección 2 — Hitos
+  motor_de_ideas:        'plata',
+  fabrica_de_proyectos:  'oro',
+  promesa_cumplida:      'oro_rosa',
+  creador_imparable:     'obsidiana',
+  negocio_en_marcha:     'platino',
+  lluvia_de_billetes:    'diamante',
+  circulo_intimo:        'oro',
+  directorio_dorado:     'titanio',
+  // ── Sección 3 — Hábitos
+  madrugador:            'cobre',
+  noctambulo:            'plata',
+  cierre_limpio:         'plata',
+  cobrador_implacable:   'oro',
+  pipeline_zen:          'platino',
+  visionario_cumplido:   'oro_rosa',
+  conector:              'titanio',
+  // ── Sección 4 — Rachas
+  en_la_zona:            'bronce',
+  racha_de_hierro:       'plata',
+  inamovible:            'obsidiana',
+  semana_perfecta:       'oro',
+  mes_de_oro:            'diamante',
+  // ── Sección 5 — Leyenda
+  fundador:              'diamante',
+  tres_en_un_dia:        'obsidiana',
+  cobro_finde:           'oro_rosa',
+  icono_efi:             'diamante',
+};
+
+const BADGE_MATERIALS: Record<BadgeKey, MaterialStyle> = Object.fromEntries(
+  (Object.keys(BADGE_TIER) as BadgeKey[]).map(k => [k, TIER_STYLES[BADGE_TIER[k]]]),
+) as Record<BadgeKey, MaterialStyle>;
+
 function BadgeTile({ badge, unlocked, accentHex }: { badge: BadgeDef; unlocked: boolean; accentHex: string }) {
-  const Icon = badge.icon;
   const mat = BADGE_MATERIALS[badge.key];
+
+  // Secret badges show a muted mystery label/icon until unlocked.
+  const isSecretLocked = !!badge.secret && !unlocked;
+  const revealed = unlocked && badge.secret ? SECRET_REVEALED[badge.key] : null;
+  const displayLabel = revealed?.label ?? badge.label;
+  const displayDescription = isSecretLocked
+    ? (badge.secretHint ?? 'Algunos logros no se anuncian')
+    : (revealed?.description ?? badge.description);
+  const DisplayIcon = revealed?.icon ?? badge.icon;
 
   // Extract a more opaque spotlight color from the border color
   const spotlightColor = mat.tileBorderColor.replace(/rgba\(([^,]+,[^,]+,[^,]+),.*\)/, 'rgba($1,0.40)');
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex w-[112px] shrink-0 flex-col items-center snap-start">
       {/* Pedestal area */}
       <div className="relative flex flex-col items-center">
-        {/* Theatrical spotlight — only for unlocked */}
         {unlocked && (
           <div
             className="pointer-events-none absolute -top-5 left-1/2 h-28 w-28 -translate-x-1/2 rounded-full blur-2xl"
@@ -600,7 +733,9 @@ function BadgeTile({ badge, unlocked, accentHex }: { badge: BadgeDef; unlocked: 
           }
         >
           {unlocked ? (
-            <Icon size={26} weight="fill" style={{ color: mat.iconColor }} />
+            <DisplayIcon size={26} weight="fill" style={{ color: mat.iconColor }} />
+          ) : isSecretLocked ? (
+            <Question size={22} weight="bold" style={{ color: '#4a4a58' }} />
           ) : (
             <Lock size={20} weight="fill" style={{ color: '#3a3a48' }} />
           )}
@@ -637,15 +772,21 @@ function BadgeTile({ badge, unlocked, accentHex }: { badge: BadgeDef; unlocked: 
             : {
                 background: 'rgba(255,255,255,0.015)',
                 border: '1px solid rgba(255,255,255,0.07)',
-                opacity: 0.4,
+                opacity: isSecretLocked ? 0.55 : 0.4,
               }
         }
       >
-        <p className="text-[11px] font-semibold leading-tight" style={{ color: unlocked ? '#d0d0e0' : '#606068' }}>
-          {badge.label}
+        <p
+          className="text-[11px] font-semibold leading-tight"
+          style={{ color: unlocked ? '#d0d0e0' : isSecretLocked ? '#7a7a88' : '#606068' }}
+        >
+          {isSecretLocked ? '???' : displayLabel}
         </p>
-        <p className="mt-0.5 text-[10px] leading-tight" style={{ color: unlocked ? '#787890' : '#404048' }}>
-          {badge.description}
+        <p
+          className="mt-0.5 text-[10px] leading-tight"
+          style={{ color: unlocked ? '#787890' : '#505058' }}
+        >
+          {displayDescription}
         </p>
       </div>
     </div>
@@ -668,6 +809,8 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  const unlockedSet = useMemo(() => new Set(unlockedBadges), [unlockedBadges]);
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
@@ -677,7 +820,7 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
       />
       {/* Panel */}
       <div
-        className={`relative flex h-full w-full max-w-sm flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`relative flex h-full w-full max-w-md flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
         style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${accentHex} 8%, #0c0c14) 0%, #090910 55%, #060608 100%)` }}
       >
         {/* Ambient ceiling glow */}
@@ -707,12 +850,38 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
           </button>
         </div>
 
-        {/* Body */}
-        <div className="relative z-10 flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-3 gap-x-3 gap-y-7">
-            {ALL_BADGES.map((badge) => (
-              <BadgeTile key={badge.key} badge={badge} unlocked={unlockedBadges.includes(badge.key)} accentHex={accentHex} />
-            ))}
+        {/* Body — secciones verticales, cada una con scroll horizontal */}
+        <div className="relative z-10 flex-1 overflow-y-auto py-5">
+          <div className="flex flex-col gap-7">
+            {SECTIONS.map((section) => {
+              const sectionUnlocked = section.badges.filter(b => unlockedSet.has(b.key)).length;
+              return (
+                <section key={section.id}>
+                  <div className="px-5">
+                    <h3 className="text-sm font-bold" style={{ color: '#dcdcf0' }}>{section.title}</h3>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <p className="text-[11px]" style={{ color: '#787890' }}>{section.subtitle}</p>
+                      <span className="text-[11px] font-bold" style={{ color: `${accentHex}bb` }}>
+                        {sectionUnlocked}/{section.badges.length}
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className="mt-3 flex gap-3 overflow-x-auto overflow-y-hidden pl-5 pr-10 pb-3 snap-x"
+                    style={{ scrollbarWidth: 'thin' }}
+                  >
+                    {section.badges.map((badge) => (
+                      <BadgeTile
+                        key={badge.key}
+                        badge={badge}
+                        unlocked={unlockedSet.has(badge.key)}
+                        accentHex={accentHex}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         </div>
       </div>
