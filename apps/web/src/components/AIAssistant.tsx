@@ -307,7 +307,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   };
 
   const handleNotifyMe = () => {
-    toast.success('Listo. Te vamos a avisar apenas Efi IA esté disponible.');
+    toast.success('Listo. Te avisaremos en cuanto Efi IA esté disponible.');
     setIsOpen(false);
   };
 
@@ -335,15 +335,14 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               : 'group relative flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--line-soft)] bg-[color:var(--surface-card)] text-[var(--text-primary)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95'
           }
         >
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] shadow-[0_10px_26px_-18px_var(--accent-glow)]"
-            style={{
-              background: accentGradient,
-              color: 'var(--accent-foreground)',
-            }}
-          >
-            <Sparkle size={14} />
-          </div>
+          <img
+            src="/brand/isotipo.png"
+            alt=""
+            draggable={false}
+            width={32}
+            height={32}
+            className="h-8 w-8 select-none"
+          />
           {isDesktop ? (
             <div className="text-left">
               <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)] uppercase">
@@ -397,15 +396,14 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               }}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-[1rem] shadow-[0_14px_30px_-20px_var(--accent-glow)]"
-                  style={{
-                    background: accentGradient,
-                    color: 'var(--accent-foreground)',
-                  }}
-                >
-                  <Sparkle size={16} />
-                </div>
+                <img
+                  src="/brand/isotipo.png"
+                  alt=""
+                  draggable={false}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 select-none"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold tracking-wide text-[var(--text-primary)]">Efi</h3>
@@ -433,15 +431,14 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               <div className="relative flex-1 overflow-y-auto px-5 py-6">
                 <div className="space-y-5">
                   <div className="flex flex-col items-center text-center">
-                    <div
-                      className="flex h-14 w-14 items-center justify-center rounded-[1.15rem] shadow-[0_18px_36px_-22px_var(--accent-glow)]"
-                      style={{
-                        background: accentGradient,
-                        color: 'var(--accent-foreground)',
-                      }}
-                    >
-                      <Sparkle size={22} weight="fill" />
-                    </div>
+                    <img
+                      src="/brand/isotipo.png"
+                      alt=""
+                      draggable={false}
+                      width={64}
+                      height={64}
+                      className="h-16 w-16 select-none"
+                    />
                     <StatusBadge tone="accent" className="mt-4">
                       Próximamente
                     </StatusBadge>
@@ -458,12 +455,12 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                       {
                         icon: <CheckSquare size={16} weight="bold" />,
                         title: 'Crea y mueve tareas por voz',
-                        desc: 'Dictá una tarea y Efi la suma al pipeline con marca, valor y fecha.',
+                        desc: 'Dicta una tarea y Efi la suma al pipeline con marca, valor y fecha.',
                       },
                       {
                         icon: <Lightning size={16} weight="bold" />,
                         title: 'Suma marcas y contactos al vuelo',
-                        desc: 'Pedile que registre una marca nueva o un contacto y listo.',
+                        desc: 'Pídele que registre una marca nueva o un contacto y listo.',
                       },
                       {
                         icon: <Sparkle size={16} weight="bold" />,
@@ -540,7 +537,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                   Avísame cuando esté listo
                 </button>
                 <p className="mt-2 text-center text-[11px] text-[var(--text-secondary)]">
-                  Te escribimos apenas abramos el acceso.
+                  Te escribiremos en cuanto abramos el acceso.
                 </p>
               </div>
             ) : (

@@ -81,15 +81,15 @@ function ProgressDots({ current }: { current: Step }) {
                 width: '2rem',
                 height: '2rem',
                 backgroundColor: completed
-                  ? 'var(--accent)'
+                  ? 'var(--accent-color)'
                   : active
-                    ? 'color-mix(in srgb, var(--accent) 15%, transparent)'
+                    ? 'color-mix(in srgb, var(--accent-color) 15%, transparent)'
                     : 'var(--surface-card)',
                 borderWidth: '2px',
                 borderColor: completed
-                  ? 'var(--accent)'
+                  ? 'var(--accent-color)'
                   : active
-                    ? 'var(--accent)'
+                    ? 'var(--accent-color)'
                     : 'var(--border-subtle)',
                 borderStyle: 'solid',
                 animation: completed ? 'check-pop 0.22s ease-out' : 'none',
@@ -101,7 +101,7 @@ function ProgressDots({ current }: { current: Step }) {
               className="text-[0.625rem] font-semibold transition-colors duration-300"
               style={{
                 color: completed
-                  ? 'var(--accent)'
+                  ? 'var(--accent-color)'
                   : active
                     ? 'var(--text-secondary)'
                     : 'var(--text-tertiary)',
@@ -238,7 +238,7 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
         {step === 'partner' && (
           <DataStep
             inputRef={partnerRef}
-            icon={<Buildings size={28} weight="duotone" style={{ color: 'var(--accent)' }} />}
+            icon={<Buildings size={28} weight="duotone" style={{ color: 'var(--accent-color)' }} />}
             title="¿Con quién estás trabajando?"
             subtitle="Escribe el nombre de una marca o cliente con el que colaboras ahora mismo."
             value={partnerName}
@@ -252,7 +252,7 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
         {step === 'goal' && (
           <DataStep
             inputRef={goalRef}
-            icon={<Target size={28} weight="duotone" style={{ color: 'var(--accent)' }} />}
+            icon={<Target size={28} weight="duotone" style={{ color: 'var(--accent-color)' }} />}
             title="¿Cuál es tu objetivo este año?"
             subtitle="Tu objetivo estratégico principal. Puedes editarlo después con más detalle."
             value={goalText}
@@ -312,18 +312,18 @@ function ProfessionStep({
               onClick={() => onSelectPrimary(value)}
               className="flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-150 active:scale-[0.97]"
               style={{
-                borderColor: selected ? 'var(--accent)' : 'var(--border-subtle)',
-                backgroundColor: selected ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
+                borderColor: selected ? 'var(--accent-color)' : 'var(--border-subtle)',
+                backgroundColor: selected ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : 'var(--surface-card)',
               }}
             >
               <Icon
                 size={20}
                 weight="duotone"
-                style={{ color: selected ? 'var(--accent)' : 'var(--text-secondary)', flexShrink: 0 }}
+                style={{ color: selected ? 'var(--accent-color)' : 'var(--text-secondary)', flexShrink: 0 }}
               />
               <span
                 className="text-xs font-semibold leading-tight"
-                style={{ color: selected ? 'var(--accent)' : 'var(--text-primary)' }}
+                style={{ color: selected ? 'var(--accent-color)' : 'var(--text-primary)' }}
               >
                 {label}
               </span>
@@ -350,9 +350,9 @@ function ProfessionStep({
                   disabled={isPrimary}
                   className="rounded-full border px-3 py-1 text-xs font-medium transition-all duration-150 disabled:cursor-not-allowed"
                   style={{
-                    borderColor: isPrimary ? 'var(--accent)' : active ? 'var(--accent)' : 'var(--border-subtle)',
-                    backgroundColor: isPrimary ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : active ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'var(--surface-card)',
-                    color: isPrimary ? 'var(--accent)' : active ? 'var(--accent)' : 'var(--text-secondary)',
+                    borderColor: isPrimary ? 'var(--accent-color)' : active ? 'var(--accent-color)' : 'var(--border-subtle)',
+                    backgroundColor: isPrimary ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : active ? 'color-mix(in srgb, var(--accent-color) 10%, transparent)' : 'var(--surface-card)',
+                    color: isPrimary ? 'var(--accent-color)' : active ? 'var(--accent-color)' : 'var(--text-secondary)',
                     opacity: isPrimary ? 0.45 : 1,
                   }}
                 >
@@ -376,7 +376,7 @@ function ProfessionStep({
             onChange={(e) => onCustomProfessionChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && canContinue && !saving && onNext()}
             placeholder="Ej. Diseñador gráfico, Productor musical…"
-            className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 transition-all"
+            className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent-color) focus:ring-2 focus:ring-(--accent-color)/20 transition-all"
             autoFocus
           />
         </div>
@@ -386,7 +386,11 @@ function ProfessionStep({
         type="button"
         disabled={!canContinue || saving}
         onClick={onNext}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--accent) py-4 text-sm font-bold text-(--accent-foreground) transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: 'var(--accent-gradient, var(--accent-color))',
+          color: 'var(--accent-foreground)',
+        }}
       >
         {saving ? 'Guardando…' : 'Continuar'}
       </button>
@@ -438,13 +442,17 @@ function DataStep({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !saving && onNext()}
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 transition-all"
+        className="w-full rounded-2xl border border-(--border-subtle) bg-(--surface-card) px-4 py-3.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-tertiary) focus:border-(--accent-color) focus:ring-2 focus:ring-(--accent-color)/20 transition-all"
       />
       <button
         type="button"
         disabled={saving}
         onClick={onNext}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--accent) py-4 text-sm font-bold text-(--accent-foreground) transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold transition-all active:scale-[0.98] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          background: 'var(--accent-gradient, var(--accent-color))',
+          color: 'var(--accent-foreground)',
+        }}
       >
         {saving ? 'Guardando…' : ctaLabel}
       </button>
