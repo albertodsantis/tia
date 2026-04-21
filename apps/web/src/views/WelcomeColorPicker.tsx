@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Check } from '@phosphor-icons/react';
 import { ACCENT_OPTIONS, getAccessibleAccentForeground, getRepresentativeHex, getSwatchCss } from '../lib/accent';
 
-const BRAND_ORANGE = '#F56040';
-const BRAND_PURPLE = '#833AB4';
+const BRAND_ORANGE = '#FF4D3D';
+const BRAND_PURPLE = '#D61B6D';
 
 export default function WelcomeColorPicker({
   onSelect,

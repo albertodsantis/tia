@@ -41,8 +41,8 @@ const PROFESSIONS: { value: FreelancerType; Icon: React.ElementType }[] = [
 
 // ─── Background decoration ───────────────────────────────────────────────────
 
-const BRAND_ORANGE = '#F56040';
-const BRAND_PURPLE = '#833AB4';
+const BRAND_ORANGE = '#FF4D3D';
+const BRAND_PURPLE = '#D61B6D';
 
 function Glows() {
   return (

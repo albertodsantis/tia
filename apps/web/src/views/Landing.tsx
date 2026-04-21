@@ -29,11 +29,11 @@ import LegalModal, { type LegalPage } from '../components/LegalModal';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
-// Brand colors — Instagram-style gradient palette
-const BRAND_GOLD = '#FCAF45';
-const BRAND_ORANGE = '#F56040';
-const BRAND_PINK = '#E1306C';
-const BRAND_PURPLE = '#833AB4';
+// Brand colors — Efi logo palette (magenta → red-orange → orange)
+const BRAND_GOLD = '#FFA500';
+const BRAND_ORANGE = '#FF4D3D';
+const BRAND_PINK = '#FF1E7A';
+const BRAND_PURPLE = '#D61B6D';
 
 const professions = [
   { label: 'Creador de contenido', Icon: Star },
@@ -279,21 +279,11 @@ export default function Landing({
         {/* Nav */}
         <nav className="flex items-center justify-between py-6 sm:py-8">
           <div className="flex items-center gap-2.5">
-            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logo-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={BRAND_GOLD}/>
-                  <stop offset="30%" stopColor={BRAND_ORANGE}/>
-                  <stop offset="60%" stopColor={BRAND_PINK}/>
-                  <stop offset="100%" stopColor={BRAND_PURPLE}/>
-                </linearGradient>
-              </defs>
-              <rect x="26" y="18" width="12" height="28" rx="6" fill="url(#logo-grad)" opacity="0.65"/>
-              <path d="M10,24 C10,15 18,9 32,9 C46,9 54,15 54,24 C54,27 48,28 40,26 C36,25 34,22 32,22 C30,22 28,25 24,26 C16,28 10,27 10,24Z" fill="url(#logo-grad)"/>
-            </svg>
-            <span className="text-lg tracking-tight text-[var(--text-primary)]" style={{ fontFamily: '"Allura", cursive', fontWeight: 400 }}>
-              Efi
-            </span>
+            <img src="/brand/isotipo.png" alt="" width={40} height={40} className="select-none" draggable={false} />
+            <picture>
+              <source srcSet="/brand/wordmark-light.png" media="(prefers-color-scheme: dark)" />
+              <img src="/brand/wordmark.png" alt="Efi" width={26} height={32} className="select-none" draggable={false} />
+            </picture>
           </div>
           <div className="flex items-center gap-3">
             <a

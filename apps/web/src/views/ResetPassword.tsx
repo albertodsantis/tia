@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Eye, EyeSlash } from '@phosphor-icons/react';
 import { authApi } from '../lib/api';
 
-const BRAND_ORANGE = '#F56040';
-const BRAND_PINK = '#E1306C';
-const BRAND_PURPLE = '#833AB4';
+const BRAND_ORANGE = '#FF4D3D';
+const BRAND_PINK = '#FF1E7A';
+const BRAND_PURPLE = '#D61B6D';
 
 export default function ResetPassword({ token, onDone }: { token: string; onDone: () => void }) {
   const [newPassword, setNewPassword] = useState('');
@@ -45,18 +45,7 @@ export default function ResetPassword({ token, onDone }: { token: string; onDone
     <div className="flex min-h-dvh items-center justify-center bg-[var(--surface-app)] px-5 font-sans">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 text-center">
-          <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4">
-            <defs>
-              <linearGradient id="logo-grad-rp" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#FCAF45"/>
-                <stop offset="30%" stopColor={BRAND_ORANGE}/>
-                <stop offset="60%" stopColor={BRAND_PINK}/>
-                <stop offset="100%" stopColor={BRAND_PURPLE}/>
-              </linearGradient>
-            </defs>
-            <rect x="26" y="18" width="12" height="28" rx="6" fill="url(#logo-grad-rp)" opacity="0.65"/>
-            <path d="M10,24 C10,15 18,9 32,9 C46,9 54,15 54,24 C54,27 48,28 40,26 C36,25 34,22 32,22 C30,22 28,25 24,26 C16,28 10,27 10,24Z" fill="url(#logo-grad-rp)"/>
-          </svg>
+          <img src="/brand/isotipo.png" alt="" width={48} height={48} className="mx-auto mb-4 select-none" draggable={false} />
           <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
             Nueva contraseña
           </h1>
