@@ -850,26 +850,40 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
           </button>
         </div>
 
-        {/* Body — secciones verticales, cada una con scroll horizontal */}
-        <div className="relative z-10 flex-1 overflow-y-auto py-5">
-          <div className="flex flex-col gap-7">
+        {/* Body — una sola pared: un único scroll horizontal que arrastra todas las filas juntas */}
+        <div
+          className="relative z-10 flex-1 overflow-x-auto overflow-y-auto py-2"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          <div className="flex w-max flex-col">
             {SECTIONS.map((section) => {
               const sectionUnlocked = section.badges.filter(b => unlockedSet.has(b.key)).length;
               return (
-                <section key={section.id}>
-                  <div className="px-5">
-                    <h3 className="text-sm font-bold" style={{ color: '#dcdcf0' }}>{section.title}</h3>
-                    <div className="mt-0.5 flex items-center gap-2">
-                      <p className="text-[11px]" style={{ color: '#787890' }}>{section.subtitle}</p>
-                      <span className="text-[11px] font-bold" style={{ color: `${accentHex}bb` }}>
-                        {sectionUnlocked}/{section.badges.length}
-                      </span>
+                <div key={section.id} className="py-3">
+                  {/* Mini-header inline, pegado a la izquierda — queda fijo en la columna 0, no se duplica */}
+                  <div className="flex items-baseline justify-between gap-3 px-5" style={{ minWidth: '100%' }}>
+                    <div className="flex items-baseline gap-2 min-w-0">
+                      <h3
+                        className="text-[10px] font-bold tracking-[0.18em] uppercase shrink-0"
+                        style={{ color: '#dcdcf0' }}
+                      >
+                        {section.title}
+                      </h3>
+                      <p
+                        className="truncate text-[10px]"
+                        style={{ color: '#787890' }}
+                      >
+                        {section.subtitle}
+                      </p>
                     </div>
+                    <span
+                      className="shrink-0 text-[10px] font-bold"
+                      style={{ color: `${accentHex}bb` }}
+                    >
+                      {sectionUnlocked}/{section.badges.length}
+                    </span>
                   </div>
-                  <div
-                    className="mt-3 flex gap-3 overflow-x-auto overflow-y-hidden pl-5 pr-10 pb-3 snap-x"
-                    style={{ scrollbarWidth: 'thin' }}
-                  >
+                  <div className="mt-2 flex gap-3 px-5">
                     {section.badges.map((badge) => (
                       <BadgeTile
                         key={badge.key}
@@ -879,7 +893,7 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
                       />
                     ))}
                   </div>
-                </section>
+                </div>
               );
             })}
           </div>
