@@ -327,6 +327,7 @@ export class PostgresAppStore {
     const gcalEventId = normalizeOptionalText(input.gcalEventId) || null;
     const actualPayment = input.actualPayment !== undefined ? normalizeMoney(input.actualPayment) : null;
     const goalId = normalizeOptionalText(input.goalId) || null;
+    const checklistItems = Array.isArray(input.checklistItems) ? input.checklistItems : [];
 
     const { rows: partnerRows } = await this.pool.query(
       'SELECT 1 FROM partners WHERE id = $1 AND user_id = $2',
@@ -347,10 +348,10 @@ export class PostgresAppStore {
     }
 
     const { rows } = await this.pool.query(
-      `INSERT INTO tasks (id, user_id, title, description, partner_id, goal_id, status, due_date, original_due_date, start_time, end_time, value, gcal_event_id, actual_payment)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, $9, $10, $11, $12, $13)
+      `INSERT INTO tasks (id, user_id, title, description, partner_id, goal_id, status, due_date, original_due_date, start_time, end_time, value, gcal_event_id, actual_payment, checklist_items)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, $9, $10, $11, $12, $13, $14)
        RETURNING created_at`,
-      [id, userId, title, description, partnerId, goalId, status, dueDate, startTime, endTime, value, gcalEventId, actualPayment],
+      [id, userId, title, description, partnerId, goalId, status, dueDate, startTime, endTime, value, gcalEventId, actualPayment, JSON.stringify(checklistItems)],
     );
 
     const createdAt = rows[0].created_at instanceof Date ? rows[0].created_at.toISOString() : rows[0].created_at;
@@ -375,7 +376,7 @@ export class PostgresAppStore {
       createdAt,
       ...(gcalEventId ? { gcalEventId } : {}),
       ...(actualPayment != null ? { actualPayment } : {}),
-      checklistItems: [],
+      checklistItems,
     };
   }
 
