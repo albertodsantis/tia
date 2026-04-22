@@ -1539,6 +1539,26 @@ export class PostgresAppStore {
     return result.rows.length > 0;
   }
 
+  /**
+   * Tasks that were overdue at the end of the given local date — i.e. their due_date was before
+   * `cutoffIso` and they weren't completed on or before `cutoffIso`. Used for retroactively
+   * assessing whether a past week was "perfect".
+   */
+  async countTasksOverdueAsOf(userId: string, cutoffIso: string, timezone: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND due_date IS NOT NULL
+         AND due_date < $2
+         AND (
+           completed_at IS NULL
+           OR (completed_at AT TIME ZONE $3)::date > $2::date
+         )`,
+      [userId, cutoffIso, timezone],
+    );
+    return result.rows[0].cnt;
+  }
+
   /** Number of tasks overdue today (due_date < today, status Pendiente/En Progreso/En Revision). */
   async countOverdueTasks(userId: string, todayIso: string): Promise<number> {
     const result = await this.pool.query(

@@ -315,8 +315,9 @@ export class GamificationService {
   }
 
   /**
-   * A "perfect week" is a local week where the user had ≥3 completed tasks
-   * and zero overdue tasks at the moment we evaluate it.
+   * A "perfect week" is a local week where the user completed ≥3 tasks within that week
+   * and had zero tasks overdue at the moment the week ended (Sunday 23:59 local).
+   * Assessed retroactively so that neither future cleanup nor future misses affect a past week.
    */
   private async assessWeekPerfection(
     userId: string,
@@ -330,18 +331,19 @@ export class GamificationService {
     monday.setUTCDate(d.getUTCDate() - dayNum);
 
     let completed = 0;
+    let sundayIso = '';
     for (let i = 0; i < 7; i++) {
       const dayDate = new Date(monday);
       dayDate.setUTCDate(monday.getUTCDate() + i);
       const iso = dayDate.toISOString().slice(0, 10);
+      if (i === 6) sundayIso = iso;
       completed += await this.appStore.countTasksCompletedOnDate(userId, iso, timezone);
     }
 
-    // Overdue check against today (the evaluation moment)
-    const today = localDateISO(new Date(), timezone);
-    const overdueToday = await this.appStore.countOverdueTasks(userId, today);
+    // Overdue as of the end of the week being assessed — not "today".
+    const overdueAtWeekEnd = await this.appStore.countTasksOverdueAsOf(userId, sundayIso, timezone);
 
-    return { perfect: completed >= 3 && overdueToday === 0 };
+    return { perfect: completed >= 3 && overdueAtWeekEnd === 0 };
   }
 
   private async checkBadges(
@@ -482,6 +484,26 @@ export class GamificationService {
     }
 
     return unlocked;
+  }
+
+  /**
+   * Re-evaluates the 'conector' badge (10 partners contacted in the last 30 days).
+   * Meant to be called after a partner's lastContactedAt is updated, since the normal
+   * network_* events don't fire on that code path.
+   */
+  async reevaluateConectorBadge(userId: string): Promise<EfisystemAward | null> {
+    const active = await this.appStore.countActivePartners(userId, 30);
+    if (active < 10) return null;
+    const isNew = await this.appStore.unlockBadge(userId, 'conector');
+    if (!isNew) return null;
+    const summary = await this.appStore.getEfisystemSummary(userId);
+    return {
+      pointsEarned: 0,
+      newTotal: summary.totalPoints,
+      newLevel: summary.currentLevel,
+      leveledUp: false,
+      newBadges: ['conector'],
+    };
   }
 
   /** Merge two awards into one (used when two processEvent calls fire for one action). */

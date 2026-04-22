@@ -261,15 +261,21 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
   router.patch('/partners/:partnerId', async (req, res) => {
     if (rejectInvalidUUID(res, req.params.partnerId)) return;
     try {
-      const partner = await appStore.updatePartner(
-        getUserId(req),
-        req.params.partnerId,
-        req.body as UpdatePartnerRequest,
-      );
+      const userId = getUserId(req);
+      const body = req.body as UpdatePartnerRequest;
+      const partner = await appStore.updatePartner(userId, req.params.partnerId, body);
       if (!partner) {
         return res.status(404).json({ error: 'Partner not found' });
       }
-      res.json(partner);
+
+      // If lastContactedAt changed, the 'conector' badge (10 partners touched in 30d)
+      // must be re-evaluated — the network_* events don't fire on this endpoint.
+      let efisystem: EfisystemAward | null = null;
+      if ((body as any).lastContactedAt !== undefined) {
+        efisystem = await gamification.reevaluateConectorBadge(userId);
+      }
+
+      res.json({ ...partner, ...(efisystem ? { efisystem } : {}) });
     } catch (error) {
       return res.status(400).json({ error: getErrorMessage(error) });
     }
