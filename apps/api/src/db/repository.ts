@@ -1551,6 +1551,18 @@ export class PostgresAppStore {
     return result.rows[0].cnt;
   }
 
+  /** Active tasks with a due_date (Pendiente/En Progreso/En Revision). Used to gate pipeline_zen so an empty account doesn't earn it. */
+  async countActiveTasksWithDueDate(userId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS cnt FROM tasks
+       WHERE user_id = $1
+         AND status IN ('Pendiente', 'En Progreso', 'En Revision')
+         AND due_date IS NOT NULL`,
+      [userId],
+    );
+    return result.rows[0].cnt;
+  }
+
   /** Number of tasks completed on a specific local date (for weekly perfect-week calc). */
   async countTasksCompletedOnDate(userId: string, dateIso: string, timezone: string): Promise<number> {
     const result = await this.pool.query(

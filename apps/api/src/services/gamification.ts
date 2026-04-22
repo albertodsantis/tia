@@ -269,13 +269,17 @@ export class GamificationService {
     }
     if (currentStreak > longestStreak) longestStreak = currentStreak;
 
-    // Pipeline zen
-    const overdue = await this.appStore.countOverdueTasks(userId, today);
+    // Pipeline zen: counts a day only if there's real pipeline to keep clean —
+    // an account with no active tasks can't "manage" a pipeline, so it doesn't earn the badge.
+    const [overdue, activeWithDue] = await Promise.all([
+      this.appStore.countOverdueTasks(userId, today),
+      this.appStore.countActiveTasksWithDueDate(userId),
+    ]);
     let cleanDays = state.cleanPipelineDays;
-    if (overdue === 0) {
-      if (state.lastActiveDate !== today) cleanDays += 1; // count at most once per day
-    } else {
+    if (overdue > 0) {
       cleanDays = 0;
+    } else if (activeWithDue > 0 && state.lastActiveDate !== today) {
+      cleanDays += 1; // count at most once per day
     }
 
     // Perfect week: evaluated once per week, on week rollover.
