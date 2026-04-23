@@ -311,7 +311,11 @@ export default function Landing({
               </span>
             </h1>
 
-            <div ref={pillsContainerRef} className="mt-12 flex flex-wrap gap-2">
+            <p className="mt-6 max-w-xl text-base leading-7 text-(--text-primary) sm:text-lg sm:leading-8">
+              <strong className="font-semibold">Organiza tus tareas</strong>, <strong className="font-semibold">gestiona tus clientes</strong> y <strong className="font-semibold">crea tu perfil público</strong>. Efi es un espacio fácil de usar, diseñado para profesionales independientes.
+            </p>
+
+            <div ref={pillsContainerRef} className="mt-8 flex flex-wrap gap-2">
               {professions.map(({ label, Icon }) => (
                 <span
                   key={label}
@@ -322,11 +326,6 @@ export default function Landing({
                 </span>
               ))}
             </div>
-
-            <p className="mt-5 max-w-lg text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
-              Workspace compacto diseñado para <strong className="font-semibold text-(--text-primary)">profesionales independientes</strong>. Organiza tareas,
-              clientes y crea tu perfil público para compartir tu trabajo.
-            </p>
 
             {/* Feature grid - visible on desktop below hero */}
             <div className="mt-12 hidden lg:block">
