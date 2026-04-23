@@ -820,7 +820,7 @@ function BadgesDrawer({ unlockedBadges, onClose, accentHex }: { unlockedBadges: 
       />
       {/* Panel */}
       <div
-        className={`relative flex h-full w-full max-w-md flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`relative flex h-full w-full max-w-md md:max-w-2xl flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out ${mounted ? 'translate-x-0' : 'translate-x-full'}`}
         style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${accentHex} 8%, #0c0c14) 0%, #090910 55%, #060608 100%)` }}
       >
         {/* Ambient ceiling glow */}
