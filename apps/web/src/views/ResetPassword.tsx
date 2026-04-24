@@ -45,7 +45,7 @@ export default function ResetPassword({ token, onDone }: { token: string; onDone
     <div className="flex min-h-dvh items-center justify-center bg-[var(--surface-app)] px-5 font-sans">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 text-center">
-          <img src="/brand/isotipo.png" alt="" width={48} height={48} className="mx-auto mb-4 select-none" draggable={false} />
+          <img src="/brand/isotipo.png?v=2" alt="" width={48} height={48} className="mx-auto mb-4 select-none" draggable={false} />
           <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)]">
             Nueva contraseña
           </h1>

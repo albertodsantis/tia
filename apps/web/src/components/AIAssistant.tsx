@@ -336,7 +336,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
           }
         >
           <img
-            src="/brand/isotipo.png"
+            src="/brand/isotipo.png?v=2"
             alt=""
             draggable={false}
             width={32}
@@ -397,7 +397,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
             >
               <div className="flex min-w-0 items-center gap-3">
                 <img
-                  src="/brand/isotipo.png"
+                  src="/brand/isotipo.png?v=2"
                   alt=""
                   draggable={false}
                   width={40}
@@ -432,7 +432,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 <div className="space-y-5">
                   <div className="flex flex-col items-center text-center">
                     <img
-                      src="/brand/isotipo.png"
+                      src="/brand/isotipo.png?v=2"
                       alt=""
                       draggable={false}
                       width={64}

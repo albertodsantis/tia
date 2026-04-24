@@ -516,7 +516,7 @@ export function LoadingMushroom({
 }) {
   return (
     <img
-      src="/brand/isotipo.png"
+      src="/brand/isotipo.png?v=2"
       alt="Cargando"
       aria-label="Cargando"
       role="status"

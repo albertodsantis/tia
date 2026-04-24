@@ -49,17 +49,32 @@ function layout(title: string, body: string): string {
 <body>
   <div class="wrap">
     <div class="logo">
-      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#FCAF45"/>
-            <stop offset="30%" stop-color="#F56040"/>
-            <stop offset="60%" stop-color="#E1306C"/>
-            <stop offset="100%" stop-color="#833AB4"/>
+          <linearGradient id="capGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#FF1E7A"/>
+            <stop offset="60%" stop-color="#FF3D5A"/>
+            <stop offset="100%" stop-color="#FF8A1E"/>
+          </linearGradient>
+          <linearGradient id="stemGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#FF6A2E"/>
+            <stop offset="100%" stop-color="#FFB400"/>
           </linearGradient>
         </defs>
-        <rect x="26" y="18" width="12" height="28" rx="6" fill="url(#g)" opacity="0.65"/>
-        <path d="M10,24 C10,15 18,9 32,9 C46,9 54,15 54,24 C54,27 48,28 40,26 C36,25 34,22 32,22 C30,22 28,25 24,26 C16,28 10,27 10,24Z" fill="url(#g)"/>
+        <path d="M32 9 C47 9 55 19 55 27 C55 31 51 32 45 31 C40 30 36 30 32 30 C28 30 24 30 19 31 C13 32 9 31 9 27 C9 19 17 9 32 9 Z" fill="url(#capGrad)"/>
+        <path d="M25 31 C25 30 26 29 28 29 L36 29 C38 29 39 30 39 31 L38 50 C38 53 36 56 32 56 C28 56 26 53 26 50 Z" fill="url(#stemGrad)"/>
+        <g fill="#FFFFFF" opacity="0.95">
+          <circle cx="22" cy="22" r="1.6"/>
+          <circle cx="28" cy="17" r="1.4"/>
+          <circle cx="34" cy="14" r="1.5"/>
+          <circle cx="40" cy="18" r="1.3"/>
+          <circle cx="46" cy="23" r="1.5"/>
+          <circle cx="26" cy="26" r="1.2"/>
+          <circle cx="32" cy="22" r="1.6"/>
+          <circle cx="38" cy="25" r="1.3"/>
+          <circle cx="42" cy="28" r="1.2"/>
+          <circle cx="20" cy="27" r="1.2"/>
+        </g>
       </svg>
       <span>Efi</span>
     </div>

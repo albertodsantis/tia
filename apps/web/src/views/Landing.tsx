@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import gsap from 'gsap';
 import {
   Article,
   Briefcase,
@@ -83,6 +82,118 @@ const features = [
   },
 ];
 
+/* ── ProfessionsMarquee ─────────────────────────────────────── */
+
+type Profession = (typeof professions)[number];
+
+function ProfessionsMarquee({ professions }: { professions: Profession[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInteractingRef = useRef(false);
+  const dragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
+  const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+
+  const setInteracting = (value: boolean) => {
+    isInteractingRef.current = value;
+  };
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let animationId: number;
+    let scrollPos = el.scrollLeft;
+    const speed = 0.315;
+
+    const scroll = () => {
+      if (!isInteractingRef.current) {
+        scrollPos += speed;
+        const maxScroll = el.scrollWidth / 2;
+        if (scrollPos >= maxScroll) scrollPos -= maxScroll;
+        el.scrollLeft = scrollPos;
+      } else {
+        scrollPos = el.scrollLeft;
+      }
+      animationId = requestAnimationFrame(scroll);
+    };
+
+    animationId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setInteracting(true);
+    if (e.pointerType === 'mouse') {
+      dragRef.current.isDragging = true;
+      dragRef.current.startX = e.pageX;
+      dragRef.current.scrollLeft = containerRef.current?.scrollLeft || 0;
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current.isDragging || !containerRef.current) return;
+    e.preventDefault();
+    containerRef.current.scrollLeft =
+      dragRef.current.scrollLeft - (e.pageX - dragRef.current.startX) * 1.5;
+  };
+
+  const handlePointerUp = () => {
+    dragRef.current.isDragging = false;
+    setInteracting(false);
+  };
+
+  const displayProfessions = React.useMemo(() => {
+    const all = Array(8).fill(professions).flat() as Profession[];
+    return all.map((p) => ({
+      ...p,
+      delay: Math.random() * 0.9,
+      duration: 0.75 + Math.random() * 0.35,
+      hopHeight: 5 + Math.random() * 5,
+    }));
+  }, [professions]);
+
+  return (
+    <div className="relative flex items-center overflow-x-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+      <div
+        ref={containerRef}
+        className="hide-scrollbar flex w-full cursor-grab select-none items-center gap-3 overflow-x-auto overflow-y-visible py-4 px-4 active:cursor-grabbing"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onMouseEnter={() => setInteracting(true)}
+        onMouseLeave={() => setInteracting(false)}
+      >
+        {displayProfessions.map(({ label, Icon, delay, duration, hopHeight }, i) => {
+          const isPressed = pressedIndex === i;
+          return (
+            <span
+              key={i}
+              onPointerDown={() => setPressedIndex(i)}
+              onPointerUp={() => setPressedIndex(null)}
+              onPointerLeave={() => setPressedIndex((cur) => (cur === i ? null : cur))}
+              onPointerCancel={() => setPressedIndex(null)}
+              className={cx(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-(--surface-card)/60 px-3 py-1.5 text-[12px] font-semibold text-(--text-secondary) border-(--line-soft) animate-pill-walk transition-[transform,opacity] duration-150',
+                isPressed && '[animation-play-state:paused] scale-95 opacity-90',
+              )}
+              style={
+                {
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                  '--hop-height': `${hopHeight}px`,
+                } as React.CSSProperties
+              }
+            >
+              <Icon size={13} />
+              {label}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Landing({
   onLogin,
 }: {
@@ -99,79 +210,11 @@ export default function Landing({
   const [forgotSent, setForgotSent] = useState(false);
   const [legalPage, setLegalPage] = useState<LegalPage | null>(null);
 
-  const pillsContainerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (sessionStorage.getItem('efi:auth_network_error')) {
       setServerUnreachable(true);
       sessionStorage.removeItem('efi:auth_network_error');
     }
-  }, []);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const pills = gsap.utils.toArray<HTMLElement>('.profession-pill');
-
-      // Phase 1 — Toy Story entrance: pills fly in from random scatter
-      gsap.fromTo(
-        pills,
-        {
-          opacity: 0,
-          scale: 0.4,
-          x: () => gsap.utils.random(-80, 80),
-          y: () => gsap.utils.random(-60, 60),
-          rotation: () => gsap.utils.random(-25, 25),
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          x: 0,
-          y: 0,
-          rotation: 0,
-          duration: 0.7,
-          ease: 'back.out(1.8)',
-          stagger: {
-            each: 0.055,
-            from: 'random',
-          },
-          delay: 0.2,
-        },
-      );
-
-      // Phase 2 — Press/hover: works on both mouse and touch
-      pills.forEach((pill) => {
-        const dir = Math.random() > 0.5 ? 1 : -1;
-        const angle = gsap.utils.random(6, 12);
-
-        const lift = () => {
-          gsap.to(pill, {
-            y: -6,
-            scale: 1.12,
-            rotation: dir * angle,
-            duration: 0.25,
-            ease: 'back.out(2)',
-            overwrite: true,
-          });
-        };
-
-        const drop = () => {
-          gsap.to(pill, {
-            y: 0,
-            scale: 1,
-            rotation: 0,
-            duration: 0.5,
-            ease: 'elastic.out(1, 0.4)',
-            overwrite: true,
-          });
-        };
-
-        pill.addEventListener('pointerenter', lift);
-        pill.addEventListener('pointerleave', drop);
-        pill.addEventListener('pointercancel', drop);
-      });
-    }, pillsContainerRef);
-
-    return () => ctx.revert();
   }, []);
 
   const switchMode = (newMode: AuthMode) => {
@@ -277,26 +320,35 @@ export default function Landing({
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         {/* Nav */}
-        <nav className="flex items-center justify-between py-6 sm:py-8">
-          <div className="flex items-center gap-2.5">
-            <img src="/brand/isotipo.png" alt="" width={40} height={40} className="select-none" draggable={false} />
+        <nav className="flex items-center justify-between py-0">
+          <div className="flex items-center gap-0">
+            <img src="/brand/isotipo.png?v=2" alt="" width={90} height={90} className="select-none" draggable={false} />
             <picture>
               <source srcSet="/brand/wordmark-light.png" media="(prefers-color-scheme: dark)" />
               <img src="/brand/wordmark.png" alt="Efi" width={26} height={32} className="select-none" draggable={false} />
             </picture>
           </div>
-          <div className="flex items-center gap-3">
-            <a
-              href="#login"
-              className="rounded-full border px-4 py-2 text-xs font-bold transition-colors hover:bg-[var(--surface-card)] [border-color:var(--line-soft)]"
-            >
-              Acceder
-            </a>
-          </div>
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border bg-(--surface-card)/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-(--text-secondary) border-(--line-soft) backdrop-blur-sm"
+          >
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{
+                background: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK})`,
+                boxShadow: `0 0 8px ${BRAND_PINK}80`,
+              }}
+            />
+            Beta
+          </span>
         </nav>
 
+        {/* Professions marquee — full-bleed, above the hero */}
+        <div className="relative mx-[calc(50%-50vw)] w-screen">
+          <ProfessionsMarquee professions={professions} />
+        </div>
+
         {/* Hero + Login */}
-        <div className="mt-8 grid items-start gap-12 sm:mt-12 lg:mt-20 lg:grid-cols-[1fr_420px] lg:gap-16 xl:grid-cols-[1fr_460px]">
+        <div className="mt-2 grid items-start gap-12 sm:mt-4 lg:grid-cols-[1fr_420px] lg:gap-16 xl:grid-cols-[1fr_460px]">
           {/* Left: Hero */}
           <div className="max-w-2xl">
             <h1 className="mt-2 text-[clamp(2.2rem,5.5vw,3.8rem)] font-black leading-[1.08] tracking-tight text-[var(--text-primary)]">
@@ -314,18 +366,6 @@ export default function Landing({
             <p className="mt-6 max-w-xl text-base leading-7 text-(--text-primary) sm:text-lg sm:leading-8">
               <strong className="font-semibold">Organiza tus tareas</strong>, <strong className="font-semibold">gestiona tus clientes</strong> y <strong className="font-semibold">crea tu perfil público</strong>. Efi es un espacio fácil de usar, diseñado para profesionales independientes.
             </p>
-
-            <div ref={pillsContainerRef} className="mt-8 flex flex-wrap gap-2">
-              {professions.map(({ label, Icon }) => (
-                <span
-                  key={label}
-                  className="profession-pill inline-flex items-center gap-1.5 rounded-full border bg-(--surface-card)/60 px-3 py-1 text-[11px] font-semibold text-(--text-secondary) border-(--line-soft) cursor-default"
-                >
-                  <Icon size={12} />
-                  {label}
-                </span>
-              ))}
-            </div>
 
             {/* Feature grid - visible on desktop below hero */}
             <div className="mt-12 hidden lg:block">
