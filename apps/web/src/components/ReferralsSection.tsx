@@ -180,9 +180,8 @@ export default function ReferralsSection() {
             )}
 
             <p className="mt-6 text-xs text-[var(--text-secondary)]">
-              Un amigo califica cuando crea al menos {REFERRAL_QUALIFY_TASK_CHANGES} cambios de
-              estado en sus entregas a lo largo de {REFERRAL_QUALIFY_ACTIVE_DAYS} días distintos,
-              dentro de los {REFERRAL_QUALIFY_WINDOW_DAYS} días siguientes a registrarse.
+              Un amigo califica cuando al trabaja al menos {REFERRAL_QUALIFY_TASK_CHANGES}
+              tareas a lo largo de {REFERRAL_QUALIFY_ACTIVE_DAYS} días distintos,
             </p>
           </>
         )}
