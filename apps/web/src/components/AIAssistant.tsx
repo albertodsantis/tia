@@ -260,7 +260,23 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 </div>
               </div>
             ) : (
-              <div className="relative flex-1 overflow-y-auto px-5 py-5">
+              <div className="relative flex-1 min-h-0 overflow-y-auto px-5 py-5">
+                {messages.length === 0 && !isProcessing ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                    <img
+                      src="/brand/isotipo.png?v=2"
+                      alt=""
+                      draggable={false}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 select-none opacity-80"
+                    />
+                    <p className="text-sm font-medium text-[var(--text-primary)]">¿En qué te ayudo?</p>
+                    <p className="max-w-[18rem] text-xs leading-5 text-[var(--text-secondary)]">
+                      Pregúntame por tus tareas, mueve algo en tu pipeline o pídeme una plantilla.
+                    </p>
+                  </div>
+                ) : null}
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div key={index} className={cx('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}>
