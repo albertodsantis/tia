@@ -56,10 +56,13 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
         if (cancelled) return;
         if (err instanceof ApiError && err.code === 'ai_disabled') {
           setIsAvailable(false);
-        } else {
-          // Network/unknown: leave null so user can retry by re-opening.
-          setIsAvailable(false);
+          return;
         }
+        // Network/server error: log and let the user retry. We treat this as
+        // "available but errored" so the chat UI renders and shows an error
+        // message instead of the "Próximamente" placeholder.
+        console.error('Efi IA quota probe failed', err);
+        setIsAvailable(true);
       });
     return () => { cancelled = true; };
   }, [isOpen, isAvailable]);

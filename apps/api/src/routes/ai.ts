@@ -349,6 +349,9 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
   const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
   router.get('/quota', async (req, res) => {
+    if (!ai) {
+      return res.status(503).json({ error: 'Asistente no configurado.', code: 'ai_disabled' });
+    }
     try {
       const quota = await readQuota(pool, (req as any).userId);
       const response: AiQuotaResponse = quota;
