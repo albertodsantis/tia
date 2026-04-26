@@ -515,12 +515,14 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
       const ctx: ToolCtx = { appStore, userId, mutations: [] };
       let response = await chat.sendMessage({ message: lastUser.text });
       let safety = 0;
+      let toolCallsMade = 0;
 
       while (response.functionCalls && response.functionCalls.length > 0) {
         if (++safety > 8) {
           logger.warn({ userId }, 'AI tool loop exceeded 8 hops');
           break;
         }
+        toolCallsMade += response.functionCalls.length;
         const toolResponses: any[] = [];
         for (const call of response.functionCalls) {
           const result = await runTool(ctx, call.name as string, (call.args ?? {}) as Record<string, any>);
@@ -531,13 +533,15 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
         response = await chat.sendMessage({ message: toolResponses as any });
       }
 
-      // Auto-recovery: si el modelo cerró sin texto tras tool calls, lo
-      // empujamos a resumir. Pasa con gemini-2.5-flash en cadenas de tools.
+      // Auto-recovery: si el modelo cerró sin texto tras cualquier tool call
+      // (lectura o mutación), lo empujamos a resumir. Pasa con gemini-2.5-flash
+      // en cadenas de tools, especialmente con summarize_pipeline / get_app_data.
       let reply = response.text || '';
-      if (!reply.trim() && ctx.mutations.length > 0) {
-        const followUp = await chat.sendMessage({
-          message: 'Resume al usuario en español neutro lo que acabas de hacer, con detalle de cada acción ejecutada. Sin preguntas, solo el resumen.',
-        });
+      if (!reply.trim() && toolCallsMade > 0) {
+        const nudge = ctx.mutations.length > 0
+          ? 'Resume al usuario en español neutro lo que acabas de hacer, con detalle de cada acción ejecutada. Sin preguntas, solo el resumen.'
+          : 'Responde ahora al usuario en español neutro con la información que acabas de consultar. Sé concreta y útil. Sin preguntas, solo la respuesta basada en los datos.';
+        const followUp = await chat.sendMessage({ message: nudge });
         reply = followUp.text || '';
       }
 

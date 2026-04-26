@@ -23,6 +23,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   const [quota, setQuota] = useState<AiQuota | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -32,7 +33,11 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll dentro del contenedor sin afectar el viewport (evita que el panel
+    // se desplace fuera de pantalla en móvil cuando aparece el teclado).
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, isProcessing]);
 
   // Probe availability + load quota on first open. We only hit the endpoint
@@ -194,7 +199,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
             </div>
 
             <div
-              className="relative flex items-center justify-between gap-4 border-b border-black/5 px-5 py-4"
+              className="relative shrink-0 flex items-center justify-between gap-4 border-b border-black/5 px-5 py-4"
               style={{
                 background:
                   'linear-gradient(135deg, rgba(201,111,91,0.18), rgba(255,255,255,0.72) 42%, rgba(93,141,123,0.08))',
@@ -260,7 +265,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 </div>
               </div>
             ) : (
-              <div className="relative flex-1 min-h-0 overflow-y-auto px-5 py-5">
+              <div ref={messagesScrollRef} className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-5">
                 {messages.length === 0 && !isProcessing ? (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
                     <img
@@ -307,7 +312,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
               </div>
             )}
 
-            <div className="relative border-t border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,244,239,0.98))] p-4">
+            <div className="relative shrink-0 border-t border-black/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,244,239,0.98))] p-4">
               <div
                 className={cx(
                   'flex items-center gap-2 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/88 p-1.5 shadow-[0_16px_28px_-28px_rgba(63,43,33,0.2)]',
