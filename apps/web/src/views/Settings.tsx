@@ -133,6 +133,21 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const tabsRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScroll = useRef(false);
+  const programmaticScrollTimer = useRef<number | null>(null);
+
+  const getScrollContainer = (el: HTMLElement): HTMLElement | Window => {
+    let node: HTMLElement | null = el.parentElement;
+    while (node && node !== document.body) {
+      const style = window.getComputedStyle(node);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return window;
+  };
 
   useEffect(() => {
     const elements = SECTIONS
@@ -140,8 +155,11 @@ export default function Settings() {
       .filter((el): el is HTMLElement => el != null);
     if (elements.length === 0) return;
 
+    const tabsHeight = tabsRef.current?.offsetHeight ?? 56;
+
     const observer = new IntersectionObserver(
       (entries) => {
+        if (isProgrammaticScroll.current) return;
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
@@ -149,7 +167,7 @@ export default function Settings() {
           setActiveSection(visible[0].target.id);
         }
       },
-      { rootMargin: '-90px 0px -55% 0px', threshold: [0, 0.25, 0.5, 1] },
+      { rootMargin: `-${tabsHeight + 8}px 0px -55% 0px`, threshold: [0, 0.25, 0.5, 1] },
     );
 
     elements.forEach((el) => observer.observe(el));
@@ -170,13 +188,31 @@ export default function Settings() {
   const scrollToSection = (id: string) => {
     const el = sectionRefs.current[id];
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 72;
-    const scroller = el.closest('main');
-    if (scroller) {
-      const offset = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-      scroller.scrollTo({ top: scroller.scrollTop + offset - 64, behavior: 'smooth' });
-    } else {
+
+    const tabsHeight = tabsRef.current?.offsetHeight ?? 56;
+    const offset = tabsHeight + 8;
+    const scroller = getScrollContainer(el);
+
+    setActiveSection(id);
+    isProgrammaticScroll.current = true;
+    if (programmaticScrollTimer.current) {
+      window.clearTimeout(programmaticScrollTimer.current);
+    }
+    programmaticScrollTimer.current = window.setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 700);
+
+    if (scroller === window) {
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      const container = scroller as HTMLElement;
+      const top =
+        el.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop -
+        offset;
+      container.scrollTo({ top, behavior: 'smooth' });
     }
   };
 
@@ -424,12 +460,12 @@ export default function Settings() {
   return (
     <div className="p-4 pb-6 lg:px-8 lg:pt-4 lg:pb-8">
       <div
-        className="sticky top-0 z-20 -mx-4 mb-5 border-b border-[color:var(--line-soft)] bg-[var(--surface-card)]/85 px-4 backdrop-blur-md lg:-mx-8 lg:mb-6 lg:px-8"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        ref={tabsRef}
+        className="sticky top-0 z-30 -mx-4 mb-5 border-b border-[color:var(--line-soft)] bg-(--surface-card)/95 px-4 backdrop-blur-md lg:-mx-8 lg:mb-6 lg:px-8"
+        style={{ pointerEvents: 'auto' }}
       >
         <div
-          ref={tabsRef}
-          className="hide-scrollbar -mb-px flex gap-1 overflow-x-auto py-2"
+          className="hide-scrollbar flex gap-1 overflow-x-auto py-2"
           role="tablist"
           aria-label="Secciones de ajustes"
         >
@@ -443,6 +479,7 @@ export default function Settings() {
                 aria-selected={isActive}
                 data-section-id={section.id}
                 onClick={() => scrollToSection(section.id)}
+                style={{ touchAction: 'manipulation' }}
                 className={cx(
                   'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold tracking-tight transition-colors',
                   isActive
