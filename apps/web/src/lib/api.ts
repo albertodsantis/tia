@@ -234,6 +234,7 @@ export const aiApi = {
     apiRequest<AiChatResponse>('/api/v1/ai/chat', {
       method: 'POST',
       body: JSON.stringify(payload),
+      headers: { 'X-Timezone': clientTimezone() },
     }),
 };
 

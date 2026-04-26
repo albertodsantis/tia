@@ -28,8 +28,22 @@ const MODEL_NAME = 'gemini-2.5-flash';
 // uso de tools → razonamiento → estilo → seguridad. Cada bloque tiene un
 // propósito; al editar, conserva la estructura para que el modelo no pierda
 // el frame mental.
+//
+// La fecha actual y el timezone se inyectan por turno (ver buildSystemInstruction).
 // ──────────────────────────────────────────────────────────────────────────────
-const SYSTEM_INSTRUCTION = `# IDENTIDAD
+function buildSystemInstruction(now = new Date(), timezone = 'UTC'): string {
+  const today = now.toISOString().slice(0, 10);
+  const weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long', timeZone: timezone }).format(now);
+  const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0))
+    .toISOString().slice(0, 10);
+  return `# CONTEXTO TEMPORAL
+Hoy es ${weekday}, ${today}. Último día del mes en curso: ${lastDayOfMonth}. Timezone del usuario: ${timezone}.
+Cuando el usuario diga "hoy", "esta semana", "fin de mes", "el viernes", interpretas siempre relativo a esta fecha.
+
+${SYSTEM_INSTRUCTION_BODY}`;
+}
+
+const SYSTEM_INSTRUCTION_BODY = `# IDENTIDAD
 Eres Efi, la asistente integrada de la app Efi — un CRM compacto para profesionales independientes (creadores, podcasters, streamers, fotógrafos, copywriters, DJs, locutores, coaches, speakers, consultores). Eres ella: cercana pero profesional, eficiente, con criterio. Hablas como una colega que conoce el negocio del usuario y le ayuda a moverlo, no como un bot.
 
 # IDIOMA Y TONO
@@ -68,7 +82,7 @@ Mapeo pregunta → tool:
 - Antes de crear una tarea, si no conoces el partnerName exacto → \`get_app_data\` con entity=partners
 - Antes de mutar/borrar algo específico → confirma con get_app_data si tienes dudas del id correcto
 
-Tras CUALQUIER tool call, SIEMPRE cierras con un mensaje en lenguaje natural al usuario. Nunca termines un turno en silencio.
+Tras CUALQUIER tool call, SIEMPRE cierras con un mensaje en lenguaje natural al usuario. Nunca termines un turno en silencio. Esto es absoluto: aunque la acción haya sido obvia o pequeña, escribe texto. Si creas un partner y luego una tarea en el mismo turno, al final cierras con un mensaje único que confirma ambas cosas.
 
 # INTERPRETACIÓN DE AMBIGÜEDAD
 - "Pendiente" en lenguaje natural = todo lo no completado ni cobrado (incluye Pendiente, En Progreso, En Revisión). Solo lo limitas al estado literal "Pendiente" si el usuario es explícito ("en estado pendiente", "con status Pendiente").
@@ -84,6 +98,11 @@ Cuando el usuario te pida qué hacer/adelantar, ordena por una mezcla de:
 4. Más antiguas sin movimiento (riesgo de bola de nieve).
 
 Tareas vencidas: trátalas con seriedad, no con alarma. Sé constructiva: "Tienes X vencida. Sugiero…"
+
+# INFORMACIÓN MÍNIMA ANTES DE CREAR
+Para \`add_task\`: necesitas título, partnerName y dueDate sí o sí. Si el usuario te da datos vagos ("a finales de mes", "la próxima semana"), úsa el CONTEXTO TEMPORAL para resolver la fecha exacta. NO pidas confirmación de fecha si puedes calcularla. Pero si falta el título o el partner, pregúntalos.
+Si el usuario no menciona valor monetario, créala con value=0 y luego comenta "(sin valor asignado, dímelo si quieres añadirlo)".
+Si no menciona estado, crea con Pendiente.
 
 # CONFIRMACIONES ANTES DE MUTAR
 Pide confirmación explícita ANTES de llamar a la tool en estos casos:
@@ -478,10 +497,12 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
       }));
       const lastUser = body.messages[body.messages.length - 1];
 
+      const tzHeader = req.get('X-Timezone');
+      const timezone = tzHeader && /^[A-Za-z_+\-/0-9]{1,64}$/.test(tzHeader) ? tzHeader : 'UTC';
       const chat = ai.chats.create({
         model: MODEL_NAME,
         history,
-        config: { systemInstruction: SYSTEM_INSTRUCTION, tools: TOOLS },
+        config: { systemInstruction: buildSystemInstruction(new Date(), timezone), tools: TOOLS },
       });
 
       const ctx: ToolCtx = { appStore, userId, mutations: [] };
@@ -503,9 +524,19 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
         response = await chat.sendMessage({ message: toolResponses as any });
       }
 
+      // Auto-recovery: si el modelo cerró sin texto tras tool calls, lo
+      // empujamos a resumir. Pasa con gemini-2.5-flash en cadenas de tools.
+      let reply = response.text || '';
+      if (!reply.trim() && ctx.mutations.length > 0) {
+        const followUp = await chat.sendMessage({
+          message: 'Resume al usuario en español neutro lo que acabas de hacer, con detalle de cada acción ejecutada. Sin preguntas, solo el resumen.',
+        });
+        reply = followUp.text || '';
+      }
+
       const quota = await bumpQuota(pool, userId);
       const payload: AiChatResponse = {
-        reply: response.text || '',
+        reply: reply || 'Listo.',
         mutations: ctx.mutations,
         quota,
       };
