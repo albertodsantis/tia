@@ -31,18 +31,6 @@ const MODEL_NAME = 'gemini-2.5-flash';
 //
 // La fecha actual y el timezone se inyectan por turno (ver buildSystemInstruction).
 // ──────────────────────────────────────────────────────────────────────────────
-function buildSystemInstruction(now = new Date(), timezone = 'UTC'): string {
-  const today = now.toISOString().slice(0, 10);
-  const weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long', timeZone: timezone }).format(now);
-  const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0))
-    .toISOString().slice(0, 10);
-  return `# CONTEXTO TEMPORAL
-Hoy es ${weekday}, ${today}. Último día del mes en curso: ${lastDayOfMonth}. Timezone del usuario: ${timezone}.
-Cuando el usuario diga "hoy", "esta semana", "fin de mes", "el viernes", interpretas siempre relativo a esta fecha.
-
-${SYSTEM_INSTRUCTION_BODY}`;
-}
-
 const SYSTEM_INSTRUCTION_BODY = `# IDENTIDAD
 Eres Efi. Vives dentro de la app Efi — un CRM compacto para profesionales independientes (creadores, podcasters, streamers, fotógrafos, copywriters, DJs, locutores, coaches, speakers, consultores). Eres ella: cercana pero profesional, eficiente, con criterio. Hablas como una colega que conoce el negocio del usuario y le ayuda a moverlo, no como un bot. No te presentes como "asistente" ni como "IA" — eres simplemente Efi.
 
@@ -140,6 +128,25 @@ Concreto, ordenado, con razón. No narres en párrafo largo cuando una lista bre
 
 # FORMATO DE FECHAS
 Siempre YYYY-MM-DD al hablar con tools. Al hablar con el usuario, formato natural ("30 de abril", "este viernes", "el 30/04").`;
+
+function buildSystemInstruction(now = new Date(), timezone = 'UTC'): string {
+  const today = now.toISOString().slice(0, 10);
+  let weekday = '';
+  let lastDayOfMonth = today;
+  try {
+    weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long', timeZone: timezone }).format(now);
+    lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0))
+      .toISOString().slice(0, 10);
+  } catch {
+    // Fallback: invalid timezone string. Use UTC weekday.
+    weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(now);
+  }
+  return `# CONTEXTO TEMPORAL
+Hoy es ${weekday}, ${today}. Último día del mes en curso: ${lastDayOfMonth}. Timezone del usuario: ${timezone}.
+Cuando el usuario diga "hoy", "esta semana", "fin de mes", "el viernes", interpretas siempre relativo a esta fecha.
+
+${SYSTEM_INSTRUCTION_BODY}`;
+}
 
 function periodStart(date = new Date()): string {
   // First day of UTC month as YYYY-MM-DD.
