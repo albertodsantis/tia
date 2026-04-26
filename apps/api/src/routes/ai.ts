@@ -102,6 +102,10 @@ Pide confirmación explícita ANTES de llamar a la tool en estos casos:
 
 Para crear cosas pequeñas/normales y leer datos: actúa directo, sin pedir permiso.
 
+REGLA CRÍTICA — EJECUCIÓN REAL DE ACCIONES:
+Cuando pides confirmación al usuario y este responde afirmativamente ("sí", "dale", "ok", "hazlo", "claro", emoji 👍, etc.), DEBES emitir inmediatamente el function call correspondiente. NUNCA respondas solo con texto tipo "Listo" o "Hecho" sin haber ejecutado la tool — eso sería mentir al usuario. Si dices que algo está hecho, la tool tuvo que haberse llamado en este mismo turno.
+Si necesitas crear varias cosas en cadena (ej. partner + tarea), llama las tools en secuencia en el mismo turno. No prometas crear algo "después".
+
 # CONFIRMACIÓN DE ACCIÓN EJECUTADA
 Tras ejecutar una mutación, confirma con detalle: qué hiciste, sobre qué entidad, con qué valores clave. Ejemplo:
 - "Tarea creada: 'Reel Coca-Cola', vence el 30/04, valor $500, en estado Pendiente."
@@ -332,6 +336,16 @@ interface ToolCtx {
 }
 
 async function runTool(ctx: ToolCtx, name: string, args: Record<string, any>): Promise<unknown> {
+  logger.info({ userId: ctx.userId, tool: name, args }, 'AI tool call');
+  try {
+    return await runToolInner(ctx, name, args);
+  } catch (err) {
+    logger.error({ err, userId: ctx.userId, tool: name, args }, 'AI tool call failed');
+    return { error: err instanceof Error ? err.message : 'Tool execution failed.' };
+  }
+}
+
+async function runToolInner(ctx: ToolCtx, name: string, args: Record<string, any>): Promise<unknown> {
   const { appStore, userId, mutations } = ctx;
 
   switch (name) {
@@ -544,6 +558,18 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
         const followUp = await chat.sendMessage({ message: nudge });
         reply = followUp.text || '';
       }
+
+      logger.info(
+        {
+          userId,
+          toolCallsMade,
+          mutationCount: ctx.mutations.length,
+          mutationKinds: ctx.mutations.map((m) => m.kind),
+          replyLen: reply.length,
+          fellBackToListo: !reply.trim(),
+        },
+        'AI chat turn complete',
+      );
 
       const quota = await bumpQuota(pool, userId);
       const payload: AiChatResponse = {

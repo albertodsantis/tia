@@ -1048,7 +1048,7 @@ export default function Dashboard() {
 
     sorted.forEach((task) => {
       const d = startOfLocalDay(parseLocalDate(task.dueDate));
-      if (d < startOfToday) overdue.push(task);
+      if (d < startOfToday && task.status !== 'Completada') overdue.push(task);
       else if (task.dueDate === todayIso) todayTasks.push(task);
       else if (task.dueDate === tomorrowIso) tomorrowTasks.push(task);
       else if (d <= weekEnd) thisWeekTasks.push(task);
