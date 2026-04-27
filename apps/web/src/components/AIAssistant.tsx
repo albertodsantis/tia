@@ -22,6 +22,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   const [isListening, setIsListening] = useState(false);
   const [quota, setQuota] = useState<AiQuota | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [showAttention, setShowAttention] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -30,6 +31,11 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
     const handler = () => setIsOpen(false);
     window.addEventListener('efi:close-ai', handler);
     return () => window.removeEventListener('efi:close-ai', handler);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowAttention(false), 3000);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -153,25 +159,30 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
         <button
           id="efi-assistant-btn"
           type="button"
+          aria-label="Habla con Efi"
           onClick={() => setIsOpen(true)}
           className={
             isDesktop
-              ? 'group relative flex h-12 items-center gap-3 rounded-[1rem] border border-[color:var(--line-soft)] bg-[color:var(--surface-card)] px-3 pr-4 text-[var(--text-primary)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_42px_-28px_rgba(63,43,33,0.24)] active:scale-95'
-              : 'group relative flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--line-soft)] bg-[color:var(--surface-card)] text-[var(--text-primary)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95'
+              ? 'group relative flex items-center gap-3 transition-transform hover:-translate-y-0.5 active:scale-95'
+              : 'group relative flex h-14 w-14 items-center justify-center transition-transform hover:scale-[1.04] active:scale-95'
           }
         >
           <img
             src="/brand/isotipo.png?v=2"
             alt=""
             draggable={false}
-            width={32}
-            height={32}
-            className="h-8 w-8 select-none"
+            width={56}
+            height={56}
+            className={cx(
+              'h-14 w-14 select-none origin-bottom drop-shadow-[0_8px_18px_rgba(63,43,33,0.32)]',
+              'group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused]',
+              showAttention ? 'animate-mushroom-attention' : 'animate-mushroom-idle',
+            )}
           />
           {isDesktop ? (
-            <div className="text-left">
-              <p className="text-sm font-bold text-[var(--text-primary)]">Habla con Efi</p>
-            </div>
+            <p className="text-sm font-bold text-[var(--text-primary)] drop-shadow-[0_2px_8px_rgba(255,255,255,0.6)]">
+              Habla con Efi
+            </p>
           ) : null}
         </button>
       </div>

@@ -34,19 +34,19 @@ async function makeIcon(size, outPath, { padding = 0.12, bg = null } = {}) {
   console.log(`✓ ${outPath}`);
 }
 
-await makeIcon(192, path.join(outDir, 'icon-192.png'), { padding: 0.1 });
-await makeIcon(512, path.join(outDir, 'icon-512.png'), { padding: 0.1 });
+await makeIcon(192, path.join(outDir, 'icon-192.png'), { padding: 0.05 });
+await makeIcon(512, path.join(outDir, 'icon-512.png'), { padding: 0.05 });
 await makeIcon(180, path.join(outDir, 'apple-touch-icon.png'), {
-  padding: 0.1,
+  padding: 0.05,
   bg: { r: 24, g: 24, b: 27, alpha: 1 },
 });
 
 await makeIcon(192, path.join(outDir, 'icon-192-maskable.png'), {
-  padding: 0.2,
+  padding: 0.05,
   bg: { r: 24, g: 24, b: 27, alpha: 1 },
 });
 await makeIcon(512, path.join(outDir, 'icon-512-maskable.png'), {
-  padding: 0.2,
+  padding: 0.05,
   bg: { r: 24, g: 24, b: 27, alpha: 1 },
 });
 

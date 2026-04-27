@@ -109,11 +109,11 @@ async function pwaIcon(size, outPath, { padding = 0.1, bg = null } = {}) {
   console.log(`✓ ${outPath}`);
 }
 
-await pwaIcon(192, path.join(pwaOut, 'icon-192.png'), { padding: 0.1 });
-await pwaIcon(512, path.join(pwaOut, 'icon-512.png'), { padding: 0.1 });
-await pwaIcon(180, path.join(pwaOut, 'apple-touch-icon.png'), { padding: 0.1, bg: BRAND_BG_DARK });
-await pwaIcon(192, path.join(pwaOut, 'icon-192-maskable.png'), { padding: 0.2, bg: BRAND_BG_DARK });
-await pwaIcon(512, path.join(pwaOut, 'icon-512-maskable.png'), { padding: 0.2, bg: BRAND_BG_DARK });
+await pwaIcon(192, path.join(pwaOut, 'icon-192.png'), { padding: 0.05 });
+await pwaIcon(512, path.join(pwaOut, 'icon-512.png'), { padding: 0.05 });
+await pwaIcon(180, path.join(pwaOut, 'apple-touch-icon.png'), { padding: 0.05, bg: BRAND_BG_DARK });
+await pwaIcon(192, path.join(pwaOut, 'icon-192-maskable.png'), { padding: 0.05, bg: BRAND_BG_DARK });
+await pwaIcon(512, path.join(pwaOut, 'icon-512-maskable.png'), { padding: 0.05, bg: BRAND_BG_DARK });
 
 const ogSize = { w: 1200, h: 630 };
 const ogIconSize = 380;

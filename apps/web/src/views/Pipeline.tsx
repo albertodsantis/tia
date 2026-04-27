@@ -1430,7 +1430,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
         >
           {isUpdating && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[inherit] bg-[var(--surface-card)]/60 backdrop-blur-[2px]">
-              <LoadingMushroom size={28} />
+              <LoadingMushroom size={56} />
             </div>
           )}
           <div className="flex items-start justify-between gap-3">

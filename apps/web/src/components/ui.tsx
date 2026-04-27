@@ -508,7 +508,7 @@ export function Avatar({
 }
 
 export function LoadingMushroom({
-  size = 40,
+  size = 64,
   className,
 }: {
   size?: number;

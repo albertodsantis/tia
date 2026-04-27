@@ -8,6 +8,8 @@
   --animate-shimmer: shimmer 3s infinite;
   --animate-check-pop: check-pop 0.22s ease-out;
   --animate-mushroom-wobble: mushroom-wobble 1.4s ease-in-out infinite;
+  --animate-mushroom-idle: mushroom-idle 4.5s ease-in-out infinite;
+  --animate-mushroom-attention: mushroom-attention 1s ease-in-out 3;
   --animate-mushroom-stroll: mushroom-stroll 7s ease-in-out infinite;
   --animate-pill-walk: pill-walk 0.85s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 
@@ -26,6 +28,19 @@
   @keyframes mushroom-wobble {
     0%, 100% { transform: rotate(-8deg); }
     50%      { transform: rotate(8deg); }
+  }
+
+  @keyframes mushroom-idle {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50%      { transform: translateY(-3px) rotate(2deg); }
+  }
+
+  @keyframes mushroom-attention {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    20%      { transform: translateY(-5px) rotate(-10deg); }
+    40%      { transform: translateY(-2px) rotate(8deg); }
+    60%      { transform: translateY(-4px) rotate(-6deg); }
+    80%      { transform: translateY(-1px) rotate(4deg); }
   }
 
   @keyframes mushroom-stroll {
@@ -66,6 +81,13 @@
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-mushroom-idle,
+  .animate-mushroom-attention {
+    animation: none !important;
   }
 }
 

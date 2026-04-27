@@ -173,7 +173,7 @@ function usePullToRefresh(onRefresh: () => Promise<void>) {
 
 const LazyFallback = () => (
   <div className="flex flex-1 items-center justify-center py-16">
-    <LoadingMushroom size={40} />
+    <LoadingMushroom size={72} />
   </div>
 );
 
