@@ -1,3 +1,26 @@
+import {
+  ALLOWED_CONIC_KEYS,
+  ALLOWED_GRADIENT_KEYS,
+  ALLOWED_RETRO_KEYS,
+  type ConicKey,
+  type GradientKey,
+  type RetroKey,
+} from '@shared';
+
+const GRADIENT_KEY_SET = new Set<string>(ALLOWED_GRADIENT_KEYS);
+const CONIC_KEY_SET = new Set<string>(ALLOWED_CONIC_KEYS);
+const RETRO_KEY_SET = new Set<string>(ALLOWED_RETRO_KEYS);
+
+function asGradientKey(value: string): GradientKey | null {
+  return GRADIENT_KEY_SET.has(value) ? (value as GradientKey) : null;
+}
+function asConicKey(value: string): ConicKey | null {
+  return CONIC_KEY_SET.has(value) ? (value as ConicKey) : null;
+}
+function asRetroKey(value: string): RetroKey | null {
+  return RETRO_KEY_SET.has(value) ? (value as RetroKey) : null;
+}
+
 export const ACCENT_OPTIONS = [
   { name: 'Efi', value: 'gradient:efi' },
   { name: 'Vintage TV', value: 'retro:crt' },
@@ -17,7 +40,7 @@ export const ACCENT_OPTIONS = [
 export const DEFAULT_ACCENT = 'gradient:instagram';
 
 // Retro presets — stored as "retro:<key>" in the database
-const RETRO_PRESETS: Record<string, { representative: string; swatch: string }> = {
+const RETRO_PRESETS: Record<RetroKey, { representative: string; swatch: string }> = {
   crt: {
     representative: '#FFB000',
     swatch: 'radial-gradient(ellipse at 42% 38%, #FFD966 0%, #FFB000 35%, #7A4F00 70%, #140900 100%)',
@@ -25,7 +48,7 @@ const RETRO_PRESETS: Record<string, { representative: string; swatch: string }> 
 };
 
 // Gradient presets — stored as "gradient:<key>" in the database
-const GRADIENT_PRESETS: Record<string, { gradient: string; representative: string }> = {
+const GRADIENT_PRESETS: Record<GradientKey, { gradient: string; representative: string }> = {
   efi: {
     gradient: 'linear-gradient(180deg, #FF1E7A 0%, #FF4D3D 55%, #FFA500 100%)',
     representative: '#FF1E7A',
@@ -41,7 +64,7 @@ const GRADIENT_PRESETS: Record<string, { gradient: string; representative: strin
 };
 
 // Conic presets — swatch shows brand colors as pie sections, accent uses representative hex
-const CONIC_PRESETS: Record<string, { conic: string; representative: string; secondary?: string }> = {
+const CONIC_PRESETS: Record<ConicKey, { conic: string; representative: string; secondary?: string }> = {
   tiktok: {
     conic: 'conic-gradient(#25F4EE 0deg 180deg, #FE2C55 180deg 360deg)',
     representative: '#FE2C55',
@@ -62,17 +85,20 @@ export function isConicAccent(value: string): boolean {
 }
 
 export function getGradientCss(value: string): string | null {
-  const key = value.replace('gradient:', '');
-  return GRADIENT_PRESETS[key]?.gradient ?? null;
+  const key = asGradientKey(value.replace('gradient:', ''));
+  return key ? GRADIENT_PRESETS[key].gradient : null;
 }
 
 export function getConicCss(value: string): string | null {
-  const key = value.replace('conic:', '');
-  return CONIC_PRESETS[key]?.conic ?? null;
+  const key = asConicKey(value.replace('conic:', ''));
+  return key ? CONIC_PRESETS[key].conic : null;
 }
 
 export function getSwatchCss(value: string): string {
-  if (isRetroAccent(value)) return RETRO_PRESETS[value.replace('retro:', '')]?.swatch ?? value;
+  if (isRetroAccent(value)) {
+    const key = asRetroKey(value.replace('retro:', ''));
+    return key ? RETRO_PRESETS[key].swatch : value;
+  }
   if (isGradientAccent(value)) return getGradientCss(value) || value;
   if (isConicAccent(value)) return getConicCss(value) || value;
   return value;
@@ -80,21 +106,22 @@ export function getSwatchCss(value: string): string {
 
 export function getAccentSecondary(value: string): string | null {
   if (!isConicAccent(value)) return null;
-  return CONIC_PRESETS[value.replace('conic:', '')]?.secondary ?? null;
+  const key = asConicKey(value.replace('conic:', ''));
+  return key ? CONIC_PRESETS[key].secondary ?? null : null;
 }
 
 export function getRepresentativeHex(value: string): string {
   if (isRetroAccent(value)) {
-    const key = value.replace('retro:', '');
-    return RETRO_PRESETS[key]?.representative ?? '#FF1E7A';
+    const key = asRetroKey(value.replace('retro:', ''));
+    return key ? RETRO_PRESETS[key].representative : '#FF1E7A';
   }
   if (isGradientAccent(value)) {
-    const key = value.replace('gradient:', '');
-    return GRADIENT_PRESETS[key]?.representative ?? '#FF1E7A';
+    const key = asGradientKey(value.replace('gradient:', ''));
+    return key ? GRADIENT_PRESETS[key].representative : '#FF1E7A';
   }
   if (isConicAccent(value)) {
-    const key = value.replace('conic:', '');
-    return CONIC_PRESETS[key]?.representative ?? '#FF1E7A';
+    const key = asConicKey(value.replace('conic:', ''));
+    return key ? CONIC_PRESETS[key].representative : '#FF1E7A';
   }
   return value;
 }
@@ -363,8 +390,9 @@ export function getAccentCssVariables(value: string) {
     ? getGradientCss(value)
     : hex;
 
-  const secondary = isConicAccent(value)
-    ? (CONIC_PRESETS[value.replace('conic:', '')]?.secondary ?? 'transparent')
+  const conicKey = isConicAccent(value) ? asConicKey(value.replace('conic:', '')) : null;
+  const secondary = conicKey
+    ? (CONIC_PRESETS[conicKey].secondary ?? 'transparent')
     : 'transparent';
 
   return {

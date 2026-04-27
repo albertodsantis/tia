@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import type pg from 'pg';
 import {
+  ALLOWED_CONIC_KEYS,
+  ALLOWED_GRADIENT_KEYS,
+  ALLOWED_RETRO_KEYS,
   createDefaultEfiProfile,
   createEmptySocialProfiles,
   getPartnerLookupKey,
@@ -101,9 +104,9 @@ function normalizeEmail(email: string | undefined) {
   return normalized.toLowerCase();
 }
 
-const ALLOWED_GRADIENTS = new Set(['instagram', 'dawn']);
-const ALLOWED_CONICS = new Set(['tiktok']);
-const ALLOWED_RETROS = new Set(['crt']);
+const ALLOWED_GRADIENTS = new Set<string>(ALLOWED_GRADIENT_KEYS);
+const ALLOWED_CONICS = new Set<string>(ALLOWED_CONIC_KEYS);
+const ALLOWED_RETROS = new Set<string>(ALLOWED_RETRO_KEYS);
 
 function normalizeAccentColor(color: string | undefined) {
   const normalized = normalizeRequiredText(color, 'El color');
