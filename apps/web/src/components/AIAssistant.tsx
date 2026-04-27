@@ -244,7 +244,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                   <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
                     {isAvailable === false
                       ? 'Efi llegará en una próxima actualización'
-                      : 'Tu copiloto para tareas, marcas y contactos'}
+                      : 'Tu copiloto para tareas, clientes y contactos'}
                   </p>
                 </div>
               </div>

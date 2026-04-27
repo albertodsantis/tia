@@ -335,6 +335,9 @@ interface ToolCtx {
   appStore: PostgresAppStore;
   userId: string;
   mutations: AiMutation[];
+  // Tracks the last result of summarize_pipeline / get_app_data so we can
+  // build a deterministic fallback if Gemini stays mute even after a nudge.
+  lastReadResult: { tool: string; data: unknown } | null;
 }
 
 async function runTool(ctx: ToolCtx, name: string, args: Record<string, any>): Promise<unknown> {
@@ -349,18 +352,21 @@ async function runTool(ctx: ToolCtx, name: string, args: Record<string, any>): P
 
 async function runToolInner(ctx: ToolCtx, name: string, args: Record<string, any>): Promise<unknown> {
   const { appStore, userId, mutations } = ctx;
+  const trackRead = (data: unknown) => { ctx.lastReadResult = { tool: name, data }; };
 
   switch (name) {
     case 'get_app_data': {
       const entity = args.entity ?? 'all';
+      let data: unknown;
       if (entity === 'tasks') {
         const tasks = await appStore.listTasks(userId);
-        return args.taskStatus ? tasks.filter((t) => t.status === args.taskStatus) : tasks;
-      }
-      if (entity === 'partners') return appStore.listPartners(userId);
-      if (entity === 'templates') return appStore.listTemplates(userId);
-      if (entity === 'profile') return appStore.getSnapshot(userId).then((s) => s.profile);
-      return appStore.getSnapshot(userId);
+        data = args.taskStatus ? tasks.filter((t) => t.status === args.taskStatus) : tasks;
+      } else if (entity === 'partners') data = await appStore.listPartners(userId);
+      else if (entity === 'templates') data = await appStore.listTemplates(userId);
+      else if (entity === 'profile') data = (await appStore.getSnapshot(userId)).profile;
+      else data = await appStore.getSnapshot(userId);
+      trackRead(data);
+      return data;
     }
 
     case 'summarize_pipeline': {
@@ -370,15 +376,19 @@ async function runToolInner(ctx: ToolCtx, name: string, args: Record<string, any
       const days14ago = new Date(Date.now() - 14 * 86400_000).toISOString();
       const overdue = tasks.filter((t) => t.dueDate < today && t.status !== 'Completada' && t.status !== 'Cobrado');
       const upcoming = tasks.filter((t) => t.dueDate >= today && t.dueDate <= in7);
+      const today_tasks = tasks.filter((t) => t.dueDate === today && t.status !== 'Completada' && t.status !== 'Cobrado');
       const stale = tasks.filter((t) => t.createdAt < days14ago && (t.status === 'Pendiente' || t.status === 'En Progreso'));
       const byStatus: Record<string, number> = {};
       tasks.forEach((t) => { byStatus[t.status] = (byStatus[t.status] ?? 0) + 1; });
-      return {
+      const summary = {
+        today: today_tasks.map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate, value: t.value, status: t.status })),
         overdue: overdue.map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate, value: t.value })),
         upcoming: upcoming.map((t) => ({ id: t.id, title: t.title, dueDate: t.dueDate, value: t.value })),
         stale: stale.map((t) => ({ id: t.id, title: t.title, status: t.status, createdAt: t.createdAt })),
         countsByStatus: byStatus,
       };
+      trackRead(summary);
+      return summary;
     }
 
     case 'add_task': {
@@ -473,6 +483,39 @@ async function runToolInner(ctx: ToolCtx, name: string, args: Record<string, any
   }
 }
 
+// Used only when Gemini stays mute even after the auto-recovery nudge.
+// We never want "Listo." to reach the user when they asked for information.
+function buildDeterministicFallback(ctx: ToolCtx): string {
+  if (ctx.mutations.length > 0) {
+    return ctx.mutations.map((m) => `✓ ${m.summary}`).join('\n');
+  }
+  if (ctx.lastReadResult) {
+    const { tool, data } = ctx.lastReadResult;
+    if (tool === 'summarize_pipeline' && data && typeof data === 'object') {
+      const d = data as { today?: any[]; overdue?: any[]; upcoming?: any[] };
+      const today = d.today ?? [];
+      const overdue = d.overdue ?? [];
+      const upcoming = d.upcoming ?? [];
+      const parts: string[] = [];
+      if (today.length > 0) {
+        parts.push(`Tienes ${today.length} tarea${today.length > 1 ? 's' : ''} para hoy: ${today.map((t: any) => `"${t.title}"`).join(', ')}.`);
+      }
+      if (overdue.length > 0) {
+        parts.push(`${overdue.length} vencida${overdue.length > 1 ? 's' : ''}: ${overdue.map((t: any) => `"${t.title}"`).join(', ')}.`);
+      }
+      if (upcoming.length > 0 && parts.length === 0) {
+        parts.push(`No tienes nada para hoy. Próximas: ${upcoming.slice(0, 3).map((t: any) => `"${t.title}"`).join(', ')}.`);
+      }
+      if (parts.length === 0) return 'No tienes tareas para hoy ni vencidas. Pipeline limpio.';
+      return parts.join(' ');
+    }
+    if (Array.isArray(data)) {
+      return `Encontré ${data.length} resultado${data.length === 1 ? '' : 's'}.`;
+    }
+  }
+  return 'Listo.';
+}
+
 export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, geminiApiKey: string | undefined) {
   const router = Router();
   router.use(requireAuth(pool));
@@ -528,7 +571,7 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
         config: { systemInstruction: buildSystemInstruction(new Date(), timezone), tools: TOOLS },
       });
 
-      const ctx: ToolCtx = { appStore, userId, mutations: [] };
+      const ctx: ToolCtx = { appStore, userId, mutations: [], lastReadResult: null };
       let response = await chat.sendMessage({ message: lastUser.text });
       let safety = 0;
       let toolCallsMade = 0;
@@ -559,6 +602,13 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
           : 'Responde ahora al usuario en español neutro con la información que acabas de consultar. Sé concreta y útil. Sin preguntas, solo la respuesta basada en los datos.';
         const followUp = await chat.sendMessage({ message: nudge });
         reply = followUp.text || '';
+
+        // Último recurso: fallback determinístico construido desde los datos
+        // que ya tenemos, así el usuario nunca ve "Listo." vacío.
+        if (!reply.trim()) {
+          logger.warn({ userId, toolCallsMade }, 'AI auto-recovery failed twice, using deterministic fallback');
+          reply = buildDeterministicFallback(ctx);
+        }
       }
 
       logger.info(
