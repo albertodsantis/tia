@@ -235,6 +235,9 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold tracking-wide text-[var(--text-primary)]">Efi</h3>
+                    <span className="shrink-0 rounded-full border border-[color:var(--line-soft)] bg-white/70 px-1.5 py-px text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-secondary)]">
+                      Beta
+                    </span>
                     {isAvailable && remaining !== null ? (
                       <StatusBadge tone="accent" className="shrink-0">
                         {remaining}/{quota!.limit}
@@ -288,6 +291,9 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                     <p className="text-sm font-medium text-[var(--text-primary)]">¿En qué te ayudo?</p>
                     <p className="max-w-[18rem] text-xs leading-5 text-[var(--text-secondary)]">
                       Pregúntame por tus tareas, mueve algo en tu pipeline o pídeme una plantilla.
+                    </p>
+                    <p className="mt-3 max-w-[18rem] text-[10px] leading-4 text-[var(--text-secondary)] opacity-70">
+                      Estoy en beta — puedo equivocarme. Verifica las acciones importantes y cuéntame si algo no salió bien.
                     </p>
                   </div>
                 ) : null}

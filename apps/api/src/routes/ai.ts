@@ -23,6 +23,67 @@ const QUOTA_LIMIT = 20;
 const MODEL_NAME = 'gemini-2.5-flash';
 
 // ──────────────────────────────────────────────────────────────────────────────
+// EFISYSTEM (gamification) — catálogos
+// Source of truth for badges and levels lives in apps/api/src/services/gamification.ts
+// and packages/shared/src/domain.ts. Mirror those changes here when they evolve.
+// ──────────────────────────────────────────────────────────────────────────────
+
+const LEVEL_THRESHOLDS_BY_LEVEL: Record<number, number> = {
+  1: 0, 2: 100, 3: 250, 4: 475, 5: 725, 6: 1000, 7: 1300, 8: 1625, 9: 1900, 10: 2200,
+  11: 2525, 12: 2875, 13: 3375, 14: 3900, 15: 4450, 16: 5025, 17: 5625, 18: 6250, 19: 7100, 20: 7975,
+  21: 8875, 22: 9800, 23: 10750, 24: 11725, 25: 12725, 26: 14100, 27: 15500, 28: 16925, 29: 18375, 30: 19850,
+  31: 21350, 32: 22875, 33: 24950, 34: 27050, 35: 29175, 36: 31325, 37: 33500, 38: 35700, 39: 37925, 40: 41000,
+  41: 44100, 42: 47225, 43: 50375, 44: 53550, 45: 58100, 46: 62675, 47: 67275, 48: 71900, 49: 78825, 50: 85775,
+};
+
+interface BadgeInfo {
+  key: string;          // BadgeKey
+  name: string;         // user-facing label
+  section: 'Primeros Pasos' | 'Hitos' | 'Hábitos' | 'Rachas' | 'Leyenda';
+  secret?: boolean;     // hidden until unlocked
+  howTo: string;        // plain-language description of how to earn it
+}
+
+const BADGE_CATALOG: BadgeInfo[] = [
+  // Primeros Pasos
+  { key: 'perfil_estelar', name: 'EfiLink Activado', section: 'Primeros Pasos', howTo: 'Activa tu EfiLink completando tu perfil público.' },
+  { key: 'primer_trazo', name: 'Primer Trazo', section: 'Primeros Pasos', howTo: 'Crea tu primera tarea en el Pipeline.' },
+  { key: 'red_inicial', name: 'Red Inicial', section: 'Primeros Pasos', howTo: 'Suma 2 clientes en tu Directorio.' },
+  { key: 'rumbo_fijo', name: 'Rumbo Fijo', section: 'Primeros Pasos', howTo: 'Define 2 objetivos en Estrategia.' },
+  { key: 'vision_clara', name: 'Visión Clara', section: 'Primeros Pasos', howTo: 'Define 3 objetivos en Estrategia.' },
+  { key: 'identidad_propia', name: 'Identidad Propia', section: 'Primeros Pasos', howTo: 'Cambia el accent color al menos 2 veces (el primer cambio es el del onboarding).' },
+  // Hitos
+  { key: 'motor_de_ideas', name: 'Motor de Ideas', section: 'Hitos', howTo: 'Crea 5 tareas en total.' },
+  { key: 'fabrica_de_proyectos', name: 'Fábrica de Proyectos', section: 'Hitos', howTo: 'Crea 25 tareas en total.' },
+  { key: 'promesa_cumplida', name: 'Promesa Cumplida', section: 'Hitos', howTo: 'Completa 10 tareas.' },
+  { key: 'creador_imparable', name: 'Creador Imparable', section: 'Hitos', howTo: 'Completa 25 tareas.' },
+  { key: 'negocio_en_marcha', name: 'Negocio en Marcha', section: 'Hitos', howTo: 'Cobra 5 tareas.' },
+  { key: 'lluvia_de_billetes', name: 'Lluvia de Billetes', section: 'Hitos', howTo: 'Cobra 20 tareas.' },
+  { key: 'circulo_intimo', name: 'Círculo Íntimo', section: 'Hitos', howTo: 'Suma 5 clientes en tu Directorio.' },
+  { key: 'directorio_dorado', name: 'Directorio Dorado', section: 'Hitos', howTo: 'Suma 10 clientes y 10 contactos.' },
+  // Hábitos
+  { key: 'madrugador', name: 'Madrugador', section: 'Hábitos', howTo: 'Crea una tarea antes de las 8am durante 5 días distintos.' },
+  { key: 'noctambulo', name: 'Noctámbulo', section: 'Hábitos', howTo: 'Crea una tarea a partir de las 11pm durante 5 días distintos.' },
+  { key: 'cierre_limpio', name: 'Cierre Limpio', section: 'Hábitos', howTo: 'Completa 5 tareas sin haber movido su fecha original.' },
+  { key: 'cobrador_implacable', name: 'Cobrador Implacable', section: 'Hábitos', howTo: 'Cobra 5 tareas dentro de los 7 días posteriores a haberlas completado.' },
+  { key: 'pipeline_zen', name: 'Pipeline Zen', section: 'Hábitos', howTo: 'Mantén 7 días seguidos sin tareas vencidas.' },
+  { key: 'visionario_cumplido', name: 'Visionario Cumplido', section: 'Hábitos', howTo: 'Lleva 3 objetivos al estado "Alcanzado" en Estrategia.' },
+  { key: 'conector', name: 'Conector', section: 'Hábitos', howTo: 'Ten 10 clientes con contacto en los últimos 30 días.' },
+  // Rachas
+  { key: 'en_la_zona', name: 'En la Zona', section: 'Rachas', howTo: 'Mantén una racha de 3 días consecutivos de actividad.' },
+  { key: 'racha_de_hierro', name: 'Racha de Hierro', section: 'Rachas', howTo: 'Mantén una racha de 7 días consecutivos.' },
+  { key: 'inamovible', name: 'Inamovible', section: 'Rachas', howTo: 'Mantén una racha de 30 días consecutivos.' },
+  { key: 'semana_perfecta', name: 'Semana Perfecta', section: 'Rachas', howTo: 'Una semana con 0 vencidas y al menos 3 completadas.' },
+  { key: 'mes_de_oro', name: 'Mes de Oro', section: 'Rachas', howTo: 'Logra 4 semanas perfectas dentro del mismo mes.' },
+  // Leyenda
+  { key: 'fundador', name: 'Fundador', section: 'Leyenda', howTo: 'Reservada para los primeros 500 usuarios de Efi.' },
+  { key: 'tres_en_un_dia', name: 'Triple Jornada', section: 'Leyenda', secret: true, howTo: 'Completa 3 tareas en un mismo día.' },
+  { key: 'cobro_finde', name: 'Fin de Semana', section: 'Leyenda', secret: true, howTo: 'Cobra una tarea un sábado o domingo.' },
+  { key: 'icono_efi', name: 'Ícono Efi', section: 'Leyenda', howTo: 'Desbloquea 25 placas en total.' },
+];
+
+
+// ──────────────────────────────────────────────────────────────────────────────
 // SYSTEM INSTRUCTION
 // Diseño en capas: identidad → tono → conocimiento del producto → reglas de
 // uso de tools → razonamiento → estilo → seguridad. Cada bloque tiene un
@@ -58,7 +119,7 @@ Conceptos del dominio:
 - **Contactos**: personas dentro de un cliente.
 - **Plantillas**: snippets de mensajes reutilizables (propuestas, follow-ups, etc.).
 - **EfiLink**: el perfil público del usuario.
-- **Efisystem (gamificación)**: la app premia el uso con puntos, niveles y badges. El usuario gana puntos al crear tareas, moverlas en el pipeline, cobrarlas, mantener racha diaria, completar el perfil, añadir clientes, etc. Los puntos suman para subir de nivel y desbloquear badges. La progresión se ve en Inicio (resumen) y los detalles en la vista del perfil/Efisystem. Tú no puedes consultar el nivel actual del usuario con tools — si te preguntan, oriéntalos a esa vista en lugar de inventar números.
+- **Efisystem (gamificación)**: la app premia el uso con puntos, niveles y placas (badges). El usuario gana puntos al crear tareas, moverlas en el pipeline, cobrarlas, mantener racha diaria, completar el perfil, añadir clientes, etc. Los puntos suman hasta el nivel 50. Hay 28 placas en total agrupadas en 5 secciones: Primeros Pasos, Hitos, Hábitos, Rachas y Leyenda. Algunas placas de la sección Leyenda son SECRETAS (no se revelan hasta desbloquearse). PUEDES consultar el nivel y placas del usuario con \`get_efisystem_status\`.
 
 Vocabulario: refiérete a las vistas con sus nombres reales ("revisa tu Pipeline", "en Directorio") cuando sea útil orientar.
 
@@ -80,6 +141,7 @@ Mapeo pregunta → tool:
 - "¿Cómo voy con [cliente X]?" → \`get_partner_detail\`
 - "Búscame el cliente del [descripción]" → \`search_partners\` con query
 - "¿Qué subtareas tengo pendientes?" / "¿qué me falta dentro de [tarea X]?" / "muéstrame mi checklist" → \`list_open_subtasks\` (con onlyTaskTitle si pregunta por una tarea concreta)
+- "¿Cuál es mi nivel?" / "¿qué placas tengo / me faltan?" / "¿cómo subo de nivel?" / "¿cuántos puntos tengo?" → \`get_efisystem_status\`
 - Lista corta de clientes → \`get_app_data\` con entity=partners
 - Lista de tareas → \`get_app_data\` con entity=tasks (filtra por taskStatus si aplica)
 - "¿Con quién no he hablado?" → \`get_app_data\` con entity=partners, razona sobre lastContactedAt
@@ -160,6 +222,15 @@ Cuando crees una plantilla y el usuario no especifique tipo, ofrece uno de estos
 - Agradecimiento de cierre (gracias por la colaboración + apertura a futuro).
 - Brief para nueva colaboración (objetivo + alcance + entregables + timing).
 Adapta el tono al tipo de cliente si tienes contexto (corporativo vs casual vs creativo). Cuando rediactes el body, usa placeholders entre llaves para los datos variables: {nombre}, {fecha}, {valor}, etc.
+
+# EFISYSTEM — RECOMENDACIONES SOBRE PLACAS Y NIVEL
+Cuando el usuario pregunte por su progreso (placas, nivel, puntos), llama \`get_efisystem_status\` y razona con los datos:
+- Si pregunta "¿qué placa puedo conseguir?" o "¿cuál es la siguiente?": elige 1 o 2 de las pendientes que sean realistas según su actividad. Prioriza Primeros Pasos antes que Leyenda. Cita el nombre de la placa y el "cómo conseguirla" en lenguaje natural.
+- Si pregunta "¿cuáles tengo?": agrupa por sección y enuméralas brevemente. No repitas las descripciones de obtención si ya están desbloqueadas.
+- Si pregunta "¿cómo subo de nivel?": menciona los puntos que le faltan al siguiente nivel y 2-3 acciones concretas que dan más puntos (cobrar tareas = 100 pts, completarlas = 50, crearlas = 25).
+- NUNCA reveles placas secretas que el usuario aún no haya desbloqueado. La tool ya las filtra de "pending"; respeta esa lista. Si pregunta directamente "¿hay placas secretas?", responde algo tipo "Sí, hay alguna secreta — descúbrela jugando" sin dar el nombre ni la condición.
+- Si está en nivel máximo (50), felicítalo y enfócate en placas pendientes.
+- No inventes placas que no estén en la respuesta de la tool. Solo existen las que devuelve.
 
 # NUNCA INVENTES SOBRE LA APP
 Si te preguntan por una feature de Efi y NO está descrita arriba en CONOCIMIENTO DEL PRODUCTO, NO digas que "no existe" ni que "no se maneja eso aquí". Eso es desinformación. En su lugar:
@@ -308,6 +379,11 @@ const TOOLS: { functionDeclarations: FunctionDeclaration[] }[] = [
           },
           required: ['partnerName'],
         },
+      },
+      {
+        name: 'get_efisystem_status',
+        description: 'Estado actual del sistema de gamificación (Efisystem) del usuario: nivel, puntos totales, puntos para el siguiente nivel, lista de placas desbloqueadas y placas que aún le faltan con su descripción de cómo conseguirlas. Úsalo para preguntas tipo "¿cuál es mi nivel?", "¿qué placa me falta?", "¿cómo subo de nivel?", "¿qué placas tengo?". Las placas secretas no se muestran en pendientes hasta que se desbloquean.',
+        parameters: { type: Type.OBJECT, properties: {} },
       },
       {
         name: 'list_open_subtasks',
@@ -649,6 +725,37 @@ async function runToolInner(ctx: ToolCtx, name: string, args: Record<string, any
               : undefined;
             return { id: t.id, title: t.title, status: t.status, dueDate: t.dueDate, value: t.value, checklist };
           }),
+        },
+      };
+      trackRead(result);
+      return result;
+    }
+
+    case 'get_efisystem_status': {
+      const snap = await appStore.getEfisystemSnapshot(userId);
+      const unlocked: Set<string> = new Set(snap.unlockedBadges);
+      const unlockedDetails = BADGE_CATALOG
+        .filter((b) => unlocked.has(b.key))
+        .map((b) => ({ key: b.key, name: b.name, section: b.section }));
+      // Pending: hide secret ones from the "what's next" list — that's the whole point.
+      const pendingDetails = BADGE_CATALOG
+        .filter((b) => !unlocked.has(b.key) && !b.secret)
+        .map((b) => ({ key: b.key, name: b.name, section: b.section, howTo: b.howTo }));
+      const nextLevelThreshold = LEVEL_THRESHOLDS_BY_LEVEL[snap.currentLevel + 1];
+      const result = {
+        level: snap.currentLevel,
+        totalPoints: snap.totalPoints,
+        nextLevelAt: nextLevelThreshold ?? null,
+        pointsToNextLevel: nextLevelThreshold != null
+          ? Math.max(0, nextLevelThreshold - snap.totalPoints)
+          : null,
+        maxLevelReached: nextLevelThreshold == null,
+        badges: {
+          unlockedCount: unlockedDetails.length,
+          totalVisible: BADGE_CATALOG.filter((b) => !b.secret).length,
+          totalIncludingSecret: BADGE_CATALOG.length,
+          unlocked: unlockedDetails,
+          pending: pendingDetails,
         },
       };
       trackRead(result);
