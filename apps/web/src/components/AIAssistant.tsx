@@ -292,6 +292,24 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                     <p className="max-w-[18rem] text-xs leading-5 text-[var(--text-secondary)]">
                       Pregúntame por tus tareas, mueve algo en tu pipeline o pídeme una plantilla.
                     </p>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
+                      {[
+                        '¿Qué tengo pendiente esta semana?',
+                        'Mueve [tarea] a En Revisión',
+                        'Añade un nuevo contacto al directorio',
+                        'Resume mi pipeline de esta semana',
+                      ].map((prompt) => (
+                        <button
+                          key={prompt}
+                          type="button"
+                          onClick={() => setInput(prompt)}
+                          disabled={inputDisabled}
+                          className="rounded-full border border-[color:var(--line-soft)] bg-white/70 px-3 py-1.5 text-xs leading-4 text-[var(--text-secondary)] transition-colors hover:border-[color:var(--accent-color)] hover:bg-white hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
                     <p className="mt-3 max-w-[18rem] text-[10px] leading-4 text-[var(--text-secondary)] opacity-70">
                       Estoy en beta — puedo equivocarme. Verifica las acciones importantes y cuéntame si algo no salió bien.
                     </p>
