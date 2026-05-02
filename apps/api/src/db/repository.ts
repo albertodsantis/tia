@@ -820,6 +820,28 @@ export class PostgresAppStore {
     return { success: (rowCount ?? 0) > 0 };
   }
 
+  async deletePartner(userId: string, partnerId: string): Promise<DeleteEntityResponse> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        'DELETE FROM tasks WHERE partner_id = $1 AND user_id = $2',
+        [partnerId, userId],
+      );
+      const { rowCount } = await client.query(
+        'DELETE FROM partners WHERE id = $1 AND user_id = $2',
+        [partnerId, userId],
+      );
+      await client.query('COMMIT');
+      return { success: (rowCount ?? 0) > 0 };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   /* ---------- PROFILE ---------- */
 
   async getProfile(userId: string): Promise<UserProfile> {

@@ -99,6 +99,7 @@ interface AppContextType extends AppState {
   findPartnerByName: (name: string) => Partner | undefined;
   ensurePartnerByName: (name: string, status?: Partner['status']) => Promise<Partner>;
   updatePartner: (partnerId: string, updates: Partial<Partner>) => Promise<void>;
+  deletePartner: (partnerId: string) => Promise<void>;
   addContact: (partnerId: string, contact: Omit<Contact, 'id'>) => Promise<void>;
   updateContact: (partnerId: string, contactId: string, updates: Partial<Contact>) => Promise<void>;
   deleteContact: (partnerId: string, contactId: string) => Promise<void>;
@@ -558,6 +559,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     }
   }, [trackError]);
 
+  const deletePartner = useCallback(async (partnerId: string) => {
+    setActionError(null);
+
+    try {
+      await appApi.deletePartner(partnerId);
+      setState((current) => ({
+        ...current,
+        partners: current.partners.filter((partner) => partner.id !== partnerId),
+        tasks: current.tasks.filter((task) => task.partnerId !== partnerId),
+      }));
+    } catch (error) {
+      trackError(error);
+    }
+  }, [trackError]);
+
   const addContact = useCallback(async (partnerId: string, contact: Omit<Contact, 'id'>) => {
     setActionError(null);
 
@@ -768,6 +784,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     findPartnerByName,
     ensurePartnerByName,
     updatePartner,
+    deletePartner,
     addContact,
     updateContact,
     deleteContact,
@@ -804,6 +821,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; onLogout: () => 
     findPartnerByName,
     ensurePartnerByName,
     updatePartner,
+    deletePartner,
     addContact,
     updateContact,
     deleteContact,

@@ -112,6 +112,7 @@ export default function Directory() {
     deleteContact,
     updatePartner,
     addPartner,
+    deletePartner,
     tasks,
     setPendingNewTaskPartner,
   } = useAppContext();
@@ -129,6 +130,8 @@ export default function Directory() {
     partnerId: string;
     contact: Contact;
   } | null>(null);
+  const [partnerPendingDeletion, setPartnerPendingDeletion] = useState<Partner | null>(null);
+  const [deletingPartnerId, setDeletingPartnerId] = useState<string | null>(null);
   const [newPartner, setNewPartner] = useState({
     name: '',
     status: 'Prospecto' as Partner['status'],
@@ -337,6 +340,22 @@ export default function Directory() {
       setEditingContact(null);
       toast.success('Contacto actualizado');
     } finally { setSaving(false); }
+  };
+
+  const handleDeletePartner = async () => {
+    if (!partnerPendingDeletion) return;
+    setDeletingPartnerId(partnerPendingDeletion.id);
+    try {
+      await hapticWarning();
+      await deletePartner(partnerPendingDeletion.id);
+      if (selectedPartnerId === partnerPendingDeletion.id) {
+        setSelectedPartnerId(null);
+      }
+      toast.info(`${partnerPendingDeletion.name} eliminado del directorio`);
+    } finally {
+      setDeletingPartnerId(null);
+      setPartnerPendingDeletion(null);
+    }
   };
 
   const handleDeleteContact = async () => {
@@ -549,7 +568,7 @@ export default function Directory() {
               <div className="border-t border-[color:var(--line-soft)] bg-[var(--surface-muted)]/50 p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div className="flex items-baseline gap-3">
-                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Próximos deliverables</h3>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Próximos</h3>
                   <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--text-secondary)]/70 sm:inline-block">Pipeline abierto</span>
                 </div>
                 <StatusBadge tone="neutral">{openTasks.length} abiertas</StatusBadge>
@@ -690,6 +709,17 @@ export default function Directory() {
         />
       ) : null}
 
+      {partnerPendingDeletion ? (
+        <ConfirmDialog
+          title="Eliminar cliente"
+          description={`Se eliminará a ${partnerPendingDeletion.name} del directorio junto con sus contactos y tareas asociadas. Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          onConfirm={() => void handleDeletePartner()}
+          onClose={() => setPartnerPendingDeletion(null)}
+          isConfirming={deletingPartnerId === partnerPendingDeletion.id}
+        />
+      ) : null}
+
       {editingPartner && (
         <OverlayModal tone="slate" onClose={() => setEditingPartner(null)}>
           <ModalPanel title="Editar cliente" description="Modifica los detalles del acuerdo comercial de este cliente." onClose={() => setEditingPartner(null)} size="lg">
@@ -771,7 +801,22 @@ export default function Directory() {
                   </div>
                 </div>
               </div>
-              <Button type="submit" accentColor={accentGradient} className="w-full" disabled={saving}>Guardar cambios</Button>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  tone="danger"
+                  onClick={() => {
+                    setPartnerPendingDeletion(editingPartner);
+                    setEditingPartner(null);
+                  }}
+                  className="px-4"
+                  aria-label="Eliminar cliente"
+                  disabled={saving || deletingPartnerId === editingPartner.id}
+                >
+                  <Trash size={18} />
+                </Button>
+                <Button type="submit" accentColor={accentGradient} className="flex-1 justify-center" disabled={saving}>Guardar cambios</Button>
+              </div>
             </form>
           </ModalPanel>
         </OverlayModal>

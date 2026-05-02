@@ -183,6 +183,10 @@ export const appApi = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  deletePartner: (partnerId: string) =>
+    apiRequest<DeleteEntityResponse>(`/api/v1/partners/${partnerId}`, {
+      method: 'DELETE',
+    }),
   addContact: (partnerId: string, payload: CreateContactRequest) =>
     apiRequest<ContactWithAward>(`/api/v1/partners/${partnerId}/contacts`, {
       method: 'POST',

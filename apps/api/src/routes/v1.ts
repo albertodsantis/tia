@@ -288,6 +288,20 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
     }
   });
 
+  router.delete('/partners/:partnerId', async (req, res) => {
+    if (rejectInvalidUUID(res, req.params.partnerId)) return;
+    try {
+      const result = await appStore.deletePartner(getUserId(req), req.params.partnerId);
+      if (!result.success) {
+        return res.status(404).json({ error: 'Partner not found' });
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Delete partner error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   router.post('/partners/:partnerId/contacts', async (req, res) => {
     if (rejectInvalidUUID(res, req.params.partnerId)) return;
     try {
