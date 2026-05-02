@@ -1,23 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Article,
-  Briefcase,
-  Broadcast,
-  Camera,
   ChartBar,
   CalendarDots,
-  ChatsCircle,
-  Compass,
   Eye,
   EyeSlash,
   Kanban,
-  Microphone,
-  MonitorPlay,
-  MusicNotes,
-  Presentation,
-  Radio,
   Sparkle,
-  Star,
   Users,
 } from '@phosphor-icons/react';
 import type { SessionUser } from '@shared';
@@ -34,21 +22,6 @@ const BRAND_GOLD = '#FCAF45';
 const BRAND_ORANGE = '#F56040';
 const BRAND_PINK = '#E1306C';
 const BRAND_PURPLE = '#833AB4';
-
-const professions = [
-  { label: 'Creador de contenido', Icon: Star },
-  { label: 'Podcaster',            Icon: Microphone },
-  { label: 'Streamer',             Icon: MonitorPlay },
-  { label: 'Radio',                Icon: Radio },
-  { label: 'Fotógrafo',            Icon: Camera },
-  { label: 'Copywriter',           Icon: Article },
-  { label: 'Community Manager',    Icon: ChatsCircle },
-  { label: 'Host / Presentador',   Icon: Broadcast },
-  { label: 'Conferencista',        Icon: Presentation },
-  { label: 'Músico',               Icon: MusicNotes },
-  { label: 'Reclutador',           Icon: Briefcase },
-  { label: 'Asesoría / Consultoría',                Icon: Compass },
-];
 
 const features = [
   {
@@ -82,118 +55,6 @@ const features = [
     description: 'Consulta asistida por inteligencia artificial integrada.',
   },
 ];
-
-/* ── ProfessionsMarquee ─────────────────────────────────────── */
-
-type Profession = (typeof professions)[number];
-
-function ProfessionsMarquee({ professions }: { professions: Profession[] }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isInteractingRef = useRef(false);
-  const dragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
-  const [pressedIndex, setPressedIndex] = useState<number | null>(null);
-
-  const setInteracting = (value: boolean) => {
-    isInteractingRef.current = value;
-  };
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    let animationId: number;
-    let scrollPos = el.scrollLeft;
-    const speed = 0.315;
-
-    const scroll = () => {
-      if (!isInteractingRef.current) {
-        scrollPos += speed;
-        const maxScroll = el.scrollWidth / 2;
-        if (scrollPos >= maxScroll) scrollPos -= maxScroll;
-        el.scrollLeft = scrollPos;
-      } else {
-        scrollPos = el.scrollLeft;
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-
-    animationId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animationId);
-  }, []);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setInteracting(true);
-    if (e.pointerType === 'mouse') {
-      dragRef.current.isDragging = true;
-      dragRef.current.startX = e.pageX;
-      dragRef.current.scrollLeft = containerRef.current?.scrollLeft || 0;
-    }
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragRef.current.isDragging || !containerRef.current) return;
-    e.preventDefault();
-    containerRef.current.scrollLeft =
-      dragRef.current.scrollLeft - (e.pageX - dragRef.current.startX) * 1.5;
-  };
-
-  const handlePointerUp = () => {
-    dragRef.current.isDragging = false;
-    setInteracting(false);
-  };
-
-  const displayProfessions = React.useMemo(() => {
-    const all = Array(8).fill(professions).flat() as Profession[];
-    return all.map((p) => ({
-      ...p,
-      delay: Math.random() * 0.9,
-      duration: 0.75 + Math.random() * 0.35,
-      hopHeight: 5 + Math.random() * 5,
-    }));
-  }, [professions]);
-
-  return (
-    <div className="relative flex items-center overflow-x-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-      <div
-        ref={containerRef}
-        className="hide-scrollbar flex w-full cursor-grab select-none items-center gap-3 overflow-x-auto overflow-y-visible py-4 px-4 active:cursor-grabbing"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        onMouseEnter={() => setInteracting(true)}
-        onMouseLeave={() => setInteracting(false)}
-      >
-        {displayProfessions.map(({ label, Icon, delay, duration, hopHeight }, i) => {
-          const isPressed = pressedIndex === i;
-          return (
-            <span
-              key={i}
-              onPointerDown={() => setPressedIndex(i)}
-              onPointerUp={() => setPressedIndex(null)}
-              onPointerLeave={() => setPressedIndex((cur) => (cur === i ? null : cur))}
-              onPointerCancel={() => setPressedIndex(null)}
-              className={cx(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-full border bg-(--surface-card)/60 px-3 py-1.5 text-[12px] font-semibold text-(--text-secondary) border-(--line-soft) animate-pill-walk transition-[transform,opacity] duration-150',
-                isPressed && '[animation-play-state:paused] scale-95 opacity-90',
-              )}
-              style={
-                {
-                  animationDelay: `${delay}s`,
-                  animationDuration: `${duration}s`,
-                  '--hop-height': `${hopHeight}px`,
-                } as React.CSSProperties
-              }
-            >
-              <Icon size={13} />
-              {label}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function Landing({
   onLogin,
@@ -344,13 +205,17 @@ export default function Landing({
               }}
             />
             Beta
+            <span aria-hidden className="opacity-40">·</span>
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK})`,
+              }}
+            >
+              Gratis
+            </span>
           </span>
         </nav>
-
-        {/* Professions marquee — full-bleed, above the hero */}
-        <div className="relative mx-[calc(50%-50vw)] w-screen">
-          <ProfessionsMarquee professions={professions} />
-        </div>
 
         {/* Hero + Login */}
         <div className="mt-2 grid items-start gap-12 sm:mt-4 lg:grid-cols-[1fr_420px] lg:gap-16 xl:grid-cols-[1fr_460px]">
