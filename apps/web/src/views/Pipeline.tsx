@@ -1438,7 +1438,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: accentGradient }} />
                 <p className="truncate text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
-                  {partner?.name || 'Sin marca'}
+                  {partner?.name || 'Sin cliente'}
                 </p>
               </div>
               <h3 className="mt-2 text-sm font-bold leading-5 text-[var(--text-primary)]">
@@ -1579,7 +1579,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-bold tracking-[0.16em] text-[var(--text-secondary)]/70 uppercase">
-              {partner?.name || 'Sin marca'}
+              {partner?.name || 'Sin cliente'}
             </p>
             {gcalConnected && task.gcalEventId ? (
               <span className="rounded-[0.75rem] bg-emerald-50 px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-emerald-600 uppercase dark:bg-emerald-500/15 dark:text-emerald-300">
@@ -1800,7 +1800,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
             <MagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
             <input
               type="text"
-              placeholder="Buscar en tareas o marcas..."
+              placeholder="Buscar en tareas o clientes..."
               value={searchQuery}
               onChange={(event) => setMagnifyingGlassQuery(event.target.value)}
               className="w-full rounded-[1rem] border bg-[var(--surface-muted)] py-3 pl-10 pr-4 text-base sm:text-sm font-medium text-[var(--text-primary)] transition-all placeholder:text-[var(--text-secondary)]/70 focus:border-transparent focus:bg-[var(--surface-card)] focus:outline-none focus:ring-2 [border-color:var(--line-soft)]"
@@ -2347,7 +2347,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
               <div className="sm:col-span-2">
                 <label className="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-[var(--text-secondary)]/70 uppercase">
                   <Buildings size={14} />
-                  Partner o marca
+                  Partner o cliente
                 </label>
                 <div className="relative">
                   <input
@@ -2364,7 +2364,7 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
                     }}
                     className={cx(fieldClass, 'bg-[var(--surface-card)]')}
                     style={{ '--tw-ring-color': accentHex } as React.CSSProperties}
-                    placeholder="Busca en Directorio o escribe una marca nueva"
+                    placeholder="Busca en Directorio o escribe un cliente nuevo"
                   />
 
                   {shouldShowPartnerSuggestions ? (
@@ -2410,8 +2410,8 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
                   {selectedPartner
                     ? `Se vinculara con ${selectedPartner.name}, existente en el directorio.`
                     : shouldCreatePartnerOnSave
-                      ? `No existe todavia. ${form.partnerName.trim()} se creara como nueva marca.`
-                      : 'Selecciona una marca existente o escribe una nueva.'}
+                      ? `No existe todavia. ${form.partnerName.trim()} se creara como nuevo cliente.`
+                      : 'Selecciona un cliente existente o escribe uno nuevo.'}
                 </p>
               </div>
 

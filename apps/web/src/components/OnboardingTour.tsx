@@ -105,7 +105,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           },
           {
             target: '#nav-directory',
-            content: 'El directorio te da contexto de marca, contactos y outreach sin salir del workspace.',
+            content: 'El directorio te da contexto de cliente, contactos y outreach sin salir del workspace.',
           },
           {
             target: '#nav-strategic',
@@ -140,7 +140,7 @@ export default function OnboardingTour({ forceRun }: { forceRun?: boolean }) {
           },
           {
             target: '#nav-directory',
-            content: 'El directorio te da contexto de marca, contactos y outreach sin salir del workspace.',
+            content: 'El directorio te da contexto de cliente, contactos y outreach sin salir del workspace.',
             placement: 'top',
           },
           {

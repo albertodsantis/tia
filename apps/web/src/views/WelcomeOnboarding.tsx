@@ -237,10 +237,10 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
             inputRef={partnerRef}
             icon={<Buildings size={28} weight="duotone" style={{ color: 'var(--accent-color)' }} />}
             title="¿Con quién estás trabajando?"
-            subtitle="Escribe el nombre de una marca o cliente con el que colaboras ahora mismo."
+            subtitle="Escribe el nombre de un cliente con el que colaboras ahora mismo."
             value={partnerName}
             onChange={setPartnerName}
-            placeholder="Ej. Nike, Marca Bonita, Juan García…"
+            placeholder="Ej. Nike, Estudio Bonito, Juan García…"
             ctaLabel="Continuar"
             onNext={handlePartnerNext}
           />

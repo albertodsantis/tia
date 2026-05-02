@@ -182,7 +182,7 @@ function TaskCard({
           <StatusBadge tone={statusToneMap[task.status]}>{task.status}</StatusBadge>
         </div>
         <p className="mt-1.5 text-[11px] font-medium text-[var(--text-secondary)]">
-          {partner?.name || 'Sin marca'} · {formatTaskDate(task)}
+          {partner?.name || 'Sin cliente'} · {formatTaskDate(task)}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -1377,7 +1377,7 @@ export default function Dashboard() {
             <EmptyState
               icon={CalendarDot}
               title="Día libre de entregas"
-              description="Aprovecha el tiempo para prospectar nuevas marcas o planificar contenido."
+              description="Aprovecha el tiempo para prospectar nuevos clientes o planificar contenido."
               className="py-10"
             />
           )}

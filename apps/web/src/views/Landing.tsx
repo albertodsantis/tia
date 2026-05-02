@@ -222,19 +222,19 @@ export default function Landing({
           {/* Left: Hero */}
           <div className="max-w-2xl">
             <h1 className="mt-2 text-[clamp(2.2rem,5.5vw,3.8rem)] font-black leading-[1.08] tracking-tight text-[var(--text-primary)]">
-              El lado fácil de ser{' '}
+              El lado fácil de{' '}
               <span
                 className="bg-clip-text text-transparent"
                 style={{
                   backgroundImage: `linear-gradient(135deg, ${BRAND_ORANGE}, ${BRAND_PINK}, ${BRAND_PURPLE})`,
                 }}
               >
-                freelance.
+                gestionar tu trabajo.
               </span>
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-7 text-(--text-primary) sm:text-lg sm:leading-8">
-              <strong className="font-semibold">Organiza tus tareas</strong>, <strong className="font-semibold">gestiona tus clientes</strong> y <strong className="font-semibold">crea tu perfil público</strong>. Efi es un espacio fácil de usar, diseñado para profesionales independientes.
+              Organiza <strong className="font-semibold">tus tareas</strong>, <strong className="font-semibold">tus clientes</strong> y <strong className="font-semibold">tu presencia</strong>. Simple, todo en un solo lugar.
             </p>
 
             {/* Feature grid - visible on desktop below hero */}
@@ -570,7 +570,7 @@ export default function Landing({
         <div className="border-t py-8 [border-color:var(--line-soft)] lg:mt-16">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
             <p className="text-xs text-(--text-secondary)/60">
-              © {new Date().getFullYear()} Efi - workspace operativo para freelancers.
+              © {new Date().getFullYear()} Efi - workspace operativo para profesionales.
             </p>
             <div className="flex items-center gap-4">
               {([

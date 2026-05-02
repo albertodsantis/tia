@@ -96,9 +96,10 @@ function TermsContent() {
 
       <Section title="Descripción del servicio">
         <p>
-          Efi es una plataforma de CRM personal diseñada para freelancers. Permite gestionar
-          relaciones con clientes y colaboradores, hacer seguimiento de proyectos y organizar
-          tareas. Es un espacio personal - no existe colaboración entre cuentas.
+          Efi es una plataforma de CRM personal para profesionales que gestionan su propio
+          trabajo. Permite gestionar relaciones con clientes y colaboradores, hacer seguimiento
+          de proyectos y organizar tareas. Es un espacio personal - no existe colaboración
+          entre cuentas.
         </p>
       </Section>
 
@@ -206,11 +207,11 @@ function FaqContent() {
   const items = [
     {
       q: '¿Qué es Efi?',
-      a: 'Efi es un CRM personal para freelancers. Te ayuda a gestionar tus proyectos con clientes, hacer seguimiento de entregas y mantener tus contactos organizados en un solo lugar.',
+      a: 'Efi es un CRM personal para profesionales que gestionan su propio trabajo. Te ayuda con tus proyectos, hacer seguimiento de entregas y mantener tus contactos organizados en un solo lugar.',
     },
     {
       q: '¿Cómo agrego un nuevo partner o colaboración?',
-      a: 'Ve a la sección "Directorio" o "Pipeline" y pulsa el botón de añadir. Puedes registrar datos del partner (marca, contacto, red social) y crear una colaboración con su estado y fechas.',
+      a: 'Ve a la sección "Directorio" o "Pipeline" y pulsa el botón de añadir. Puedes registrar datos del partner (cliente, contacto, red social) y crear una colaboración con su estado y fechas.',
     },
     {
       q: '¿Qué significan los estados del pipeline?',
