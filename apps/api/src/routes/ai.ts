@@ -932,6 +932,58 @@ function buildDeterministicFallback(ctx: ToolCtx): string {
   return 'Listo.';
 }
 
+const SUGGESTIONS_INSTRUCTION = `Eres un generador de follow-up chips para un asistente de CRM llamado Efi.
+Dado el último intercambio (mensaje del usuario + respuesta del asistente), devuelve entre 0 y 3 sugerencias de respuesta breves que el USUARIO podría querer enviarle al asistente como siguiente mensaje.
+
+REGLAS:
+- Cada sugerencia: máximo 6 palabras, en español neutro, escrita desde la voz del usuario ("Mover a Cobrado", "Ver detalle", "Crear otra tarea").
+- Acciones siguientes naturales y CONTEXTUALIZADAS al intercambio. Nunca genéricas tipo "Ayúdame" o "Gracias".
+- Si el asistente acaba de hacer una pregunta, las sugerencias son posibles respuestas a esa pregunta.
+- Si el asistente listó opciones numeradas, las sugerencias pueden ser "La 1", "La 2", "La 3".
+- Si la conversación se siente cerrada (el usuario agradeció, cerró tema, recibió confirmación final sin más camino natural), devuelve array vacío.
+- No uses em dash (—). No uses emojis.
+- Devuelve SOLO JSON válido con la forma {"suggestions": ["...", "..."]}.`;
+
+async function generateSuggestions(
+  ai: GoogleGenAI,
+  userMessage: string,
+  assistantReply: string,
+): Promise<string[]> {
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: [
+        { role: 'user', parts: [{ text: `Usuario: ${userMessage}\n\nAsistente: ${assistantReply}` }] },
+      ],
+      config: {
+        systemInstruction: SUGGESTIONS_INSTRUCTION,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            suggestions: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+          },
+          required: ['suggestions'],
+        },
+      },
+    });
+    const raw = response.text || '';
+    const parsed = JSON.parse(raw) as { suggestions?: unknown };
+    if (!Array.isArray(parsed.suggestions)) return [];
+    return parsed.suggestions
+      .filter((s): s is string => typeof s === 'string')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && s.length <= 60)
+      .slice(0, 3);
+  } catch (err) {
+    logger.warn({ err }, 'AI suggestions generation failed');
+    return [];
+  }
+}
+
 export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, geminiApiKey: string | undefined) {
   const router = Router();
   router.use(requireAuth(pool));
@@ -1041,10 +1093,13 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
       );
 
       const quota = await bumpQuota(pool, userId);
+      const finalReply = reply || 'Listo.';
+      const suggestions = await generateSuggestions(ai, lastUser.text, finalReply);
       const payload: AiChatResponse = {
-        reply: reply || 'Listo.',
+        reply: finalReply,
         mutations: ctx.mutations,
         quota,
+        suggestions,
       };
       res.json(payload);
     } catch (error) {

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   CircleNotch,
-  Microphone,
-  MicrophoneSlash,
   PaperPlaneRight,
   X,
 } from '@phosphor-icons/react';
@@ -19,13 +17,12 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [quota, setQuota] = useState<AiQuota | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [showAttention, setShowAttention] = useState(true);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const handler = () => setIsOpen(false);
@@ -73,44 +70,21 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
     return () => { cancelled = true; };
   }, [isOpen, isAvailable]);
 
-  useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'es-ES';
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInput((prev) => prev + (prev ? ' ' : '') + transcript);
-        setIsListening(false);
-      };
-      recognitionRef.current.onerror = () => setIsListening(false);
-      recognitionRef.current.onend = () => setIsListening(false);
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (isListening) recognitionRef.current?.stop();
-    else {
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
-
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || isProcessing) return;
 
     const nextMessages: AiMessage[] = [...messages, { role: 'user', text }];
     setMessages(nextMessages);
     setInput('');
+    setSuggestions([]);
     setIsProcessing(true);
 
     try {
       const result = await aiApi.chat({ messages: nextMessages });
       setQuota(result.quota);
       setMessages((prev) => [...prev, { role: 'model', text: result.reply || '…' }]);
+      setSuggestions(result.suggestions ?? []);
 
       // Surface mutations as toasts and refresh app state once if anything changed.
       if (result.mutations.length > 0) {
@@ -311,7 +285,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                       ))}
                     </div>
                     <p className="mt-3 max-w-[18rem] text-[10px] leading-4 text-[var(--text-secondary)] opacity-70">
-                      Estoy en beta — puedo equivocarme. Verifica las acciones importantes y cuéntame si algo no salió bien.
+                      Estoy en beta y puedo equivocarme. Verifica las acciones importantes y cuéntame si algo no salió bien.
                     </p>
                   </div>
                 ) : null}
@@ -340,6 +314,26 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                     </div>
                   ) : null}
 
+                  {!isProcessing
+                    && suggestions.length > 0
+                    && input.trim().length === 0
+                    && messages.length > 0
+                    && messages[messages.length - 1].role === 'model' ? (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => void send(suggestion)}
+                          disabled={inputDisabled}
+                          className="rounded-full border border-[color:var(--line-soft)] bg-white/70 px-3 py-1.5 text-xs leading-4 text-[var(--text-secondary)] transition-colors hover:border-[color:var(--accent-color)] hover:bg-white hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
                   <div ref={messagesEndRef} />
                 </div>
               </div>
@@ -354,22 +348,6 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                     : 'opacity-60',
                 )}
               >
-                {'SpeechRecognition' in window || 'webkitSpeechRecognition' in window ? (
-                  <button
-                    type="button"
-                    onClick={toggleListening}
-                    disabled={inputDisabled}
-                    className={cx(
-                      'flex h-10 w-10 items-center justify-center rounded-[0.9rem] transition-colors disabled:cursor-not-allowed',
-                      isListening
-                        ? 'bg-rose-100 text-rose-600'
-                        : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]',
-                    )}
-                  >
-                    {isListening ? <Microphone size={18} className="animate-pulse" /> : <MicrophoneSlash size={18} />}
-                  </button>
-                ) : null}
-
                 <input
                   type="text"
                   value={inputDisabled && quotaExhausted ? '' : input}
@@ -379,7 +357,7 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
                     quotaExhausted
                       ? 'Cuota agotada hasta el próximo mes'
                       : isAvailable
-                      ? 'Escribe o habla con Efi...'
+                      ? 'Habla con Efi...'
                       : ''
                   }
                   disabled={inputDisabled}

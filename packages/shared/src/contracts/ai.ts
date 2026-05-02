@@ -34,6 +34,8 @@ export interface AiChatResponse {
   reply: string;
   mutations: AiMutation[];
   quota: AiQuota;
+  // Contextual follow-up chips. Empty when conversation feels closed.
+  suggestions: string[];
 }
 
 export interface AiQuota {
