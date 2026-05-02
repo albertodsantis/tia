@@ -179,48 +179,48 @@ function evaluateScaling(s: Omit<AdminStats, 'scaling'>): ScalingAlert[] {
     });
   }
 
-  // Railway RAM — límite 500 MB en Free. Warn 350 (70%), danger 450 (90%).
+  // Railway RAM — límite 8 GB por replica en Hobby. Warn 5700 (~70%), danger 7370 (~90%).
   const rssMb = s.memory.rssMb;
-  const ramLimit = 500;
+  const ramLimit = 8192;
   const ramPct = Math.round((rssMb / ramLimit) * 100);
   alerts.push({
     service: 'Railway RAM',
-    level: rssMb >= 450 ? 'danger' : rssMb >= 350 ? 'warn' : 'ok',
-    title: `${rssMb} MB RSS / ${ramLimit} MB plan Free`,
+    level: rssMb >= 7370 ? 'danger' : rssMb >= 5700 ? 'warn' : 'ok',
+    title: `${rssMb} MB RSS / ${ramLimit} MB plan Hobby`,
     detail:
-      rssMb >= 450
+      rssMb >= 7370
         ? `${ramPct}% — riesgo de OOM kill`
-        : rssMb >= 350
+        : rssMb >= 5700
           ? `${ramPct}% — picos podrían saturar`
           : `${ramPct}% — estable`,
     action:
-      rssMb >= 450
-        ? 'Upgrade Railway a Hobby ($5/mes, 8 GB RAM) YA'
-        : rssMb >= 350
-          ? 'Vigilar logs por OOM; planificar upgrade a Hobby'
+      rssMb >= 7370
+        ? 'Subir a Pro o escalar a más replicas YA'
+        : rssMb >= 5700
+          ? 'Vigilar logs por OOM; revisar consumo de memoria'
           : 'Sin acción',
-    link: rssMb >= 350 ? 'https://railway.app' : undefined,
+    link: rssMb >= 5700 ? 'https://railway.app' : undefined,
   });
 
-  // Railway — escala con usuarios activos. Doc: "antes de 100-200 usuarios activos".
+  // Railway — escala con usuarios activos. Hobby aguanta más, pero vigilar concurrencia a partir de 1k MAU.
   const mau = s.users.mau;
   alerts.push({
     service: 'Railway carga',
-    level: mau >= 200 ? 'danger' : mau >= 100 ? 'warn' : 'ok',
+    level: mau >= 2000 ? 'danger' : mau >= 1000 ? 'warn' : 'ok',
     title: `${mau} usuarios activos (MAU)`,
     detail:
-      mau >= 200
-        ? `>200 MAU — plan Free insuficiente bajo concurrencia`
-        : mau >= 100
-          ? `entre 100-200 MAU — umbral de upgrade recomendado`
-          : `<100 MAU — plan Free suficiente`,
+      mau >= 2000
+        ? `>2000 MAU — Hobby al límite bajo concurrencia`
+        : mau >= 1000
+          ? `entre 1000-2000 MAU — preparar siguiente upgrade`
+          : `<1000 MAU — plan Hobby holgado`,
     action:
-      mau >= 200
-        ? 'Upgrade Railway a Hobby ($5/mes) YA'
-        : mau >= 100
-          ? 'Preparar upgrade a Railway Hobby'
+      mau >= 2000
+        ? 'Subir a Pro o añadir replicas YA'
+        : mau >= 1000
+          ? 'Preparar upgrade a Railway Pro'
           : 'Sin acción',
-    link: mau >= 100 ? 'https://railway.app' : undefined,
+    link: mau >= 1000 ? 'https://railway.app' : undefined,
   });
 
   // Resend — no tenemos contador interno. Recordatorio manual si hay >500 usuarios.

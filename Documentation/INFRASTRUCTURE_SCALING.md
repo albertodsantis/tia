@@ -2,7 +2,7 @@
 
 Plan de escalado de infraestructura para Efi. Revisar antes de hacer upgrade en cualquier servicio.
 
-Última revisión: 2026-04-20 · Usuarios estimados a corto plazo: 10-20
+Última revisión: 2026-05-02 · Usuarios estimados a corto plazo: 10-20
 
 ---
 
@@ -10,7 +10,7 @@ Plan de escalado de infraestructura para Efi. Revisar antes de hacer upgrade en 
 
 | Servicio  | Plan actual            | Coste  |
 |-----------|------------------------|--------|
-| Railway   | Free (→ $1/mes al acabar créditos) | $0-1   |
+| Railway   | Hobby ($5/mes incluye $5 de créditos de uso) | $5+    |
 | Supabase  | Free                   | $0     |
 | Resend    | Free                   | $0     |
 | Sentry    | Free (Developer)       | $0     |
@@ -19,9 +19,14 @@ Plan de escalado de infraestructura para Efi. Revisar antes de hacer upgrade en 
 
 ## Capacidades por servicio
 
-### Railway (Free)
-- Up to 1 vCPU / 0.5 GB RAM per service
-- 0.5 GB volume storage
+### Railway (Hobby)
+- Incluye $5/mes de créditos de uso
+- Up to 48 vCPU / 48 GB RAM per service
+- Up to 5 replicas, at 8 vCPU / 8 GB RAM per replica
+- Up to 5 GB storage
+- Single developer workspace
+- 7-Day log history
+- Community support · Global regions
 
 ### Supabase (Free)
 - Unlimited API requests
@@ -52,9 +57,9 @@ Plan de escalado de infraestructura para Efi. Revisar antes de hacer upgrade en 
 | Servicio  | Estado      | Nota |
 |-----------|-------------|------|
 | Sentry    | 🟢 Sobra    | App estable → probablemente <500 errores/mes |
+| Railway   | 🟢 Holgado  | Hobby con 8 GB RAM aguanta sobradamente este rango |
 | Resend    | 🟡 Apretado | 3 emails/usuario × 1000 = 3.000 → roza el límite |
 | Supabase  | 🔴 Crítico  | Storage (1 GB) es el primer recurso que se agota |
-| Railway   | 🔴 Crítico  | 0.5 GB RAM insuficiente bajo carga concurrente |
 
 ### 10-20 usuarios (estado actual esperado)
 
@@ -68,22 +73,24 @@ Orden recomendado cuando crezca la demanda:
 
 | # | Prioridad | Servicio | Acción | Coste | Cuándo |
 |---|-----------|----------|--------|-------|--------|
-| 1 | 🔴 Primero | Railway  | Hobby ($5/mes + uso) → 8 GB RAM, 8 vCPU | $5+/mes | Antes de alcanzar 100-200 usuarios activos, o si ves OOM / latencias >2s |
-| 2 | 🟡 Segundo | Supabase | Pro ($25/mes) → 8 GB DB, 100 GB storage, 8 GB RAM | $25/mes | Cuando `/api/admin/stats` muestre DB size >70% o storage >70% |
-| 3 | 🟢 Tercero | Resend   | Pro ($20/mes) → 50K emails/mes, dominios extra | $20/mes | Cuando pase los 2.500 emails/mes (80% del límite) |
-| 4 | 🟢 Probable nunca | Sentry | Team ($26/mes) → 50K errores/mes | $26/mes | Solo si satura la cuota (muy improbable) |
+| ✅ Hecho | — | Railway | Hobby ($5/mes + uso) → 8 GB RAM, 8 vCPU por replica | $5+/mes | Activo desde 2026-05-02 |
+| 1 | 🟡 Primero | Supabase | Pro ($25/mes) → 8 GB DB, 100 GB storage, 8 GB RAM | $25/mes | Cuando `/api/admin/stats` muestre DB size >70% o storage >70% |
+| 2 | 🟢 Segundo | Resend   | Pro ($20/mes) → 50K emails/mes, dominios extra | $20/mes | Cuando pase los 2.500 emails/mes (80% del límite) |
+| 3 | 🟢 Probable nunca | Sentry | Team ($26/mes) → 50K errores/mes | $26/mes | Solo si satura la cuota (muy improbable) |
+| 4 | 🟢 A futuro | Railway | Pro ($20/mes) → más replicas, mayor RAM, prioridad | $20+/mes | Si Hobby satura: OOM repetidos, p95 >2s, o >2000 MAU |
 
-**Total mínimo recomendado para entorno estable con 500+ usuarios: $5/mes (Railway).**
+**Coste actual base: $5/mes (Railway Hobby).**
 
 ---
 
 ## Señales concretas para cada upgrade
 
-### Railway → Hobby
-- Logs con `out of memory` / `OOM killed`
-- Response times p95 >2 segundos
-- Deploys fallan por falta de recursos
+### Railway Hobby → Pro
+- Logs con `out of memory` / `OOM killed` recurrentes pese a 8 GB RAM
+- Response times p95 >2 segundos sostenidos
+- Necesidad de >5 replicas o >8 vCPU/8 GB RAM por replica
 - CPU sostenido al 100% en el dashboard de Railway
+- MAU >2000 con concurrencia alta
 
 ### Supabase → Pro
 - **DB size >350 MB** (70% de 500 MB)
@@ -131,3 +138,4 @@ Usarlo como fuente de verdad antes de decidir upgrades.
 ## Historia de revisiones
 
 - **2026-04-20** — Documento creado. Usuarios estimados: 10-20. Sin upgrades planificados a corto plazo.
+- **2026-05-02** — Railway upgrade a Hobby ($5/mes con $5 de créditos de uso incluidos): 8 GB RAM y 8 vCPU por replica, hasta 5 replicas, 5 GB storage. Umbrales del AdminPanel actualizados.
