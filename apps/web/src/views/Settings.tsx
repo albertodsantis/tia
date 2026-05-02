@@ -133,6 +133,7 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const tabsRef = useRef<HTMLDivElement>(null);
+  const tabsScrollerRef = useRef<HTMLDivElement>(null);
   const isProgrammaticScroll = useRef(false);
   const programmaticScrollTimer = useRef<number | null>(null);
 
@@ -175,14 +176,15 @@ export default function Settings() {
   }, [SECTIONS]);
 
   useEffect(() => {
-    const tabsEl = tabsRef.current;
-    if (!tabsEl) return;
-    const activeBtn = tabsEl.querySelector<HTMLButtonElement>(
+    const scroller = tabsScrollerRef.current;
+    if (!scroller) return;
+    const activeBtn = scroller.querySelector<HTMLButtonElement>(
       `button[data-section-id="${activeSection}"]`,
     );
-    if (activeBtn) {
-      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
+    if (!activeBtn) return;
+    const target =
+      activeBtn.offsetLeft - scroller.clientWidth / 2 + activeBtn.offsetWidth / 2;
+    scroller.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
   }, [activeSection]);
 
   const scrollToSection = (id: string) => {
@@ -465,6 +467,7 @@ export default function Settings() {
         style={{ pointerEvents: 'auto' }}
       >
         <div
+          ref={tabsScrollerRef}
           className="hide-scrollbar flex gap-1 overflow-x-auto py-2"
           role="tablist"
           aria-label="Secciones de ajustes"
