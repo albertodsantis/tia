@@ -342,6 +342,7 @@ function requireAuth(pool: pg.Pool) {
       return res.status(401).json({ error: 'Sesión inválida.' });
     }
     (req as any).userId = user.id;
+    (req as any).userEmail = user.email;
     next();
   };
 }
@@ -984,19 +985,31 @@ async function generateSuggestions(
   }
 }
 
-export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, geminiApiKey: string | undefined) {
+export function createAiRouter(
+  appStore: PostgresAppStore,
+  pool: pg.Pool,
+  geminiApiKey: string | undefined,
+  unlimitedEmails: string[] = [],
+) {
   const router = Router();
   router.use(requireAuth(pool));
 
   const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
+  const unlimitedSet = new Set(unlimitedEmails.map((e) => e.toLowerCase()));
+  const isUnlimited = (email: string | undefined) =>
+    !!email && unlimitedSet.has(email.toLowerCase());
 
   router.get('/quota', async (req, res) => {
     if (!ai) {
       return res.status(503).json({ error: 'Asistente no configurado.', code: 'ai_disabled' });
     }
     try {
-      const quota = await readQuota(pool, (req as any).userId);
-      const response: AiQuotaResponse = quota;
+      const userId = (req as any).userId as string;
+      const userEmail = (req as any).userEmail as string | undefined;
+      const quota = await readQuota(pool, userId);
+      const response: AiQuotaResponse = isUnlimited(userEmail)
+        ? { ...quota, limit: Number.MAX_SAFE_INTEGER }
+        : quota;
       res.json(response);
     } catch (error) {
       logger.error({ err: error }, 'AI quota read failed');
@@ -1010,18 +1023,22 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
     }
 
     const userId = (req as any).userId as string;
+    const userEmail = (req as any).userEmail as string | undefined;
+    const unlimited = isUnlimited(userEmail);
     const body = req.body as AiChatRequest;
     if (!Array.isArray(body?.messages) || body.messages.length === 0) {
       return res.status(400).json({ error: 'messages requerido.' });
     }
 
-    const current = await readQuota(pool, userId);
-    if (current.used >= current.limit) {
-      return res.status(429).json({
-        error: 'Has alcanzado el límite mensual de mensajes con Efi IA.',
-        code: 'quota_exhausted',
-        quota: current,
-      });
+    if (!unlimited) {
+      const current = await readQuota(pool, userId);
+      if (current.used >= current.limit) {
+        return res.status(429).json({
+          error: 'Has alcanzado el límite mensual de mensajes con Efi IA.',
+          code: 'quota_exhausted',
+          quota: current,
+        });
+      }
     }
 
     try {
@@ -1092,7 +1109,8 @@ export function createAiRouter(appStore: PostgresAppStore, pool: pg.Pool, gemini
         'AI chat turn complete',
       );
 
-      const quota = await bumpQuota(pool, userId);
+      const bumped = await bumpQuota(pool, userId);
+      const quota = unlimited ? { ...bumped, limit: Number.MAX_SAFE_INTEGER } : bumped;
       const finalReply = reply || 'Listo.';
       const suggestions = await generateSuggestions(ai, lastUser.text, finalReply);
       const payload: AiChatResponse = {

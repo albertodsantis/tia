@@ -13,6 +13,7 @@ export interface AppEnv {
   RESEND_API_KEY?: string;
   SENTRY_DSN?: string;
   ADMIN_API_KEY?: string;
+  AI_UNLIMITED_EMAILS: string[];
 }
 
 function requireEnv(name: string): string {
@@ -51,5 +52,9 @@ export function loadEnv(): AppEnv {
     RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
     SENTRY_DSN: process.env.SENTRY_DSN || undefined,
     ADMIN_API_KEY: process.env.ADMIN_API_KEY || undefined,
+    AI_UNLIMITED_EMAILS: (process.env.AI_UNLIMITED_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
   };
 }

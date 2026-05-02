@@ -223,7 +223,7 @@ export async function createApp(): Promise<{
 
   const gamification = new GamificationService(appStore);
   app.use('/api/v1', createV1Router(appStore, pool, gamification));
-  app.use('/api/v1/ai', createAiRouter(appStore, pool, env.GEMINI_API_KEY));
+  app.use('/api/v1/ai', createAiRouter(appStore, pool, env.GEMINI_API_KEY, env.AI_UNLIMITED_EMAILS));
   app.use('/api/auth', authLimiter, createAuthRouter(googleCreds, env.APP_URL, pool, env.EARLY_ACCESS));
   app.use('/api/calendar', createCalendarRouter(googleCreds, pool));
   app.use('/api/admin', createAdminRouter(pool, env.ADMIN_API_KEY));
