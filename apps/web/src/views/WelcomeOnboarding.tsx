@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Article,
   Broadcast,
@@ -19,6 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import type { FreelancerType } from '@shared';
 import { useAppContext } from '../context/AppContext';
+import { captureEvent } from '../lib/posthog';
 import { PROFESSION_LABELS } from '../lib/professions';
 
 // ─── Profession catalogue ────────────────────────────────────────────────────
@@ -134,6 +135,10 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
   const partnerRef = useRef<HTMLInputElement>(null);
   const goalRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    captureEvent('onboarding_started');
+  }, []);
+
   // ── Profession handlers ──────────────────────────────────────────────────
 
   const toggleProfession = (value: FreelancerType) => {
@@ -159,6 +164,7 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
       // Don't block on failure
     }
     setSaving(false);
+    captureEvent('onboarding_step_completed', { step: 'profession', professions_count: selected.length });
     setStep('partner');
     setTimeout(() => partnerRef.current?.focus(), 50);
   };
@@ -166,6 +172,7 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
   // ── Partner handler ──────────────────────────────────────────────────────
 
   const handlePartnerNext = () => {
+    captureEvent('onboarding_step_completed', { step: 'partner', skipped: !partnerName.trim() });
     setStep('goal');
     setTimeout(() => goalRef.current?.focus(), 50);
   };
@@ -209,6 +216,10 @@ export default function WelcomeOnboarding({ onComplete }: { onComplete: () => vo
       // Don't block on failure
     }
     setSaving(false);
+    captureEvent('onboarding_completed', {
+      added_partner: Boolean(partnerName.trim()),
+      added_goal: Boolean(goalText.trim()),
+    });
     onComplete();
   };
 

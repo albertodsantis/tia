@@ -8,6 +8,7 @@ import type { AiMessage, AiQuota } from '@shared';
 import { useAppContext } from '../context/AppContext';
 import { aiApi } from '../lib/api';
 import { ApiError } from '../lib/api';
+import { captureEvent } from '../lib/posthog';
 import { toast } from '../lib/toast';
 import { StatusBadge, cx } from './ui';
 
@@ -135,7 +136,10 @@ export default function AIAssistant({ isDesktop = false }: { isDesktop?: boolean
           id="efi-assistant-btn"
           type="button"
           aria-label="Habla con Efi"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            captureEvent('ai_assistant_opened');
+            setIsOpen(true);
+          }}
           className={
             isDesktop
               ? 'group relative flex h-20 w-20 items-center justify-center transition-transform hover:-translate-y-0.5 active:scale-95'

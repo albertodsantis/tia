@@ -137,6 +137,8 @@ export function createMediaKitRouter(pool: pg.Pool, isDev = false): Router {
         accentColor: profileAccent,
         forceDark: settingsRow?.profile_force_dark ?? false,
         publicUrl,
+        posthogKey: process.env.VITE_POSTHOG_KEY || process.env.POSTHOG_API_KEY || '',
+        posthogHost: process.env.VITE_POSTHOG_HOST || process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
       });
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');

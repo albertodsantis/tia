@@ -53,6 +53,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { addLocalDays, formatLocalDateISO, parseLocalDate, startOfLocalDay, startOfWeek } from '../lib/date';
 import { toast } from '../lib/toast';
 import { calendarApi } from '../lib/api';
+import { captureEvent } from '../lib/posthog';
 import { hapticLight, hapticMedium, hapticWarning } from '../lib/haptics';
 
 const REVIEW_STATUS = 'En Revisión' as TaskStatus;
@@ -1790,7 +1791,10 @@ export default function Pipeline({ pendingPartnerName, onPendingPartnerConsumed 
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setView(tab.id as typeof view)}
+                onClick={() => {
+                  setView(tab.id as typeof view);
+                  captureEvent('pipeline_view_changed', { view: tab.id });
+                }}
                 className={cx(
                   'flex h-full items-center justify-center gap-2 rounded-[1rem] border px-4 text-sm font-bold transition-all',
                   view === tab.id

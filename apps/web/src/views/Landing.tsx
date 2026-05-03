@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import type { SessionUser } from '@shared';
 import { authApi, ApiError } from '../lib/api';
+import { captureEvent } from '../lib/posthog';
 import { readReferralCode, clearReferralCode } from '../lib/referral';
 import { supabase } from '../lib/supabase';
 import { cx } from '../components/ui';
@@ -80,6 +81,7 @@ export default function Landing({
   }, []);
 
   const switchMode = (newMode: AuthMode) => {
+    captureEvent('landing_cta_clicked', { cta: `switch_to_${newMode}` });
     setMode(newMode);
     setError('');
   };
@@ -88,6 +90,7 @@ export default function Landing({
     e.preventDefault();
     if (!email.trim() || !password) return;
     if (mode === 'register' && !name.trim()) return;
+    captureEvent('landing_cta_clicked', { cta: mode === 'register' ? 'submit_register' : 'submit_login' });
 
     setLoading(true);
     setError('');
@@ -140,6 +143,7 @@ export default function Landing({
   };
 
   const handleGoogleLogin = async () => {
+    captureEvent('landing_cta_clicked', { cta: 'google_login' });
     if (!supabase) {
       setError('Login con Google no disponible. Configuracion pendiente.');
       return;
