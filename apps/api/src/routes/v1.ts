@@ -28,6 +28,7 @@ import { GamificationService, checkProfileComplete } from '../services/gamificat
 import { evaluateReferralQualification } from '../services/referrals';
 import { generateEfiLinkHtml } from '../lib/profileRenderer';
 import { createEmptySocialProfiles, createDefaultEfiProfile } from '@shared';
+import { posthog } from '../lib/posthog';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Bad request';
@@ -180,6 +181,11 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
       const timezone = parseTimezoneHeader(req.get('X-Timezone'));
       const task = await appStore.createTask(userId, req.body as CreateTaskRequest);
       const efisystem = await gamification.processEvent(userId, 'pipeline_first_task', { timezone });
+      posthog.capture({
+        distinctId: userId,
+        event: 'task created',
+        properties: { task_id: task.id, status: task.status },
+      });
       res.status(201).json({ ...task, efisystem });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
@@ -214,10 +220,13 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
       let efisystem: EfisystemAward | null = null;
       if (body.status === 'Cobrado') {
         efisystem = await gamification.processEvent(userId, 'pipeline_task_paid', { taskId: req.params.taskId, timezone });
+        posthog.capture({ distinctId: userId, event: 'task paid', properties: { task_id: req.params.taskId } });
       } else if (body.status === 'Completada') {
         efisystem = await gamification.processEvent(userId, 'pipeline_task_completed', { taskId: req.params.taskId, timezone });
+        posthog.capture({ distinctId: userId, event: 'task completed', properties: { task_id: req.params.taskId } });
       } else if (body.status !== undefined) {
         efisystem = await gamification.processEvent(userId, 'pipeline_task_moved', { timezone });
+        posthog.capture({ distinctId: userId, event: 'task status changed', properties: { task_id: req.params.taskId, new_status: body.status } });
       }
 
       if (Array.isArray(body.checklistItems) && body.checklistItems.length > 0) {
@@ -259,6 +268,7 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
         efisystem = GamificationService.mergeAwards(efisystem, subsequent);
       }
 
+      posthog.capture({ distinctId: userId, event: 'partner created', properties: { partner_id: partner.id } });
       res.status(201).json({ ...partner, efisystem });
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });
@@ -291,10 +301,12 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
   router.delete('/partners/:partnerId', async (req, res) => {
     if (rejectInvalidUUID(res, req.params.partnerId)) return;
     try {
-      const result = await appStore.deletePartner(getUserId(req), req.params.partnerId);
+      const userId = getUserId(req);
+      const result = await appStore.deletePartner(userId, req.params.partnerId);
       if (!result.success) {
         return res.status(404).json({ error: 'Partner not found' });
       }
+      posthog.capture({ distinctId: userId, event: 'partner deleted', properties: { partner_id: req.params.partnerId } });
       res.json(result);
     } catch (error) {
       console.error('Delete partner error:', error);
@@ -430,6 +442,7 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
         efisystem = awards.reduce((acc, cur) => GamificationService.mergeAwards(acc, cur));
       }
 
+      posthog.capture({ distinctId: userId, event: 'profile updated' });
       res.json({ ...profile, ...(efisystem ? { efisystem } : {}) });
     } catch (error) {
       const message = getErrorMessage(error);
@@ -836,8 +849,10 @@ export function createV1Router(appStore: PostgresAppStore, pool: pg.Pool, gamifi
         return res.status(400).json({ error: 'No se recibió ningún archivo.' });
       }
 
+      const userId = getUserId(req);
       const category = (req.body.category as string) || 'general';
-      const result = await uploadFile(getUserId(req), category, file);
+      const result = await uploadFile(userId, category, file);
+      posthog.capture({ distinctId: userId, event: 'file uploaded', properties: { category } });
       res.status(201).json(result);
     } catch (error) {
       res.status(400).json({ error: getErrorMessage(error) });

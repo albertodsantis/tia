@@ -23,6 +23,7 @@ import type {
 import { sendPasswordResetEmail, sendEmailChangeVerification, sendWelcomeEmail } from '../lib/email';
 import { ensureReferralCode, attachReferrer } from '../services/referrals';
 import type { GoogleCreds } from './calendar';
+import { posthog } from '../lib/posthog';
 
 /** Extract the client IP from the request, respecting proxy headers. Returns null for local/unknown. */
 function getClientIp(req: Express.Request): string | null {
@@ -217,10 +218,21 @@ export function createAuthRouter(
 
       setSessionUser(req, user);
 
+      posthog.identify({
+        distinctId: userId,
+        properties: { email: trimmedEmail, name: trimmedName, provider: 'email' },
+      });
+      posthog.capture({
+        distinctId: userId,
+        event: 'user signed up',
+        properties: { provider: 'email', $set: { email: trimmedEmail, name: trimmedName } },
+      });
+
       const response: MeResponse = { user, isNew: true };
       res.status(201).json(response);
     } catch (error) {
       console.error('Register error:', error);
+      posthog.captureException(error);
       res.status(500).json({ error: 'Error al crear la cuenta.' });
     }
   });
@@ -271,10 +283,21 @@ export function createAuthRouter(
 
       setSessionUser(req, user);
 
+      posthog.identify({
+        distinctId: dbUser.id,
+        properties: { email: dbUser.email, name: dbUser.name, provider: dbUser.provider },
+      });
+      posthog.capture({
+        distinctId: dbUser.id,
+        event: 'user logged in',
+        properties: { provider: 'email' },
+      });
+
       const response: MeResponse = { user };
       res.json(response);
     } catch (error) {
       console.error('Login error:', error);
+      posthog.captureException(error);
       res.status(500).json({ error: 'Error al iniciar sesion.' });
     }
   });
@@ -302,6 +325,7 @@ export function createAuthRouter(
     }
 
     try {
+      posthog.capture({ distinctId: sessionUser.id, event: 'account deleted' });
       // CASCADE deletes profile, settings, tasks, partners, etc.
       await pool.query('DELETE FROM users WHERE id = $1', [sessionUser.id]);
     } catch (err) {
@@ -451,6 +475,16 @@ export function createAuthRouter(
         setSessionUser(req, user);
         (req.session as any).tokens = tokens;
 
+        posthog.identify({
+          distinctId: userId,
+          properties: { email: googleEmail, name: googleName, provider: 'google' },
+        });
+        posthog.capture({
+          distinctId: userId,
+          event: isNewGoogleUser ? 'user signed up' : 'user logged in',
+          properties: { provider: 'google', $set: { email: googleEmail, name: googleName } },
+        });
+
         res.send(`
           <html>
             <body>
@@ -472,6 +506,7 @@ export function createAuthRouter(
         // Persist tokens to DB so calendar connection survives session expiry
         const sessionUser = (req.session as any).user;
         if (sessionUser?.id && tokens.access_token) {
+          posthog.capture({ distinctId: sessionUser.id, event: 'google calendar connected' });
           await pool.query(
             `UPDATE users
              SET gcal_access_token = $1, gcal_refresh_token = $2, gcal_token_expiry = $3
@@ -592,6 +627,16 @@ export function createAuthRouter(
       );
 
       setSessionUser(req, user);
+
+      posthog.identify({
+        distinctId: userId,
+        properties: { email: googleEmail, name: googleName, provider: 'google' },
+      });
+      posthog.capture({
+        distinctId: userId,
+        event: isNewUser ? 'user signed up' : 'user logged in',
+        properties: { provider: 'google', $set: { email: googleEmail, name: googleName } },
+      });
 
       const response: MeResponse = { user, isNew: isNewUser };
       res.json(response);

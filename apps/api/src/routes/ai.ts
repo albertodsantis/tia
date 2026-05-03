@@ -15,6 +15,7 @@ import type {
 } from '@shared';
 import type { PostgresAppStore } from '../db/repository';
 import { logger } from '../lib/logger';
+import { posthog } from '../lib/posthog';
 
 // Quota: monthly window keyed to first day of UTC month.
 // Free tier during early access — bumped to 500 at public launch.
@@ -1132,6 +1133,11 @@ export function createAiRouter(
 
       const bumped = await bumpQuota(pool, userId);
       const quota = unlimited ? { ...bumped, limit: Number.MAX_SAFE_INTEGER } : bumped;
+      posthog.capture({
+        distinctId: userId,
+        event: 'ai message sent',
+        properties: { mutations_count: ctx.mutations.length },
+      });
       const finalReply = reply || 'Listo.';
       const suggestions = await generateSuggestions(ai, lastUser.text, finalReply);
       const payload: AiChatResponse = {

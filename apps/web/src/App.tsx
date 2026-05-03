@@ -38,6 +38,7 @@ import LegalModal from './components/LegalModal';
 import type { LegalPage } from './components/LegalModal';
 import { Avatar, LoadingMushroom, SurfaceCard, cx } from './components/ui';
 import { authApi } from './lib/api';
+import { identifyUser, resetPostHog } from './lib/posthog';
 import { captureReferralFromUrl, readReferralCode, clearReferralCode } from './lib/referral';
 import { supabase } from './lib/supabase';
 import { getAccentSecondary } from './lib/accent';
@@ -832,6 +833,20 @@ function AppInner() {
 
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (sessionUser?.id) {
+      identifyUser({
+        id: sessionUser.id,
+        email: sessionUser.email,
+        name: sessionUser.name,
+        provider: sessionUser.provider,
+        plan: sessionUser.plan,
+      });
+    } else {
+      resetPostHog();
+    }
+  }, [sessionUser?.id, sessionUser?.email, sessionUser?.plan]);
 
   const handleLogin = (user: SessionUser, isNew = false) => {
     setIsNewRegistration(isNew);

@@ -17,6 +17,7 @@ import * as Sentry from '@sentry/node';
 import { pinoHttp } from 'pino-http';
 import { randomUUID } from 'crypto';
 import { logger } from './lib/logger';
+import { posthog } from './lib/posthog';
 import { createAuthRouter } from './routes/auth';
 import { createCalendarRouter } from './routes/calendar';
 import { createV1Router } from './routes/v1';
@@ -239,6 +240,12 @@ export async function createApp(): Promise<{
       next(err);
     });
   }
+
+  app.use((err: Error, req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const userId: string | undefined = (req.session as any)?.user?.id;
+    posthog.captureException(err, userId);
+    next(err);
+  });
 
   return { app, env, pool, closePool };
 }

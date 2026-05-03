@@ -8,3 +8,5 @@ coverage/
 !.env.example
 test-results/
 output/
+.claude/
+posthog-setup-report.md

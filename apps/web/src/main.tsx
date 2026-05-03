@@ -5,8 +5,10 @@ import App from './App.tsx';
 import './index.css';
 import { initializeStatusBar } from './lib/statusBar';
 import { initSentry } from './lib/sentry';
+import { initPostHog } from './lib/posthog';
 
 initSentry();
+initPostHog();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
