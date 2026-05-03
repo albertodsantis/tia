@@ -42,6 +42,7 @@ Monorepo structure:
 
 - UI and user-facing copy: **Spanish**
 - Code, comments, docs, file names: **English**
+- Assistant chat replies: **español neutro** — siempre tuteo estándar ("tienes", "puedes", "pásate", "disfruta"). Nunca voseo ni argentinismos ("tenés", "podés", "pasate", "disfrutá", "dale", "che", "boludo", etc.).
 
 ## Current State
 
