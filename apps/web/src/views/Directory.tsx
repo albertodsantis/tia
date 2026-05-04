@@ -115,6 +115,7 @@ export default function Directory() {
     deletePartner,
     tasks,
     setPendingNewTaskPartner,
+    pipelineHasCobrado,
   } = useAppContext();
   const [search, setMagnifyingGlass] = useState('');
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(partners[0]?.id ?? null);
@@ -168,15 +169,17 @@ export default function Directory() {
       partners.reduce(
         (accumulator, partner) => {
           const partnerTasks = tasks.filter((task) => task.partnerId === partner.id);
-          const openPartnerTasks = partnerTasks.filter((task) => task.status !== 'Cobrado');
+          const openPartnerTasks = partnerTasks.filter((task) => task.status !== 'Cobrado' && task.status !== 'Completada');
+          const toCollectPartnerTasks = partnerTasks.filter((task) => task.status === 'Completada');
           accumulator[partner.id] = {
             total: partnerTasks.length,
             open: openPartnerTasks.length,
             openValue: openPartnerTasks.reduce((sum, task) => sum + task.value, 0),
+            toCollect: toCollectPartnerTasks.length,
           };
           return accumulator;
         },
-        {} as Record<string, { total: number; open: number; openValue: number }>,
+        {} as Record<string, { total: number; open: number; openValue: number; toCollect: number }>,
       ),
     [partners, tasks],
   );
@@ -428,7 +431,7 @@ export default function Directory() {
             <div className="space-y-2">
               {filteredPartners.map((partner) => {
                 const isActive = activePartner?.id === partner.id;
-                const meta = partnerTaskMeta[partner.id] ?? { total: 0, open: 0, openValue: 0 };
+                const meta = partnerTaskMeta[partner.id] ?? { total: 0, open: 0, openValue: 0, toCollect: 0 };
                 return (
                   <button
                     key={partner.id}
@@ -451,7 +454,7 @@ export default function Directory() {
                           <div className="min-w-0">
                             <h3 className="truncate text-base font-bold leading-tight text-[var(--text-primary)]">{partner.name}</h3>
                             <p className={cx('mt-1 text-xs font-medium', isActive ? 'text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]')}>
-                              {partner.contacts.length} contactos · {meta.open} abiertas · {formatCurrency(meta.openValue)}
+                              {partner.contacts.length} contactos · {meta.open} abiertas{pipelineHasCobrado && meta.toCollect > 0 ? ` · ${meta.toCollect} por cobrar` : ''} · {formatCurrency(meta.openValue)}
                             </p>
                           </div>
                         </div>
